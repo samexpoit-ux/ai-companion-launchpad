@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ImageRouteImport } from './routes/image'
+import { Route as DashpreviewRouteImport } from './routes/dashpreview'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -21,6 +22,11 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 const ImageRoute = ImageRouteImport.update({
   id: '/image',
   path: '/image',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashpreviewRoute = DashpreviewRouteImport.update({
+  id: '/dashpreview',
+  path: '/dashpreview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -61,6 +67,7 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/dashpreview': typeof DashpreviewRoute
   '/image': typeof ImageRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/workspace': typeof AuthenticatedWorkspaceRoute
@@ -70,6 +77,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/dashpreview': typeof DashpreviewRoute
   '/image': typeof ImageRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/workspace': typeof AuthenticatedWorkspaceRoute
@@ -81,6 +89,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/dashpreview': typeof DashpreviewRoute
   '/image': typeof ImageRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/workspace': typeof AuthenticatedWorkspaceRoute
@@ -92,6 +101,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/dashpreview'
     | '/image'
     | '/dashboard'
     | '/workspace'
@@ -101,6 +111,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/dashpreview'
     | '/image'
     | '/dashboard'
     | '/workspace'
@@ -111,6 +122,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/dashpreview'
     | '/image'
     | '/_authenticated/dashboard'
     | '/_authenticated/workspace'
@@ -122,6 +134,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  DashpreviewRoute: typeof DashpreviewRoute
   ImageRoute: typeof ImageRoute
   ApiAutofixRoute: typeof ApiAutofixRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -134,6 +147,13 @@ declare module '@tanstack/react-router' {
       path: '/image'
       fullPath: '/image'
       preLoaderRoute: typeof ImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashpreview': {
+      id: '/dashpreview'
+      path: '/dashpreview'
+      fullPath: '/dashpreview'
+      preLoaderRoute: typeof DashpreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -205,6 +225,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  DashpreviewRoute: DashpreviewRoute,
   ImageRoute: ImageRoute,
   ApiAutofixRoute: ApiAutofixRoute,
   ApiChatRoute: ApiChatRoute,
