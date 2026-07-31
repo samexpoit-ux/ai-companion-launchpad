@@ -111,8 +111,11 @@ function DashboardPage() {
   const [recents, setRecents] = useState<RecentProject[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const isMobile = useIsMobile();
 
+  useEffect(() => setSidebarOpen(!isMobile), [isMobile]);
   useEffect(() => setRecents(readRecents()), []);
+
 
   useEffect(() => {
     const el = textareaRef.current;
