@@ -817,88 +817,122 @@ function ChatWorkspaceInner() {
           )}
         </div>
 
-        {/* Composer */}
-        <div className="relative shrink-0 border-t border-ink-200 bg-white">
+        {/* Composer — Lovable-style floating prompt box */}
+        <div className="relative shrink-0 bg-white">
+          {/* soft fade so the transcript melts into the composer instead of a hard rule */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-8 left-0 right-0 h-8 bg-gradient-to-b from-transparent to-white"
+          />
 
+          <div className="mx-auto w-full max-w-3xl px-3 pb-3 pt-1 sm:px-6 sm:pb-5">
+            <div
+              className={cn(
+                "relative rounded-[26px] border border-ink-200 bg-white transition-all duration-200",
+                "shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-16px_rgba(16,24,40,0.18)]",
+                "focus-within:border-[color:var(--color-iris)]/50",
+                "focus-within:shadow-[0_1px_2px_rgba(16,24,40,0.05),0_18px_44px_-18px_color-mix(in_oklab,var(--color-iris)_45%,transparent)]",
+              )}
+            >
+              <textarea
+                ref={taRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={onKeyDown}
+                rows={1}
+                placeholder="Ask Nexura to build something…"
+                className="block max-h-56 w-full resize-none bg-transparent px-4 pb-1 pt-4 text-[15px] leading-6 text-ink-900 placeholder:text-ink-400 focus:outline-none"
+              />
 
-          <div className="mx-auto max-w-3xl px-4 py-4 sm:px-6">
-            <div className="group relative">
-              <div className="relative rounded-2xl border border-ink-200 bg-white p-2 shadow-sm transition focus-within:border-[color:var(--color-iris)] focus-within:ring-4 focus-within:ring-[color:var(--color-iris-soft)]">
-                <textarea
-                  ref={taRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={onKeyDown}
-                  rows={1}
-                  placeholder="Ask Nexura to build something…"
-                  className="max-h-52 w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-base leading-relaxed text-ink-900 placeholder:text-ink-400 focus:outline-none"
-                />
-                <div className="flex items-center justify-between gap-2 px-1.5 pb-1 pt-1.5">
-                  <div className="flex items-center gap-0.5">
-                    <div
-                      role="group"
-                      aria-label="Response mode"
-                      className="mr-1 flex items-center rounded-lg border border-ink-200 bg-ink-100 p-0.5"
+              <div className="flex items-center gap-1.5 px-2.5 pb-2.5 pt-1">
+                {/* + menu, exactly one entry point for attachments like Lovable */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Add attachment"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 text-ink-600 transition hover:border-ink-300 hover:bg-ink-100 hover:text-ink-900"
                     >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" side="top" className="w-52">
+                    <DropdownMenuItem>
+                      <Paperclip className="mr-2 h-4 w-4" /> Attach a file
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <ImageIcon className="mr-2 h-4 w-4" /> Add an image
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Command className="mr-2 h-4 w-4" /> Browse commands
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <span className="hidden text-2xs text-ink-400 sm:inline">
+                  {ACTION_RULES[actionForMode(mode)].label} ·{" "}
+                  <span className="font-medium text-ink-600">
+                    {formatCredits(credits.quote(actionForMode(mode), input.length))}
+                  </span>{" "}
+                  credits
+                </span>
+
+                <div className="ml-auto flex items-center gap-1.5">
+                  {/* Mode as a compact dropdown, not a tab strip */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Response mode"
+                        className="inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-xs font-medium text-ink-700 transition hover:bg-ink-100 hover:text-ink-900"
+                      >
+                        {mode}
+                        <ChevronDown className="h-3.5 w-3.5 text-ink-400" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" side="top" className="w-64">
                       {(["Build", "Chat", "Plan"] as const).map((m) => (
-                        <button
-                          key={m}
-                          type="button"
-                          onClick={() => setMode(m)}
-                          aria-pressed={mode === m}
-                          title={`${ACTION_RULES[actionForMode(m)].label} · ${ACTION_RULES[actionForMode(m)].note}`}
-                          className={cn(
-                            "rounded-md px-2 py-1 text-xs font-medium transition",
-                            mode === m
-                              ? "bg-white text-ink-900 shadow-sm"
-                              : "text-ink-500 hover:text-ink-900",
-                          )}
-                        >
-                          {m}
-                        </button>
+                        <DropdownMenuItem key={m} onSelect={() => setMode(m)} className="items-start gap-2">
+                          <Check
+                            className={cn(
+                              "mt-0.5 h-3.5 w-3.5 shrink-0 text-[color:var(--color-iris)]",
+                              mode === m ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+                          <span className="min-w-0">
+                            <span className="block text-sm font-medium text-ink-900">{m}</span>
+                            <span className="block text-2xs leading-snug text-ink-500">
+                              {ACTION_RULES[actionForMode(m)].note}
+                            </span>
+                          </span>
+                        </DropdownMenuItem>
                       ))}
-                    </div>
-                    <ComposerBtn label="Attach"><Paperclip className="h-4 w-4" /></ComposerBtn>
-                    <ComposerBtn label="Image"><ImageIcon className="h-4 w-4" /></ComposerBtn>
-                    <ComposerBtn label="Voice"><Mic className="h-4 w-4" /></ComposerBtn>
-                    <ComposerBtn label="Commands"><Command className="h-4 w-4" /></ComposerBtn>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="hidden text-2xs text-ink-400 sm:inline">
-                      <kbd className="rounded border border-ink-200 bg-ink-100 px-1 py-0.5 font-mono">⏎</kbd> send
-                    </span>
-                    <SendButton
-                      onClick={() => void handleSend()}
-                      disabled={!input.trim() || isSending}
-                      loading={isSending}
-                    />
-                  </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <button
+                    type="button"
+                    aria-label="Voice input"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full text-ink-500 transition hover:bg-ink-100 hover:text-ink-900"
+                  >
+                    <Mic className="h-4 w-4" />
+                  </button>
+
+                  <SendButton
+                    onClick={() => void handleSend()}
+                    disabled={!input.trim() || isSending}
+                    loading={isSending}
+                  />
                 </div>
               </div>
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-2xs leading-relaxed text-ink-400">
-              <span>
-                Smart routing · {ACTION_RULES[actionForMode(mode)].label} costs{" "}
-                <span className="font-medium text-ink-600">
-                  {formatCredits(credits.quote(actionForMode(mode), input.length))}
-                </span>{" "}
-                credits
-              </span>
-              <span className="text-ink-300">·</span>
-              <span>
-                <span className="font-medium text-ink-600">{formatCredits(credits.remaining)}</span>{" "}
-                left after this you have{" "}
-                <span className="font-medium text-ink-600">
-                  {formatCredits(
-                    Math.max(0, credits.remaining - credits.quote(actionForMode(mode), input.length)),
-                  )}
-                </span>
-              </span>
-            </div>
-
+            <p className="mt-2 text-center text-2xs text-ink-400">
+              Smart routing · {formatCredits(credits.remaining)} of {formatCredits(credits.total)} credits left
+            </p>
           </div>
         </div>
+
       </main>
       </Panel>
 
