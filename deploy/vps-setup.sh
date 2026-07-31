@@ -10,9 +10,9 @@
 set -euo pipefail
 
 DOMAIN="nexuraai.dev"
-APP_DIR="/var/www/nexura"
-APP_USER="nexura"
-REPO="https://github.com/abexpoit-blip/ai-companion-platform.git"
+APP_DIR="/var/www/nexuraai"
+APP_USER="nexuraai"
+REPO="https://github.com/samexpoit-ux/ai-companion-launchpad.git"
 PORT="3000"
 
 echo "==> 1/8 System update + base packages"
@@ -69,10 +69,10 @@ bun run build
 chown -R "$APP_USER:$APP_USER" "$APP_DIR"
 
 echo "==> 8/8 systemd + nginx + SSL"
-cp "$APP_DIR/deploy/nexura.service" /etc/systemd/system/nexura.service
+cp "$APP_DIR/deploy/nexuraai.service" /etc/systemd/system/nexuraai.service
 systemctl daemon-reload
-systemctl enable --now nexura
-systemctl restart nexura
+systemctl enable --now nexuraai
+systemctl restart nexuraai
 
 cp "$APP_DIR/deploy/nginx-nexuraai.conf" /etc/nginx/sites-available/nexuraai
 ln -sf /etc/nginx/sites-available/nexuraai /etc/nginx/sites-enabled/nexuraai
@@ -85,4 +85,4 @@ certbot --nginx -d "$DOMAIN" -d "www.$DOMAIN" --non-interactive --agree-tos \
 
 echo
 echo "DONE. App on http://127.0.0.1:$PORT  →  https://$DOMAIN"
-systemctl --no-pager status nexura | head -n 20
+systemctl --no-pager status nexuraai | head -n 20

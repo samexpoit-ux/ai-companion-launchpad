@@ -4,14 +4,14 @@ After=network.target
 
 [Service]
 Type=simple
-User=nexura
-Group=nexura
-WorkingDirectory=/var/www/nexura
-EnvironmentFile=/var/www/nexura/.env
+User=nexuraai
+Group=nexuraai
+WorkingDirectory=/var/www/nexuraai
+EnvironmentFile=/var/www/nexuraai/.env
 Environment=NODE_ENV=production
 Environment=PORT=3000
 Environment=HOST=127.0.0.1
-ExecStart=/usr/bin/node /var/www/nexura/.output/server/index.mjs
+ExecStart=/usr/bin/node /var/www/nexuraai/.output/server/index.mjs
 Restart=always
 RestartSec=3
 StandardOutput=journal
