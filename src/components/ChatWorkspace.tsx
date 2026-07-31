@@ -37,6 +37,8 @@ import {
   Image as ImageIcon,
   ChevronRight,
   Crown,
+  History as HistoryIcon,
+
 } from "lucide-react";
 import {
   sendChatMessage,
