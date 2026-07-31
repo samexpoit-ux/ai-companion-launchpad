@@ -27,12 +27,12 @@ export function CreditMeter({
 
   return (
     <div className={cn("rounded-xl border border-ink-200 bg-white/70 px-3 py-2", className)}>
-      <div className="flex items-center gap-2 text-[11px]">
+      <div className="flex items-center gap-2 text-xs">
         <Coins className={cn("h-3.5 w-3.5", low ? "text-red-500" : "text-[color:var(--color-iris)]")} />
         <span className="font-semibold text-ink-900">{formatCredits(remaining)}</span>
         <span className="text-ink-500">/ {formatCredits(total)} credits</span>
         {!compact && (
-          <span className="ml-auto rounded-full border border-ink-200 px-2 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-ink-500">
+          <span className="ml-auto rounded-full border border-ink-200 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-ink-500">
             {planById(plan).name}
           </span>
         )}
@@ -44,13 +44,13 @@ export function CreditMeter({
         />
       </div>
       {pending != null && pending > 0 && (
-        <div className="mt-1 text-[10px] text-ink-500">
+        <div className="mt-1 text-2xs text-ink-500">
           This action costs <span className="font-semibold text-ink-800">{formatCredits(pending)}</span> —{" "}
           {formatCredits(Math.max(0, remaining - pending))} left after
         </div>
       )}
       {low && (
-        <div className="mt-1 text-[10px] font-medium text-red-500">
+        <div className="mt-1 text-2xs font-medium text-red-500">
           Low balance — upgrade your plan to keep building.
         </div>
       )}

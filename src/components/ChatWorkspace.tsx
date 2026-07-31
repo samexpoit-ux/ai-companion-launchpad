@@ -569,8 +569,8 @@ function ChatWorkspaceInner() {
         <div className="flex items-center gap-2.5 border-b border-ink-200 px-4 py-4">
           <BrandMark size="md" />
           <div className="min-w-0">
-            <BrandWordmark className="block text-[14px] font-bold leading-tight sm:text-[15px]" />
-            <div className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-ink-500">
+            <BrandWordmark className="block text-sm font-bold leading-tight" />
+            <div className="text-2xs font-semibold uppercase tracking-[0.16em] text-ink-500">
               Build · Preview · Ship
             </div>
           </div>
@@ -595,8 +595,8 @@ function ChatWorkspaceInner() {
         </div>
 
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
-          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink-400">Chat history</span>
-          <span className="rounded-full bg-ink-200 px-1.5 text-[10px] text-ink-500">{filtered.length}</span>
+          <span className="text-2xs font-bold uppercase tracking-[0.18em] text-ink-400">Chat history</span>
+          <span className="rounded-full bg-ink-200 px-1.5 text-2xs text-ink-500">{filtered.length}</span>
         </div>
 
 
@@ -609,7 +609,7 @@ function ChatWorkspaceInner() {
               <div
                 key={t.id}
                 className={cn(
-                  "group relative mb-0.5 flex items-center gap-2 rounded-lg border px-3 py-2 text-[13px] transition",
+                  "group relative mb-1 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition",
                   isActive
                     ? "border-ink-200 bg-[color:var(--color-iris-soft)]/60 font-medium text-ink-900"
                     : "border-transparent text-ink-700 hover:bg-[color:var(--color-iris-soft)]/30 hover:text-ink-900",
@@ -627,7 +627,7 @@ function ChatWorkspaceInner() {
                         if (e.key === "Enter") commitRename();
                         if (e.key === "Escape") cancelRename();
                       }}
-                      className="h-7 flex-1 px-1.5 text-[13px]"
+                      className="h-7 flex-1 px-1.5 text-sm"
                     />
                     <Button variant="ghost" size="icon-sm" onClick={commitRename} className="text-primary" aria-label="Save name"><Check className="h-3.5 w-3.5" /></Button>
                     <Button variant="ghost" size="icon-sm" onClick={cancelRename} aria-label="Cancel rename"><X className="h-3.5 w-3.5" /></Button>
@@ -641,7 +641,7 @@ function ChatWorkspaceInner() {
                     >
 
                       <div className="truncate">{t.title}</div>
-                      <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-ink-500">
+                      <div className="mt-0.5 flex items-center gap-1.5 text-2xs text-ink-500">
                         <span>{new Date(t.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
                         <span className="text-ink-300">·</span>
                         <span>{t.messages.length} turns</span>
@@ -661,7 +661,7 @@ function ChatWorkspaceInner() {
             );
           })}
           {filtered.length === 0 && (
-            <p className="px-3 py-6 text-center text-[12px] text-ink-400">
+            <p className="px-3 py-6 text-center text-xs text-ink-400">
               {query.trim() ? "No conversation matches that search." : "No conversations yet."}
             </p>
           )}
@@ -691,9 +691,9 @@ function ChatWorkspaceInner() {
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
-                <div className="truncate text-[13px] font-medium">{accountName}</div>
+                <div className="truncate text-sm font-medium">{accountName}</div>
               </div>
-              <div className="flex items-center gap-1.5 text-[10px]">
+              <div className="mt-0.5 flex items-center gap-1.5 text-2xs">
                 <span className="rounded-sm bg-[color:var(--color-iris)]/15 px-1 py-px font-medium uppercase text-[color:var(--color-iris)]">
                   {profile?.plan ?? "free"}
                 </span>
@@ -712,10 +712,10 @@ function ChatWorkspaceInner() {
 
         {/* Developer credit */}
         <div className="border-t border-ink-200 px-4 py-3 text-center">
-          <div className="text-[9.5px] font-semibold uppercase tracking-[0.2em] text-ink-400">
+          <div className="text-2xs font-semibold uppercase tracking-[0.2em] text-ink-400">
             Crafted with care
           </div>
-          <div className="mt-0.5 text-[12.5px] font-medium text-ink-700">
+          <div className="mt-1 text-xs font-medium text-ink-700">
             Developed by <span className="font-semibold text-[color:var(--color-iris)]">Sam</span>
           </div>
         </div>
@@ -728,7 +728,7 @@ function ChatWorkspaceInner() {
       <main className="relative flex h-full min-w-0 flex-1 flex-col">
 
         {/* Header */}
-        <header className="relative z-10 flex h-14 items-center gap-2 border-b border-ink-200 bg-white px-3 sm:gap-3 sm:px-6">
+        <header className="relative z-10 flex h-14 shrink-0 items-center gap-2 overflow-hidden border-b border-ink-200 bg-white px-3 sm:gap-3 sm:px-6">
 
 
           <Button
@@ -760,12 +760,12 @@ function ChatWorkspaceInner() {
             title="Nexura automatically picks the best-value model for each request"
           >
             <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[color:var(--color-iris)]" />
-            <span className="truncate text-[11.5px] font-semibold text-ink-900">Smart routing</span>
-            <span className="hidden text-[10px] text-ink-500 sm:inline">· auto</span>
+            <span className="truncate text-xs font-semibold text-ink-900">Smart routing</span>
+            <span className="hidden text-2xs text-ink-500 sm:inline">· auto</span>
           </div>
 
 
-          <div className="ml-auto flex shrink-0 items-center gap-1.5 text-[11px] text-ink-700 sm:gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-ink-700 sm:gap-2">
             <span className="hidden items-center gap-1 rounded-md border border-ink-200 bg-white/70 px-2 py-1 lg:flex">
               <Shield className="h-3 w-3 text-[color:var(--color-iris-cyan)]" />
               <span>End-to-end encrypted</span>
@@ -778,7 +778,7 @@ function ChatWorkspaceInner() {
               onClick={toggleWorkspace}
               title="Toggle the live workspace panel (preview, code, console)"
               className={cn(
-                "inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 text-[11px] font-medium transition",
+                "inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 text-xs font-medium transition",
                 previewOpen
                   ? "border-[color:var(--color-iris)]/45 bg-[color:var(--color-iris)]/10 text-ink-900"
                   : "border-ink-200 bg-white/70 text-ink-700 hover:border-[color:var(--color-iris)]/40 hover:text-ink-900",
@@ -788,7 +788,7 @@ function ChatWorkspaceInner() {
               <span className="hidden sm:inline">Workspace</span>
             </button>
             <span
-              className="inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-ink-200 bg-white/70 px-2.5 text-[11px] font-medium text-ink-700"
+              className="inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-ink-200 bg-white/70 px-2.5 text-xs font-medium text-ink-700"
               title="Credits included in your workspace plan"
             >
               <Coins className="h-3.5 w-3.5 text-[color:var(--color-iris)]" />
@@ -808,7 +808,7 @@ function ChatWorkspaceInner() {
           {!active || active.messages.length === 0 ? (
             <EmptyState onPick={(q) => setInput(q)} model={model} />
           ) : (
-            <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-10 sm:px-6">
+            <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8 sm:px-6 lg:py-10">
               {active?.messages.map((m) => (
                 <MessageBubble key={m.id} message={m} />
               ))}
@@ -818,7 +818,7 @@ function ChatWorkspaceInner() {
         </div>
 
         {/* Composer */}
-        <div className="relative border-t border-ink-200 bg-white">
+        <div className="relative shrink-0 border-t border-ink-200 bg-white">
 
 
           <div className="mx-auto max-w-3xl px-4 py-4 sm:px-6">
@@ -831,7 +831,7 @@ function ChatWorkspaceInner() {
                   onKeyDown={onKeyDown}
                   rows={1}
                   placeholder="Ask Nexura to build something…"
-                  className="max-h-52 w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-[14px] leading-relaxed text-ink-900 placeholder:text-ink-400 focus:outline-none"
+                  className="max-h-52 w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-base leading-relaxed text-ink-900 placeholder:text-ink-400 focus:outline-none"
                 />
                 <div className="flex items-center justify-between gap-2 px-1.5 pb-1 pt-1.5">
                   <div className="flex items-center gap-0.5">
@@ -848,7 +848,7 @@ function ChatWorkspaceInner() {
                           aria-pressed={mode === m}
                           title={`${ACTION_RULES[actionForMode(m)].label} · ${ACTION_RULES[actionForMode(m)].note}`}
                           className={cn(
-                            "rounded-md px-2 py-1 text-[11px] font-medium transition",
+                            "rounded-md px-2 py-1 text-xs font-medium transition",
                             mode === m
                               ? "bg-white text-ink-900 shadow-sm"
                               : "text-ink-500 hover:text-ink-900",
@@ -864,7 +864,7 @@ function ChatWorkspaceInner() {
                     <ComposerBtn label="Commands"><Command className="h-4 w-4" /></ComposerBtn>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="hidden text-[10px] text-ink-400 sm:inline">
+                    <span className="hidden text-2xs text-ink-400 sm:inline">
                       <kbd className="rounded border border-ink-200 bg-ink-100 px-1 py-0.5 font-mono">⏎</kbd> send
                     </span>
                     <SendButton
@@ -877,7 +877,7 @@ function ChatWorkspaceInner() {
               </div>
             </div>
 
-            <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[10.5px] text-ink-400">
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-2xs leading-relaxed text-ink-400">
               <span>
                 Smart routing · {ACTION_RULES[actionForMode(mode)].label} costs{" "}
                 <span className="font-medium text-ink-600">
@@ -1008,7 +1008,7 @@ const markdownComponents: Components = {
     );
   },
   th({ children }) {
-    return <th className="border-b border-ink-200/80 bg-[color:var(--color-iris)]/[0.06] px-3 py-2 text-left font-medium uppercase tracking-wider text-[11px] text-[color:var(--color-gold-soft)]">{children}</th>;
+    return <th className="border-b border-ink-200/80 bg-[color:var(--color-iris)]/[0.06] px-3 py-2 text-left font-medium uppercase tracking-wider text-xs text-[color:var(--color-gold-soft)]">{children}</th>;
   },
   td({ children }) {
     return <td className="border-b border-ink-200 px-3 py-2 align-top">{children}</td>;
@@ -1051,14 +1051,14 @@ function ArtifactCard({ project }: { project: ArtifactProject }) {
           <FolderTree className="h-3.5 w-3.5" />
         </span>
         <div className="min-w-0">
-          <div className="truncate text-[12.5px] font-medium text-ink-900">{project.title}</div>
-          <div className="font-mono text-[10px] text-ink-500">
+          <div className="truncate text-xs font-medium text-ink-900">{project.title}</div>
+          <div className="font-mono text-2xs text-ink-500">
             {paths.length} file{paths.length > 1 ? "s" : ""} · entry {project.entry}
           </div>
         </div>
         <button
           onClick={() => openProject(project)}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-white transition hover:brightness-110"
+          className="ml-auto inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-white transition hover:brightness-110"
           style={{ background: "var(--iris-gradient)" }}
         >
           <PlayCircle className="h-3.5 w-3.5" />
@@ -1067,7 +1067,7 @@ function ArtifactCard({ project }: { project: ArtifactProject }) {
       </div>
       <ul className="max-h-40 overflow-auto px-3 py-2">
         {paths.map((p) => (
-          <li key={p} className="truncate font-mono text-[11px] leading-6 text-ink-600">
+          <li key={p} className="truncate font-mono text-xs leading-6 text-ink-600">
             {p}
           </li>
         ))}
@@ -1102,7 +1102,7 @@ function CodeBlock({ language, value: rawValue }: { language: string; value: str
             <span className="h-2 w-2 rounded-full bg-[color:var(--color-iris)]/50" />
             <span className="h-2 w-2 rounded-full bg-[color:var(--color-iris-cyan)]/60" />
           </span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-500">{language}</span>
+          <span className="font-mono text-2xs uppercase tracking-[0.2em] text-ink-500">{language}</span>
         </div>
         <div className="flex items-center gap-1">
           {previewable && (
@@ -1110,7 +1110,7 @@ function CodeBlock({ language, value: rawValue }: { language: string; value: str
               variant="ghost"
               size="xs"
               onClick={() => openPreview(value, language)}
-              className="text-[10.5px] text-primary hover:bg-primary/10 hover:text-primary"
+              className="text-2xs text-primary hover:bg-primary/10 hover:text-primary"
               aria-label="Open in live preview"
               title="Open in live workspace"
             >
@@ -1122,7 +1122,7 @@ function CodeBlock({ language, value: rawValue }: { language: string; value: str
             variant="ghost"
             size="xs"
             onClick={onCopy}
-            className="text-[10.5px]"
+            className="text-2xs"
             aria-label="Copy code"
           >
             {copied ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
@@ -1172,7 +1172,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         )}
       </div>
       <div className={cn("min-w-0 max-w-[92%] sm:max-w-[85%]", isUser ? "text-right" : "text-left")}>
-        <div className={cn("mb-1.5 flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-ink-500", isUser && "justify-end")}>
+        <div className={cn("mb-1.5 flex items-center gap-2 text-2xs uppercase tracking-[0.18em] text-ink-500", isUser && "justify-end")}>
           <span>{isUser ? "You" : "Nexura"}</span>
           {!isUser && message.model && (
             <>
@@ -1187,7 +1187,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         </div>
         <div
           className={cn(
-            "relative rounded-2xl px-4 py-3 text-[14px] leading-relaxed",
+            "relative rounded-2xl px-4 py-3 text-base leading-relaxed",
             isUser
               ? "inline-block text-ink-900"
               : "border border-ink-200 text-ink-900",
@@ -1217,7 +1217,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 
         </div>
         {!isUser && (message.tokens || message.latencyMs || message.credits != null) && (
-          <div className="mt-1.5 flex items-center gap-2 text-[10px] font-mono text-ink-500">
+          <div className="mt-1.5 flex items-center gap-2 font-mono text-2xs text-ink-500">
             {message.latencyMs && <span>{(message.latencyMs / 1000).toFixed(2)}s</span>}
             {message.tokens && <><span className="text-ink-200">·</span><span>{message.tokens} tokens</span></>}
             {message.credits != null && (
@@ -1246,7 +1246,7 @@ function TypingIndicator({ model }: { model: AIModel }) {
         </div>
       </div>
       <div className="min-w-0">
-        <div className="mb-1.5 text-[10px] uppercase tracking-[0.18em] text-ink-500">
+        <div className="mb-1.5 text-2xs uppercase tracking-[0.18em] text-ink-500">
           Nexura · <span className="normal-case tracking-normal font-mono text-[color:var(--color-iris-cyan)]/90">{model.name}</span>
         </div>
         <div className="inline-flex items-center gap-2 rounded-2xl border border-ink-200 px-4 py-3" style={{
@@ -1256,7 +1256,7 @@ function TypingIndicator({ model }: { model: AIModel }) {
           <div className="relative h-4 w-16 overflow-hidden rounded-full bg-ink-100">
             <div className="absolute inset-0 shimmer-gold" />
           </div>
-          <span className="text-[11px] text-ink-700">reasoning…</span>
+          <span className="text-xs text-ink-700">reasoning…</span>
 
         </div>
       </div>
@@ -1294,10 +1294,10 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
 
   return (
     <div className="mx-auto flex h-full w-full max-w-xl flex-col items-center justify-center px-6 py-10 text-center">
-      <h1 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink-900">
+      <h1 className="font-display text-lg font-bold leading-tight tracking-tight text-ink-900">
         What can I build for you?
       </h1>
-      <p className="mx-auto mt-3 max-w-sm text-[13.5px] leading-relaxed text-ink-500">
+      <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-500">
         Describe your project or choose a quick start below to begin building with Nexura AI.
       </p>
 
@@ -1313,13 +1313,13 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
             }}
             className="cursor-pointer p-3 text-left transition hover:border-primary hover:bg-secondary"
           >
-            <span className="block text-[12.5px] font-semibold text-foreground">{s.title}</span>
-            <span className="mt-0.5 block text-[11.5px] leading-snug text-muted-foreground">{s.body}</span>
+            <span className="block text-sm font-semibold text-foreground">{s.title}</span>
+            <span className="mt-1 block text-xs leading-snug text-muted-foreground">{s.body}</span>
           </Card>
         ))}
       </div>
 
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[10.5px] text-ink-500">
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-2xs text-ink-500">
         <span className="flex items-center gap-1.5"><Shield className="h-3 w-3 text-[color:var(--color-iris)]" />E2E encrypted</span>
         <span className="text-ink-300">·</span>
         <span className="flex items-center gap-1.5"><Zap className="h-3 w-3 text-[color:var(--color-iris)]" />Sub-second routing</span>

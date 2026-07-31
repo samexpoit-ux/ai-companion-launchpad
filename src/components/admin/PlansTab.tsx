@@ -41,7 +41,7 @@ export function PlansTab() {
       {rows.map((plan) => (
         <div key={plan.id} className="space-y-3 rounded-2xl border border-ink-200 bg-white/80 p-4">
           <div className="flex items-center justify-between">
-            <span className="rounded-full border border-ink-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-500">
+            <span className="rounded-full border border-ink-200 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-ink-500">
               {plan.slug}
             </span>
             <label className="flex items-center gap-2 text-xs text-ink-600">

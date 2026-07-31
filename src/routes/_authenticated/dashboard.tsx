@@ -198,7 +198,7 @@ function DashboardPage() {
           >
             <PanelLeft className="h-4 w-4" />
           </button>
-          <span className="truncate font-display text-[13.5px] font-semibold text-ink-900">
+          <span className="truncate font-display text-sm font-semibold text-ink-900">
             {workspaceName}
           </span>
         </div>
@@ -219,8 +219,8 @@ function DashboardPage() {
         <section className="relative isolate flex min-h-[420px] flex-col items-center justify-center overflow-hidden px-4 py-12 sm:min-h-[520px] sm:px-5 sm:py-16 lg:rounded-bl-[28px]">
           <div className="aurora-canvas absolute inset-0 -z-10" />
 
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/50 bg-white/70 px-3 py-1.5 text-[12.5px] font-medium text-ink-700 shadow-ds-sm backdrop-blur">
-            <span className="rounded-full bg-[color:var(--color-iris)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[color:var(--color-iris-fg)]">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/50 bg-white/70 px-3 py-1.5 text-xs font-medium text-ink-700 shadow-ds-sm backdrop-blur">
+            <span className="rounded-full bg-[color:var(--color-iris)] px-2 py-0.5 text-2xs font-bold uppercase tracking-wide text-[color:var(--color-iris-fg)]">
               New
             </span>
             Smart routing picks the model — you just build
@@ -252,7 +252,7 @@ function DashboardPage() {
                   }}
                   rows={1}
                   placeholder="Ask Nexura to build an app that…"
-                  className="w-full resize-none bg-transparent px-1.5 py-1 text-[15px] text-ink-900 outline-none placeholder:text-ink-400"
+                  className="w-full resize-none bg-transparent px-1.5 py-1 text-base text-ink-900 outline-none placeholder:text-ink-400"
                 />
 
                 <div className="mt-2 flex items-center gap-1.5">
@@ -276,10 +276,10 @@ function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => setModeOpen((open) => !open)}
-                        className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-[12.5px] font-medium text-ink-600 transition hover:bg-ink-200/70"
+                        className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-ink-600 transition hover:bg-ink-200/70"
                       >
                         {mode}
-                        <span className="text-[10.5px] text-ink-400">· {formatCredits(cost)}</span>
+                        <span className="text-2xs text-ink-400">· {formatCredits(cost)}</span>
                         <ChevronDown className="h-3.5 w-3.5" />
                       </button>
                       {modeOpen && (
@@ -293,7 +293,7 @@ function DashboardPage() {
                                 setModeOpen(false);
                               }}
                               className={cn(
-                                "block w-full rounded-lg px-2 py-1.5 text-left text-[12.5px] transition hover:bg-ink-200/60",
+                                "block w-full rounded-lg px-2 py-1.5 text-left text-xs transition hover:bg-ink-200/60",
                                 option === mode ? "font-semibold text-ink-900" : "text-ink-600",
                               )}
                             >
@@ -331,7 +331,7 @@ function DashboardPage() {
                 key={chip.label}
                 type="button"
                 onClick={() => setPrompt(`Build a ${chip.label.toLowerCase()} for `)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/70 px-3 py-1.5 text-[12.5px] font-medium text-ink-700 shadow-ds-xs backdrop-blur transition hover:bg-white"
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/70 px-3 py-1.5 text-xs font-medium text-ink-700 shadow-ds-xs backdrop-blur transition hover:bg-white"
               >
                 <chip.icon className="h-3.5 w-3.5 text-[color:var(--color-iris)]" />
                 {chip.label}
@@ -345,8 +345,8 @@ function DashboardPage() {
           <div className="rounded-2xl border border-ink-200 bg-ink-50 p-4 shadow-ds-xs sm:p-5">
             <div className="flex flex-wrap items-center gap-4">
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Plan</p>
-                <p className="font-display text-[16px] font-bold leading-tight text-ink-900">
+                <p className="text-2xs font-bold uppercase tracking-wider text-ink-400">Plan</p>
+                <p className="font-display text-lg font-bold leading-tight text-ink-900">
                   {planById(credits.plan).name}
                 </p>
               </div>
@@ -362,13 +362,13 @@ function DashboardPage() {
               </div>
               <Link
                 to="/account"
-                className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border border-ink-200 bg-ink-50 px-3.5 py-2 text-[12.5px] font-semibold text-ink-800 transition hover:bg-ink-100"
+                className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border border-ink-200 bg-ink-50 px-3.5 py-2 text-xs font-semibold text-ink-800 transition hover:bg-ink-100"
               >
                 Plans &amp; usage
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
-            <p className="mt-3 border-t border-ink-200 pt-3 text-[12px] text-ink-500">
+            <p className="mt-3 border-t border-ink-200 pt-3 text-xs text-ink-500">
               {mode} costs {formatCredits(cost)} credits — smart routing always picks the cheapest
               capable model for you.
             </p>
@@ -387,7 +387,7 @@ function DashboardPage() {
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Search"
-                  className="w-32 min-w-0 bg-transparent text-[12.5px] text-ink-800 outline-none placeholder:text-ink-400"
+                  className="w-32 min-w-0 bg-transparent text-xs text-ink-800 outline-none placeholder:text-ink-400"
                 />
               </div>
               {TABS.map((option) => (
@@ -396,7 +396,7 @@ function DashboardPage() {
                   type="button"
                   onClick={() => setTab(option)}
                   className={cn(
-                    "rounded-full px-3 py-1.5 text-[12.5px] transition",
+                    "rounded-full px-3 py-1.5 text-xs transition",
                     option === tab
                       ? "border border-ink-200 bg-ink-50 font-semibold text-ink-900 shadow-ds-xs"
                       : "text-ink-500 hover:bg-ink-200/60 hover:text-ink-800",
@@ -409,10 +409,10 @@ function DashboardPage() {
 
             {visible.length === 0 ? (
               <div className="mt-8 grid place-items-center rounded-2xl border border-dashed border-ink-200 px-6 py-14 text-center">
-                <p className="font-display text-[15px] font-semibold text-ink-900">
+                <p className="font-display text-base font-semibold text-ink-900">
                   {tab === "Templates" ? "Templates are coming soon" : "No projects yet"}
                 </p>
-                <p className="mt-1 max-w-sm text-[13px] text-ink-500">
+                <p className="mt-1 max-w-sm text-sm text-ink-500">
                   Describe what you want above and Nexura will generate the files, run a live
                   preview and fix runtime errors for you.
                 </p>
@@ -428,10 +428,10 @@ function DashboardPage() {
                     className="group rounded-2xl border border-ink-200 bg-ink-50 p-4 shadow-ds-xs transition hover:-translate-y-0.5 hover:shadow-ds-md"
                   >
                     <div className="h-24 rounded-xl bg-gradient-to-br from-[color:var(--color-iris-soft)] via-ink-100 to-white" />
-                    <p className="mt-3 truncate text-[13.5px] font-semibold text-ink-900">
+                    <p className="mt-3 truncate text-sm font-semibold text-ink-900">
                       {project.title}
                     </p>
-                    <p className="mt-1 flex items-center gap-1.5 text-[11.5px] text-ink-400">
+                    <p className="mt-1 flex items-center gap-1.5 text-xs text-ink-400">
                       <Clock className="h-3 w-3" />
                       Edited {relativeTime(project.updatedAt)}
                     </p>

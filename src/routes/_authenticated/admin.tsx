@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
+import { PageBar, PageHeader, PageShell } from "@/components/page-shell";
+
 import { OverviewTab } from "@/components/admin/OverviewTab";
 import { UsersTab } from "@/components/admin/UsersTab";
 import { PaymentsTab } from "@/components/admin/PaymentsTab";
@@ -47,49 +49,51 @@ function AdminPage() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-2xl px-5 py-16">
+      <PageShell width="lg">
         <p className="text-sm text-ink-500">Checking access…</p>
-      </main>
+      </PageShell>
     );
   }
 
   if (!isAdmin) {
     return (
-      <main className="mx-auto max-w-lg px-5 py-16 text-center">
-        <ShieldAlert className="mx-auto h-8 w-8 text-ink-400" aria-hidden />
-        <h1 className="mt-3 text-xl font-semibold text-ink-900">Admins only</h1>
-        <p className="mt-1 text-sm text-ink-500">
-          This control panel is limited to accounts with the admin role.
-        </p>
-        <Link
-          to="/dashboard"
-          className="mt-5 inline-flex items-center gap-1.5 text-sm text-[color:var(--color-iris)] hover:underline"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden /> Back to dashboard
-        </Link>
-      </main>
+      <PageShell width="md">
+        <div className="mx-auto max-w-md py-10 text-center">
+          <ShieldAlert className="mx-auto h-8 w-8 text-ink-400" aria-hidden />
+          <h1 className="mt-4 font-display text-xl font-semibold tracking-tight text-ink-900">
+            Admins only
+          </h1>
+          <p className="mt-1.5 text-sm leading-relaxed text-ink-500">
+            This control panel is limited to accounts with the admin role.
+          </p>
+          <Link
+            to="/dashboard"
+            className="mt-6 inline-flex items-center gap-1.5 text-sm text-[color:var(--color-iris)] hover:underline"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden /> Back to dashboard
+          </Link>
+        </div>
+      </PageShell>
     );
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-      <div className="flex flex-wrap items-center gap-3">
+    <PageShell width="xl">
+      <PageBar>
         <Link
           to="/dashboard"
           className="inline-flex items-center gap-1.5 text-sm text-ink-500 transition hover:text-ink-900"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden /> Dashboard
         </Link>
-      </div>
+      </PageBar>
 
-      <h1 className="mt-3 text-2xl font-semibold tracking-tight text-ink-900">
-        Admin control panel
-      </h1>
-      <p className="mt-1 text-sm text-ink-500">
-        Monitor growth, manage users and credit limits, track sales, and tune the platform.
-      </p>
+      <PageHeader
+        title="Admin control panel"
+        description="Monitor growth, manage users and credit limits, track sales, and tune the platform."
+      />
 
-      <div role="tablist" aria-label="Admin sections" className="mt-6 flex flex-wrap gap-1.5">
+      <div role="tablist" aria-label="Admin sections" className="mt-6 flex flex-wrap gap-2">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -99,10 +103,10 @@ function AdminPage() {
             aria-selected={tab === t.id}
             aria-controls={`admin-panel-${t.id}`}
             onClick={() => setTab(t.id)}
-            className={`rounded-full border px-3.5 py-1.5 text-[13px] transition ${
+            className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
               tab === t.id
                 ? "border-[color:var(--color-iris)] bg-[color:var(--color-iris)]/10 font-medium text-ink-900"
-                : "border-ink-200 text-ink-600 hover:bg-ink-50"
+                : "border-ink-200 bg-white text-ink-600 hover:bg-ink-100"
             }`}
           >
             {t.label}
@@ -114,7 +118,7 @@ function AdminPage() {
         role="tabpanel"
         id={`admin-panel-${tab}`}
         aria-labelledby={`admin-tab-${tab}`}
-        className="mt-6"
+        className="mt-6 space-y-6"
       >
         {tab === "overview" && <OverviewTab />}
         {tab === "users" && <UsersTab />}
@@ -123,6 +127,7 @@ function AdminPage() {
         {tab === "settings" && <SettingsTab />}
         {tab === "audit" && <AuditTab />}
       </section>
-    </main>
+    </PageShell>
   );
 }
+

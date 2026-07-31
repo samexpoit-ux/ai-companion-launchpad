@@ -83,7 +83,7 @@ export function ThemePicker() {
           >
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <div className="text-[10px] uppercase tracking-[0.22em] text-ink-500">Theme Studio</div>
+                <div className="text-2xs uppercase tracking-[0.22em] text-ink-500">Theme Studio</div>
                 <div className="mt-0.5 text-sm font-semibold iris-text">Iridescent Chrome</div>
               </div>
               <button
@@ -107,7 +107,7 @@ export function ThemePicker() {
             <Slider label="Saturation"   min={4} max={22}  value={Math.round(theme.chroma * 100)} onChange={(v) => update({ chroma: v / 100 })} suffix="%" />
 
             <div className="mt-4">
-              <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-ink-500">Presets</div>
+              <div className="mb-2 text-2xs uppercase tracking-[0.22em] text-ink-500">Presets</div>
               <div className="grid grid-cols-3 gap-2">
                 {PRESETS.map((p) => (
                   <button
@@ -128,7 +128,7 @@ export function ThemePicker() {
                           oklch(0.72 ${p.theme.chroma + 0.04} ${p.theme.hWarm}))`,
                       }}
                     />
-                    <span className="mt-1.5 block truncate text-[10px] text-ink-500 group-hover:text-ink-900">{p.name}</span>
+                    <span className="mt-1.5 block truncate text-2xs text-ink-500 group-hover:text-ink-900">{p.name}</span>
                   </button>
                 ))}
               </div>
@@ -136,7 +136,7 @@ export function ThemePicker() {
 
             <button
               onClick={reset}
-              className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-ink-200 bg-white/60 px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-ink-600 transition hover:border-[color:var(--color-iris)]/40 hover:text-ink-900"
+              className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-ink-200 bg-white/60 px-3 py-2 text-xs font-medium uppercase tracking-wider text-ink-600 transition hover:border-[color:var(--color-iris)]/40 hover:text-ink-900"
             >
               <RotateCcw className="h-3 w-3" /> Reset to Vapor Chrome
             </button>
@@ -152,7 +152,7 @@ function Slider({
 }: { label: string; min: number; max: number; value: number; onChange: (v: number) => void; suffix?: string }) {
   return (
     <div className="mb-3">
-      <div className="mb-1 flex items-center justify-between text-[11px]">
+      <div className="mb-1 flex items-center justify-between text-xs">
         <span className="text-ink-500">{label}</span>
         <span className="font-mono text-ink-600">{value}{suffix}</span>
       </div>

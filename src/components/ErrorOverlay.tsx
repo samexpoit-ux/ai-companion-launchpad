@@ -55,7 +55,7 @@ export default function ErrorOverlay({ onReload }: { onReload: () => void }) {
         <div className="flex items-center gap-2 border-b border-border bg-destructive/8 px-4 py-2.5">
           <AlertTriangle className="h-4 w-4 text-destructive" />
           <span className="ds-label text-destructive">{title}</span>
-          <span className="ds-muted text-[11px]">{err.code}</span>
+          <span className="ds-muted text-xs">{err.code}</span>
           <Button
             variant="ghost"
             size="icon-sm"
