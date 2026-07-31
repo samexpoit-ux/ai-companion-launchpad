@@ -32,11 +32,11 @@ export const PLANS: Plan[] = [
     name: "Free",
     price: "$0",
     cadence: "forever",
-    credits: 40,
+    credits: 5,
     ceiling: "cheap",
     tagline: "Chat, plan and small builds on the cheap tier.",
     perks: [
-      "40 credits / month",
+      "5 free credits / month",
       "Chat + plan modes",
       "Light coding on the cheap tier",
       "Live preview, code view & console",
