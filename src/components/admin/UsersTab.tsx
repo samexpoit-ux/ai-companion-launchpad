@@ -103,7 +103,7 @@ export function UsersTab() {
           <table className="w-full min-w-[820px] text-sm">
             <caption className="sr-only">Platform users with plan, credit and role controls</caption>
             <thead>
-              <tr className="border-b border-ink-200 text-left text-[11px] uppercase tracking-wider text-ink-500">
+              <tr className="border-b border-ink-200 text-left text-xs uppercase tracking-wider text-ink-500">
                 <th scope="col" className="px-4 py-2">User</th>
                 <th scope="col" className="px-4 py-2">Plan</th>
                 <th scope="col" className="px-4 py-2">Credit limit</th>

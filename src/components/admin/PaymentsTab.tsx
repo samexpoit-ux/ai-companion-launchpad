@@ -187,7 +187,7 @@ export function PaymentsTab() {
           <table className="w-full min-w-[760px] text-sm">
             <caption className="sr-only">Payments and their status</caption>
             <thead>
-              <tr className="border-b border-ink-200 text-left text-[11px] uppercase tracking-wider text-ink-500">
+              <tr className="border-b border-ink-200 text-left text-xs uppercase tracking-wider text-ink-500">
                 <th scope="col" className="px-4 py-2">Date</th>
                 <th scope="col" className="px-4 py-2">User</th>
                 <th scope="col" className="px-4 py-2">Plan</th>
@@ -208,7 +208,7 @@ export function PaymentsTab() {
                     {formatMoney(row.amountCents, row.currency)}
                   </td>
                   <td className="px-4 py-2">
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${statusClass(row.status)}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-2xs font-semibold uppercase ${statusClass(row.status)}`}>
                       {row.status}
                     </span>
                   </td>

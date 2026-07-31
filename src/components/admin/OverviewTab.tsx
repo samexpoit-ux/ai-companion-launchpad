@@ -23,7 +23,7 @@ function Stat({
 }) {
   return (
     <div className="rounded-2xl border border-ink-200 bg-white/80 p-4">
-      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-ink-500">
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-ink-500">
         <Icon className="h-3.5 w-3.5 text-[color:var(--color-iris)]" aria-hidden />
         {label}
       </div>
