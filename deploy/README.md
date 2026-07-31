@@ -6,9 +6,9 @@ Everything runs on your own VPS: the app plus self-hosted Supabase
 ## 0) DNS
 | Type | Name | Value |
 |---|---|---|
-|  A | @ | 169.58.105.190 |
-|  A | www | 169.58.105.190 |
-|  A | db | 169.58.105.190 |
+| A | @ | 169.58.105.190 |
+| A | www | 169.58.105.190 |
+| A | supabase | 169.58.105.190 |
 
 `supabase.nexuraai.dev` serves the self-hosted Supabase API + Studio.
 
