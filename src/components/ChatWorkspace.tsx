@@ -783,6 +783,8 @@ function ChatWorkspaceInner() {
             </span>
             <button
               onClick={toggleWorkspace}
+              data-testid="workspace-toggle"
+              aria-label="Toggle live workspace"
               title="Toggle the live workspace panel (preview, code, console)"
               className={cn(
                 "inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 text-xs font-medium transition",

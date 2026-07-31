@@ -103,20 +103,20 @@ export function PreviewPanel() {
 
 
   return (
-    <aside className="relative flex h-full min-w-0 flex-col border-l border-ink-200 bg-ink-100">
+    <aside data-testid="live-workspace" className="relative flex h-full min-w-0 flex-col border-l border-ink-200 bg-ink-100">
       {/* Header — Lovable-style single row: segmented tabs left, viewport + actions right */}
       <div className="flex h-12 shrink-0 items-center gap-2 overflow-hidden border-b border-ink-200 bg-white px-2 sm:px-3">
-        <div className="flex min-w-0 items-center gap-1 rounded-full border border-ink-200 bg-ink-100 p-0.5">
+        <div className="flex min-w-0 shrink items-center gap-0.5 rounded-full border border-ink-200 bg-ink-100 p-0.5 sm:gap-1">
           <TabBtn active={tab === "preview"} onClick={() => setTab("preview")} icon={Eye} label="Preview" />
           <TabBtn active={tab === "code"} onClick={() => setTab("code")} icon={Code2} label="Code" />
           <TabBtn active={tab === "console"} onClick={() => setTab("console")} icon={Terminal} label="Console" />
         </div>
 
-        <span className="hidden min-w-0 shrink truncate rounded-full border border-ink-200 bg-ink-100 px-2 py-1 font-mono text-2xs text-ink-500 lg:inline">
+        <span className="pointer-events-none hidden min-w-0 shrink truncate rounded-full border border-ink-200 bg-ink-100 px-2 py-1 font-mono text-2xs text-ink-500 lg:inline">
           {payload.files ? `${Object.keys(payload.files).length} files` : payload.lang}
         </span>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1">
+        <div className="ml-auto flex min-w-0 shrink-0 items-center gap-0.5 sm:gap-1">
           {tab === "preview" && (
             <div className="hidden items-center gap-0.5 rounded-full border border-ink-200 bg-ink-100 p-0.5 sm:flex">
               <DeviceBtn active={device === "desktop"} onClick={() => setDevice("desktop")} icon={Monitor} label="Desktop" />
@@ -221,7 +221,7 @@ export function PreviewPanel() {
 
       {/* Canvas — inset rounded stage, like Lovable's right-hand preview surface */}
       <div className="relative min-h-0 flex-1 p-2 sm:p-3">
-        <div className="relative h-full w-full overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_24px_60px_-38px_rgba(16,24,40,0.35)]">
+        <div data-testid="workspace-stage" className="relative h-full w-full overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_24px_60px_-38px_rgba(16,24,40,0.35)]">
         <Suspense fallback={<LoadingSkeleton />}>
           {tab === "preview" ? (
             armed ? (
@@ -466,7 +466,7 @@ function DeviceBtn({
 
 function EmptyWorkspace({ onClose, onStart }: { onClose: () => void; onStart: () => void }) {
   return (
-    <aside className="relative flex h-full min-w-0 flex-col border-l border-ink-200 bg-ink-100">
+    <aside data-testid="live-workspace" className="relative flex h-full min-w-0 flex-col border-l border-ink-200 bg-ink-100">
       <div className="flex h-12 shrink-0 items-center gap-2 overflow-hidden border-b border-ink-200 bg-white px-2 sm:px-3">
         <span className="shrink-0 text-2xs font-semibold uppercase tracking-[0.18em] text-ink-400">Live Workspace</span>
         <span className="rounded-md border border-ink-200 bg-ink-100 px-1.5 py-0.5 font-mono text-2xs text-ink-500">idle</span>
