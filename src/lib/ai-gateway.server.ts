@@ -37,62 +37,44 @@ export function openRouterConfig(): OpenRouterConfig | null {
     baseURL: "https://openrouter.ai/api/v1",
     apiKey,
     extraHeaders: {
-      "HTTP-Referer": "https://ai.nexus-x.cloud",
+      "HTTP-Referer": "https://nexuraai.dev",
       "X-Title": "Nexura AI",
     },
   };
 }
 
 /* ------------------------------------------------------------------ */
-/* Model catalogue                                                     */
+/* Model catalogue — ids come from model-tiers.ts                       */
 /* ------------------------------------------------------------------ */
-
-const CLAUDE_SONNET_37 = "anthropic/claude-3.7-sonnet";
-const CLAUDE_SONNET_35 = "anthropic/claude-3.5-sonnet";
-const CLAUDE_HAIKU_35 = "anthropic/claude-3.5-haiku";
-
-const FREE_CODE = "cohere/north-mini-code:free";
-const FREE_SMART = "nvidia/nemotron-3-super-120b-a12b:free";
-const FREE_FAST = "nvidia/nemotron-nano-9b-v2:free";
-const FREE_OSS = "openai/gpt-oss-20b:free";
 
 /** Friendly ids kept for backwards compatibility with stored threads. */
 export const MODEL_ROUTES: Record<string, { upstream: string; task: TaskKind }> = {
-  "nx-auto": { upstream: CLAUDE_HAIKU_35, task: "chat" },
-  "nx-builder": { upstream: CLAUDE_SONNET_37, task: "code" },
-  "nx-reasoner": { upstream: CLAUDE_SONNET_37, task: "reason" },
-  "nx-flash": { upstream: CLAUDE_HAIKU_35, task: "fast" },
-  "nx-vision": { upstream: CLAUDE_SONNET_35, task: "chat" },
+  "nx-auto": { upstream: CHEAP_CHAT, task: "chat" },
+  "nx-builder": { upstream: CODING_PRIMARY, task: "code" },
+  "nx-reasoner": { upstream: CODING_PRIMARY, task: "reason" },
+  "nx-flash": { upstream: CHEAP_CHAT, task: "fast" },
+  "nx-vision": { upstream: CODING_SECONDARY, task: "chat" },
 };
 
-/**
- * Cheap tier first, expensive tier only for heavy work.
- * Each chain: [primary, ...fallbacks].
- */
+/** Cheap tier first, expensive tier only for heavy work. */
 const TASK_MODELS: Record<TaskKind, string[]> = {
-  // Heavy engineering work — quality matters most.
-  code: [CLAUDE_SONNET_37, CLAUDE_SONNET_35, CLAUDE_HAIKU_35, FREE_CODE, FREE_OSS],
-  fix: [CLAUDE_SONNET_37, CLAUDE_SONNET_35, CLAUDE_HAIKU_35, FREE_CODE, FREE_OSS],
-  // Planning / analysis — Sonnet 3.7 but happy to fall back cheap.
-  reason: [CLAUDE_SONNET_37, CLAUDE_HAIKU_35, FREE_SMART, FREE_OSS],
-  // Everyday chat — cheap by default.
-  chat: [CLAUDE_HAIKU_35, FREE_SMART, FREE_OSS],
-  // One-liners, greetings, tiny questions — cheapest possible.
-  fast: [FREE_FAST, CLAUDE_HAIKU_35, FREE_OSS],
+  code: [...TIER_CHAINS.code],
+  fix: [...TIER_CHAINS.fix],
+  reason: [...TIER_CHAINS.reason],
+  chat: [...TIER_CHAINS.chat],
+  fast: [...TIER_CHAINS.fast],
 };
-
-/** Light-weight code path: small code question does not need Sonnet. */
-const LIGHT_CODE_CHAIN = [CLAUDE_HAIKU_35, CLAUDE_SONNET_37, FREE_CODE, FREE_OSS];
 
 const FRIENDLY_BY_UPSTREAM: Record<string, string> = {
-  [CLAUDE_SONNET_37]: "nx-builder",
-  [CLAUDE_SONNET_35]: "nx-vision",
-  [CLAUDE_HAIKU_35]: "nx-flash",
+  [CODING_PRIMARY]: "nx-builder",
+  [CODING_SECONDARY]: "nx-vision",
+  [CHEAP_CHAT]: "nx-flash",
   [FREE_CODE]: "nx-builder",
   [FREE_SMART]: "nx-auto",
   [FREE_FAST]: "nx-flash",
   [FREE_OSS]: "nx-auto",
 };
+
 
 /* ------------------------------------------------------------------ */
 /* Task + complexity detection                                         */
