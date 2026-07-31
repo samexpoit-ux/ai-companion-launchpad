@@ -4,7 +4,13 @@ set -euo pipefail
 APP_DIR="/var/www/nexuraai"
 cd "$APP_DIR"
 git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
-git pull --ff-only
+# generated files (routeTree.gen.ts, lockfile, etc.) are rewritten by the build
+# on the server, so discard local changes before pulling.
+BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)"
+git fetch origin "$BRANCH"
+git reset --hard "origin/$BRANCH"
+git clean -fd -e .env -e .env.* -e node_modules -e .output -e dist
+
 set -a; . "$APP_DIR/.env"; set +a
 export NITRO_PRESET=node-server
 bun install
