@@ -140,6 +140,7 @@ function ChatWorkspaceInner() {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
   // Load conversations from the database (single source of truth).
@@ -210,6 +211,9 @@ function ChatWorkspaceInner() {
   }, [hydrated, requestedThreadId]);
 
 
+
+  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+  useFocusTrap(sidebarRef, isMobile && sidebarOpen, closeSidebar);
 
   const active = useMemo(
     () => threads.find((t) => t.id === activeId) ?? threads[0],
@@ -435,6 +439,9 @@ function ChatWorkspaceInner() {
     handoffDone.current = true;
     const pending = takePendingPrompt();
     if (!pending) return;
+    if (pending.mode === "Build" || pending.mode === "Chat" || pending.mode === "Plan") {
+      setMode(pending.mode);
+    }
 
     const current = threads.find((t) => t.id === activeId);
     if (current && current.messages.length === 0) {
@@ -442,16 +449,20 @@ function ChatWorkspaceInner() {
       void sendText(pending.prompt, current);
       return;
     }
-    const fresh: ChatThread = {
-      id: uid(),
-      title: pending.prompt.slice(0, 48),
-      messages: [],
-      updatedAt: Date.now(),
-    };
-    setThreads((prev) => [fresh, ...prev]);
-    setActiveId(fresh.id);
-    setInput("");
-    void sendText(pending.prompt, fresh);
+    void (async () => {
+      const created = await createDbThread({
+        title: pending.prompt.slice(0, 48),
+        mode: pending.mode.toLowerCase(),
+      });
+      const fresh: ChatThread = created
+        ? { id: created.id, title: created.title, messages: [], updatedAt: Date.now() }
+        : createFreshThread();
+      setThreads((prev) => [fresh, ...prev]);
+      setActiveId(fresh.id);
+      setLoadedThreads((prev) => new Set(prev).add(fresh.id));
+      setInput("");
+      await sendText(pending.prompt, fresh);
+    })();
   }, [hydrated, threads, activeId, sendText]);
 
 
@@ -480,6 +491,13 @@ function ChatWorkspaceInner() {
 
       {/* Sidebar */}
       <aside
+        ref={sidebarRef}
+        id="workspace-sidebar"
+        role={isMobile ? "dialog" : undefined}
+        aria-modal={isMobile && sidebarOpen ? true : undefined}
+        aria-label="Chat history and account"
+        aria-hidden={!sidebarOpen && isMobile ? true : undefined}
+        tabIndex={-1}
         className={cn(
           "flex h-full w-[86vw] max-w-[300px] shrink-0 flex-col border-r border-ink-200 bg-ink-100 transition-transform duration-300 md:w-64 md:max-w-none",
           "fixed inset-y-0 left-0 z-40 md:relative md:translate-x-0",
@@ -503,17 +521,17 @@ function ChatWorkspaceInner() {
           </div>
           <div className="min-w-0">
             <div className="font-display text-[15px] font-bold leading-tight tracking-tight text-ink-900">
-              Nexus <span className="text-[color:var(--color-iris)]">X AI</span>
+              Nexura <span className="text-[color:var(--color-iris)]">AI</span>
             </div>
             <div className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-ink-500">
-              Free Intelligence Network
+              Build · Preview · Ship
             </div>
           </div>
         </div>
 
         {/* New chat + search */}
         <div className="flex flex-col gap-3 border-b border-ink-200 p-4">
-          <Button onClick={newChat} className="w-full rounded-xl font-display font-semibold active:scale-[0.99]">
+          <Button onClick={() => void newChat()} className="w-full rounded-xl font-display font-semibold active:scale-[0.99]">
             <Plus className="h-4 w-4" strokeWidth={2.5} />
             New Workspace
           </Button>
