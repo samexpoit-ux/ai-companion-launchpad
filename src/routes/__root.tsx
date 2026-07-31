@@ -87,6 +87,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Prompt, preview, edit code and ship — Nexura AI builds web projects for you." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "theme-color", content: "#0B0F1A" },
+      { name: "apple-mobile-web-app-title", content: "Nexura AI" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
