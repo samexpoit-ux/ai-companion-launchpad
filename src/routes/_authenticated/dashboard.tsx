@@ -200,7 +200,7 @@ function DashboardPage() {
 
 
         {/* Aurora hero */}
-        <section className="relative isolate flex min-h-[520px] flex-col items-center justify-center overflow-hidden px-5 py-16 lg:rounded-bl-[28px]">
+        <section className="relative isolate flex min-h-[420px] flex-col items-center justify-center overflow-hidden px-4 py-12 sm:min-h-[520px] sm:px-5 sm:py-16 lg:rounded-bl-[28px]">
           <div className="aurora-canvas absolute inset-0 -z-10" />
 
           <Link
@@ -327,7 +327,7 @@ function DashboardPage() {
         </section>
 
         {/* Projects panel */}
-        <section className="relative -mt-6 min-h-[420px] rounded-t-[28px] border border-ink-200 bg-ink-50 px-5 py-5 shadow-ds-lg">
+        <section className="relative -mt-6 min-h-[420px] rounded-t-[28px] border border-ink-200 bg-ink-50 px-3 py-5 shadow-ds-lg sm:px-5">
           <div className="mx-auto w-full max-w-5xl">
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex min-w-0 items-center gap-2 rounded-full border border-ink-200 bg-ink-100/70 px-3 py-1.5">
@@ -372,6 +372,8 @@ function DashboardPage() {
                   <Link
                     key={project.id}
                     to="/workspace"
+                    search={{ thread: project.id }}
+
                     className="group rounded-2xl border border-ink-200 bg-ink-50 p-4 shadow-ds-xs transition hover:-translate-y-0.5 hover:shadow-ds-md"
                   >
                     <div className="h-24 rounded-xl bg-gradient-to-br from-[color:var(--color-iris-soft)] via-ink-100 to-white" />

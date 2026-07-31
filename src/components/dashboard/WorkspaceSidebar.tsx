@@ -238,6 +238,8 @@ export function WorkspaceSidebar({
             <Link
               key={project.id}
               to="/workspace"
+              search={{ thread: project.id }}
+
               className="block truncate rounded-lg px-2 py-1.5 text-[13px] text-ink-600 transition hover:bg-ink-200/60 hover:text-ink-900"
             >
               {project.title}
