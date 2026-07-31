@@ -300,7 +300,7 @@ function ChatWorkspaceInner() {
     const ta = taRef.current;
     if (!ta) return;
     ta.style.height = "auto";
-    ta.style.height = Math.min(ta.scrollHeight, 200) + "px";
+    ta.style.height = Math.min(ta.scrollHeight, 224) + "px";
   }, [input]);
 
   const newChat = async () => {
