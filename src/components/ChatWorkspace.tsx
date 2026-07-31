@@ -631,7 +631,7 @@ function ChatWorkspaceInner() {
             className="hidden shrink-0 gap-1.5 text-ink-600 sm:inline-flex"
             aria-label="Show chat history"
           >
-            <History className="h-3.5 w-3.5" />
+            <HistoryIcon className="h-3.5 w-3.5" />
             History
           </Button>
 
