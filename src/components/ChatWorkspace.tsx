@@ -457,6 +457,10 @@ function ChatWorkspaceInner() {
         else void credits.refresh();
       } catch (error) {
         const apiErr = parseApiError(error, "chat");
+        // Server rejected the charge — pull the authoritative balance back in.
+        if (apiErr.code === "insufficient_credits" || apiErr.code === "unauthenticated") {
+          void credits.refresh();
+        }
         const steps = apiErr.steps.map((s, i) => `${i + 1}. ${s}`).join("\n");
         const asstMsg: ChatMessage = {
           id: uid(),
