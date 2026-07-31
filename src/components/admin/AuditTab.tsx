@@ -36,7 +36,7 @@ export function AuditTab() {
               {new Date(row.createdAt).toLocaleString()}
             </span>
           </div>
-          <div className="mt-1 text-xs text-ink-600">by {row.actorEmail ?? row.actorId ?? "system"}</div>
+          <div className="mt-1 text-xs text-ink-600">by {row.actorId ?? "system"}</div>
           {row.details && Object.keys(row.details).length > 0 && (
             <pre className="mt-2 overflow-x-auto rounded-lg bg-ink-50 p-2 text-[11px] text-ink-700">
               {JSON.stringify(row.details, null, 2)}
