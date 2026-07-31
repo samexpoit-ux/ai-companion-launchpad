@@ -170,8 +170,11 @@ function AccountPage() {
         </div>
       </section>
 
-      <section className="mt-10" aria-labelledby="plan-heading">
-        <h2 id="plan-heading" className="text-sm font-semibold text-ink-900">
+      <section
+        className="mt-10 rounded-2xl border border-ink-200 bg-white/70 p-5"
+        aria-labelledby="plan-heading"
+      >
+        <h2 id="plan-heading" className="font-display text-lg font-bold tracking-tight text-ink-900">
           Plan &amp; billing
         </h2>
         <p className="mt-1 text-xs text-ink-500">
@@ -191,8 +194,11 @@ function AccountPage() {
         )}
       </section>
 
-      <section className="mt-10" aria-labelledby="usage-heading">
-        <h2 id="usage-heading" className="text-sm font-semibold text-ink-900">
+      <section
+        className="mt-6 rounded-2xl border border-ink-200 bg-white/70 p-5"
+        aria-labelledby="usage-heading"
+      >
+        <h2 id="usage-heading" className="font-display text-lg font-bold tracking-tight text-ink-900">
           Usage by action
         </h2>
         {loading ? (
@@ -220,8 +226,14 @@ function AccountPage() {
         )}
       </section>
 
-      <section className="mt-10" aria-labelledby="activity-heading">
-        <h2 id="activity-heading" className="text-sm font-semibold text-ink-900">
+      <section
+        className="mt-6 rounded-2xl border border-ink-200 bg-white/70 p-5"
+        aria-labelledby="activity-heading"
+      >
+        <h2
+          id="activity-heading"
+          className="font-display text-lg font-bold tracking-tight text-ink-900"
+        >
           Recent activity
         </h2>
         {loading ? (

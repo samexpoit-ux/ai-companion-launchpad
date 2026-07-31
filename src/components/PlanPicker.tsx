@@ -13,24 +13,17 @@ interface PlanPickerProps {
 export function PlanPicker({ value, onChange, className }: PlanPickerProps) {
   return (
     <section className={cn("space-y-4", className)} aria-label="Pricing plans">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h2 className="font-display text-lg font-bold tracking-tight text-ink-900">Plan & usage</h2>
-          <p className="text-[12px] text-ink-500">
-            Smart routing always picks the cheapest capable model — your plan sets the ceiling.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {(["chat", "plan", "code"] as const).map((action) => (
-            <span
-              key={action}
-              className="rounded-full border border-ink-200 bg-white/70 px-2 py-0.5 text-[10px] text-ink-600"
-            >
-              {ACTION_RULES[action].label} · {formatCredits(ACTION_RULES[action].base)}+
-            </span>
-          ))}
-        </div>
+      <div className="flex flex-wrap gap-1.5">
+        {(["chat", "plan", "code"] as const).map((action) => (
+          <span
+            key={action}
+            className="rounded-full border border-ink-200 bg-white/70 px-2 py-0.5 text-[10px] text-ink-600"
+          >
+            {ACTION_RULES[action].label} · {formatCredits(ACTION_RULES[action].base)}+
+          </span>
+        ))}
       </div>
+
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {PLANS.map((plan) => {

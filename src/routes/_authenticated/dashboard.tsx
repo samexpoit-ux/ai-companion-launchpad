@@ -22,13 +22,14 @@ import { cn } from "@/lib/utils";
 import { useAuth, useProfile, displayNameOf } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { queuePendingPrompt } from "@/lib/pending-prompt";
-import { actionForMode, ACTION_RULES, formatCredits } from "@/lib/credits";
+import { actionForMode, formatCredits } from "@/lib/credits";
 import { useCredits } from "@/hooks/useCredits";
 import { CreditMeter } from "@/components/CreditMeter";
-import { PlanPicker } from "@/components/PlanPicker";
+
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { listThreads } from "@/lib/chat-store";
 import { WorkspaceSidebar, type RecentProject } from "@/components/dashboard/WorkspaceSidebar";
+import { planById } from "@/lib/plans";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -124,7 +125,9 @@ function DashboardPage() {
 
   const firstName = useMemo(() => {
     const label = displayNameOf(profile, user);
-    return label.split(/[\s@]/)[0] ?? label;
+    const token = label.split(/[\s@._-]+/).filter(Boolean)[0] ?? label;
+    const clean = token.replace(/[^a-zA-Z]/g, "") || token;
+    return clean.charAt(0).toUpperCase() + clean.slice(1);
   }, [profile, user?.email]);
 
   const workspaceName = useMemo(
@@ -184,7 +187,7 @@ function DashboardPage() {
         </div>
       )}
 
-      <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+      <main className="flex min-w-0 flex-1 flex-col overflow-y-auto bg-ink-100">
         {/* Mobile top bar */}
         <div className="sticky top-0 z-30 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 border-b border-ink-200 bg-ink-50/90 px-3 py-2 backdrop-blur md:hidden">
           <button
@@ -337,41 +340,45 @@ function DashboardPage() {
           </div>
         </section>
 
-        {/* Plan, credits and cost transparency */}
-        <section className="relative z-10 mx-auto -mt-2 w-full max-w-5xl px-3 pb-2 sm:px-5">
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
-            <div className="rounded-2xl border border-ink-200 bg-white/70 p-4">
-              <PlanPicker value={credits.plan} onChange={(plan) => void credits.setPlan(plan)} />
-            </div>
-            <div className="space-y-2">
-              <CreditMeter
-                plan={credits.plan}
-                remaining={credits.remaining}
-                total={credits.total}
-                pending={prompt.trim() ? cost : undefined}
-              />
-              <div className="rounded-xl border border-ink-200 bg-white/70 p-3 text-[11px] text-ink-600">
-                <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-400">
-                  What each action costs
-                </div>
-                <ul className="space-y-1">
-                  {(["chat", "plan", "code", "autofix", "preview_run", "export"] as const).map((key) => (
-                    <li key={key} className="flex items-center justify-between gap-2">
-                      <span>{ACTION_RULES[key].label}</span>
-                      <span className="font-mono text-ink-800">
-                        {formatCredits(ACTION_RULES[key].base)}
-                        {ACTION_RULES[key].perKChars > 0 ? "+" : ""}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+        {/* Compact plan + credit strip */}
+        <section className="mx-auto w-full max-w-5xl px-3 pt-6 sm:px-5" aria-label="Plan and credits">
+          <div className="rounded-2xl border border-ink-200 bg-ink-50 p-4 shadow-ds-xs sm:p-5">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Plan</p>
+                <p className="font-display text-[16px] font-bold leading-tight text-ink-900">
+                  {planById(credits.plan).name}
+                </p>
               </div>
+              <div className="h-9 w-px bg-ink-200 max-sm:hidden" />
+              <div className="w-full max-w-[280px] shrink-0 sm:w-[240px]">
+                <CreditMeter
+                  plan={credits.plan}
+                  remaining={credits.remaining}
+                  total={credits.total}
+                  compact
+                  className="border-0 bg-transparent p-0"
+                />
+              </div>
+              <Link
+                to="/account"
+                className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border border-ink-200 bg-ink-50 px-3.5 py-2 text-[12.5px] font-semibold text-ink-800 transition hover:bg-ink-100"
+              >
+                Plans &amp; usage
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
+            <p className="mt-3 border-t border-ink-200 pt-3 text-[12px] text-ink-500">
+              {mode} costs {formatCredits(cost)} credits — smart routing always picks the cheapest
+              capable model for you.
+            </p>
           </div>
         </section>
 
+
         {/* Projects panel */}
-        <section className="relative -mt-6 min-h-[420px] rounded-t-[28px] border border-ink-200 bg-ink-50 px-3 py-5 shadow-ds-lg sm:px-5">
+        <section className="min-h-[360px] px-3 py-8 sm:px-5">
+
           <div className="mx-auto w-full max-w-5xl">
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex min-w-0 items-center gap-2 rounded-full border border-ink-200 bg-ink-100/70 px-3 py-1.5">
