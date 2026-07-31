@@ -9,7 +9,9 @@ set -a; . "$APP_DIR/.env"; set +a
 export NITRO_PRESET=node-server
 bun install
 bun run build
+bash "$APP_DIR/deploy/migrate.sh"
 chown -R nexuraai:nexuraai "$APP_DIR"
+
 systemctl restart nexuraai
 sleep 2
 systemctl --no-pager status nexuraai | head -n 15

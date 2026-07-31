@@ -49,10 +49,40 @@ SUPABASE_URL=https://db.nexuraai.dev
 SUPABASE_SERVICE_ROLE_KEY=<service role key>
 OPENROUTER_API_KEY=<openrouter key>
 ```
-then:
+then ship from your machine (see below).
+
+## 2b) One-command deploy
+From your local checkout — this is the only command you need for every update:
+```bash
+bun run ship          # = bash deploy/ship.sh
+```
+It runs, stopping at the first failure:
+1. **local checks** — typecheck + unit tests
+2. **sync** — `rsync` of the source tree to `/var/www/nexuraai` (`.env`,
+   `node_modules`, `.output` and `.git` are never overwritten)
+3. **build** — `bun install` + `NITRO_PRESET=node-server bun run build` **on the
+   server**, so the `VITE_*` values baked into the bundle are the server's
+4. **migrations** — `deploy/migrate.sh` applies every new
+   `supabase/migrations/*.sql` to self-hosted Supabase, once each, in a
+   transaction, tracked in `public.schema_migrations`
+5. **restart** — `systemctl restart nexuraai`, `nginx -t && systemctl reload
+   nginx`, then a local and public health check
+
+Flags: `--skip-tests`, `--skip-migrations`, `--no-build`,
+`--host root@IP`, `--dir /var/www/nexuraai`, `--service nexuraai`.
+
+Requirements: `rsync` locally and key-based SSH (`ssh-copy-id root@169.58.105.190`).
+
+Database only:
+```bash
+ssh root@169.58.105.190 'bash /var/www/nexuraai/deploy/migrate.sh'
+```
+`deploy/deploy.sh` still exists as the git-pull-based fallback you can run
+directly on the server:
 ```bash
 bash /var/www/nexuraai/deploy/deploy.sh
 ```
+
 
 ## 3) Auth settings (self-hosted Studio → Authentication → URL configuration)
 Site URL: `https://nexuraai.dev`
