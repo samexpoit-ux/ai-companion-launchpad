@@ -1,6 +1,14 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { spendAction } from "@/lib/api-fetch";
-import { X, Code2, Eye, Terminal, RefreshCw, Monitor, Tablet, Smartphone, Wand2, Loader2, ShieldCheck, AlertTriangle, History, GitCompare, Play, Lock } from "lucide-react";
+import { X, Code2, Eye, Terminal, RefreshCw, Monitor, Tablet, Smartphone, Wand2, Loader2, ShieldCheck, AlertTriangle, History, GitCompare, Play, Lock, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useCredits } from "@/hooks/useCredits";
 import { CreditMeter } from "@/components/CreditMeter";
