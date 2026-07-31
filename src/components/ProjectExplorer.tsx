@@ -88,7 +88,7 @@ function TreeItem({
       <button
         onClick={() => onSelect(node.path)}
         className={cn(
-          "flex w-full items-center gap-1.5 rounded-md py-1 pr-2 text-left text-[11.5px] transition",
+          "flex w-full items-center gap-1.5 rounded-md py-1 pr-2 text-left text-xs transition",
           isActive
             ? "bg-white text-ink-900 shadow-[0_0_0_1px_color-mix(in_oklab,var(--color-iris)_35%,transparent)]"
             : "text-ink-600 hover:bg-ink-900/5 hover:text-ink-900",
@@ -111,7 +111,7 @@ function TreeItem({
     <div>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-1 rounded-md py-1 pr-2 text-left text-[11.5px] text-ink-700 hover:bg-ink-900/5"
+        className="flex w-full items-center gap-1 rounded-md py-1 pr-2 text-left text-xs text-ink-700 hover:bg-ink-900/5"
         style={{ paddingLeft: 4 + depth * 12 }}
       >
         <ChevronRight className={cn("h-3 w-3 transition", open && "rotate-90")} />
@@ -236,7 +236,7 @@ export default function ProjectExplorer() {
         <button
           onClick={() => void downloadZip()}
           disabled={zipping}
-          className="mx-2 mt-3 flex w-[calc(100%-16px)] items-center justify-center gap-1.5 rounded-md border border-ink-200 px-2 py-1.5 text-[10.5px] text-ink-600 transition hover:border-[color:var(--color-iris)]/40 hover:text-ink-900 disabled:opacity-50"
+          className="mx-2 mt-3 flex w-[calc(100%-16px)] items-center justify-center gap-1.5 rounded-md border border-ink-200 px-2 py-1.5 text-2xs text-ink-600 transition hover:border-[color:var(--color-iris)]/40 hover:text-ink-900 disabled:opacity-50"
         >
           <FileArchive className="h-3 w-3" />
           {zipping ? "Packaging…" : "Export project (.zip)"}
@@ -245,14 +245,14 @@ export default function ProjectExplorer() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex flex-wrap items-center gap-2 border-b border-ink-200 px-3 py-1.5">
-          <span className="truncate font-mono text-[11px] text-ink-700">{current}</span>
+          <span className="truncate font-mono text-xs text-ink-700">{current}</span>
           {current === payload?.entry && (
-            <span className="rounded border border-ink-200 px-1 text-[9.5px] uppercase tracking-wider text-ink-500">
+            <span className="rounded border border-ink-200 px-1 text-2xs uppercase tracking-wider text-ink-500">
               entry
             </span>
           )}
           {changed.has(current) && (
-            <span className="rounded border border-[color:var(--color-iris)]/40 bg-[color:var(--color-iris)]/10 px-1 text-[9.5px] uppercase tracking-wider text-ink-700">
+            <span className="rounded border border-[color:var(--color-iris)]/40 bg-[color:var(--color-iris)]/10 px-1 text-2xs uppercase tracking-wider text-ink-700">
               changed
             </span>
           )}
@@ -260,7 +260,7 @@ export default function ProjectExplorer() {
           <button
             onClick={() => setEditing((e) => !e)}
             className={cn(
-              "ml-auto inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[10.5px] transition",
+              "ml-auto inline-flex items-center gap-1 rounded-md border px-2 py-1 text-2xs transition",
               editing
                 ? "border-[color:var(--color-iris)]/40 bg-[color:var(--color-iris)]/10 text-ink-900"
                 : "border-ink-200 text-ink-500 hover:text-ink-900",
@@ -273,7 +273,7 @@ export default function ProjectExplorer() {
 
           <button
             onClick={() => void copyFile()}
-            className="inline-flex items-center gap-1 rounded-md border border-ink-200 px-2 py-1 text-[10.5px] text-ink-500 transition hover:text-ink-900"
+            className="inline-flex items-center gap-1 rounded-md border border-ink-200 px-2 py-1 text-2xs text-ink-500 transition hover:text-ink-900"
             title="Copy this file"
           >
             <Copy className="h-3 w-3" />
@@ -282,7 +282,7 @@ export default function ProjectExplorer() {
 
           <button
             onClick={downloadFile}
-            className="inline-flex items-center gap-1 rounded-md border border-ink-200 px-2 py-1 text-[10.5px] text-ink-500 transition hover:text-ink-900"
+            className="inline-flex items-center gap-1 rounded-md border border-ink-200 px-2 py-1 text-2xs text-ink-500 transition hover:text-ink-900"
             title="Download this file"
           >
             <Download className="h-3 w-3" />
@@ -293,7 +293,7 @@ export default function ProjectExplorer() {
             onClick={() => setLiveEdit(!liveEdit)}
             title="Live sync: preview reloads as you type"
             className={cn(
-              "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[10.5px] transition",
+              "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-2xs transition",
               liveEdit
                 ? "border-[color:var(--color-iris)]/40 bg-[color:var(--color-iris)]/10 text-ink-900"
                 : "border-ink-200 text-ink-500 hover:text-ink-900",
@@ -311,7 +311,7 @@ export default function ProjectExplorer() {
             }}
             disabled={!dirty}
             className={cn(
-              "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[10.5px] transition",
+              "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-2xs transition",
               dirty
                 ? "border-[color:var(--color-iris)]/40 bg-[color:var(--color-iris)]/10 text-ink-900"
                 : "border-ink-200 text-ink-400",
@@ -329,7 +329,7 @@ export default function ProjectExplorer() {
             onChange={(e) => onEdit(e.target.value)}
             spellCheck={false}
             aria-label={`Edit ${current}`}
-            className="min-h-0 flex-1 resize-none bg-transparent p-3 font-mono text-[11.5px] leading-[1.6] text-ink-800 outline-none"
+            className="min-h-0 flex-1 resize-none bg-transparent p-3 font-mono text-xs leading-[1.6] text-ink-800 outline-none"
           />
         ) : (
           <div className="min-h-0 flex-1 overflow-auto">

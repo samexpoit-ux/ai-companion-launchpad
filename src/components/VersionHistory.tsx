@@ -14,12 +14,12 @@ export default function VersionHistory({ onClose }: { onClose: () => void }) {
     <div className="absolute right-2 top-12 z-20 w-80 overflow-hidden rounded-xl border border-ink-200 bg-white shadow-xl">
       <div className="flex items-center gap-2 border-b border-ink-200 px-3 py-2">
         <History className="h-3.5 w-3.5 text-[color:var(--color-iris)]" />
-        <span className="text-[11.5px] font-medium text-ink-800">Patch history</span>
-        <span className="ml-auto text-[10.5px] text-ink-500">{versions.length} version(s)</span>
+        <span className="text-xs font-medium text-ink-800">Patch history</span>
+        <span className="ml-auto text-2xs text-ink-500">{versions.length} version(s)</span>
       </div>
       <ul className="max-h-72 overflow-auto p-1.5">
         {ordered.length === 0 && (
-          <li className="px-2 py-3 text-[11px] text-ink-500">No versions yet.</li>
+          <li className="px-2 py-3 text-xs text-ink-500">No versions yet.</li>
         )}
         {ordered.map((v) => {
           const isActive = v.id === activeVersionId;
@@ -27,7 +27,7 @@ export default function VersionHistory({ onClose }: { onClose: () => void }) {
             <li
               key={v.id}
               className={cn(
-                "rounded-lg px-2 py-1.5 text-[11px]",
+                "rounded-lg px-2 py-1.5 text-xs",
                 isActive ? "bg-[color:var(--color-iris)]/8 ring-1 ring-[color:var(--color-iris)]/25" : "hover:bg-ink-50",
               )}
             >
@@ -52,7 +52,7 @@ export default function VersionHistory({ onClose }: { onClose: () => void }) {
                       }
                     }}
                     className={cn(
-                      "ml-auto h-6 shrink-0 px-1.5 text-[10px]",
+                      "ml-auto h-6 shrink-0 px-1.5 text-2xs",
                       confirming === v.id && "border-primary/50 bg-primary/10 text-foreground",
                     )}
                   >
@@ -61,7 +61,7 @@ export default function VersionHistory({ onClose }: { onClose: () => void }) {
                   </Button>
                 )}
               </div>
-              <div className="mt-0.5 pl-4.5 font-mono text-[10px] text-ink-500">
+              <div className="mt-0.5 pl-4.5 font-mono text-2xs text-ink-500">
                 {new Date(v.at).toLocaleTimeString()}
                 {v.model ? ` · ${v.model}` : ""}
                 {v.changedPaths.length ? ` · ${v.changedPaths.join(", ")}` : ""}

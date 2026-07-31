@@ -74,12 +74,12 @@ export default function PatchReview() {
           <FileDiff className="h-4 w-4 text-[color:var(--color-iris)]" />
           <div className="min-w-0">
             <div className="truncate text-sm font-medium text-ink-900">Review AI patch</div>
-            <div className="truncate text-[11px] text-ink-500">
+            <div className="truncate text-xs text-ink-500">
               {pendingPatch.summary}
               {pendingPatch.model ? ` · ${pendingPatch.model}` : ""} · attempt {pendingPatch.attempt}
             </div>
           </div>
-          <div className="ml-auto flex items-center gap-2 font-mono text-[11px]">
+          <div className="ml-auto flex items-center gap-2 font-mono text-xs">
             <span className="text-emerald-600">+{totalAdd}</span>
             <span className="text-rose-500">−{totalDel}</span>
             <Button
@@ -100,14 +100,14 @@ export default function PatchReview() {
           {/* File list */}
           <div className="w-52 shrink-0 overflow-auto border-r border-ink-200 bg-ink-50/40 p-2">
             {diffs.length === 0 && (
-              <div className="px-2 py-3 text-[11px] text-ink-500">No file changes detected.</div>
+              <div className="px-2 py-3 text-xs text-ink-500">No file changes detected.</div>
             )}
             {diffs.map((d) => (
               <button
                 key={d.path}
                 onClick={() => setSelected(d.path)}
                 className={cn(
-                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[11.5px] transition",
+                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition",
                   d.path === active?.path
                     ? "bg-white text-ink-900 shadow-sm ring-1 ring-ink-200"
                     : "text-ink-600 hover:bg-white/70",
@@ -124,7 +124,7 @@ export default function PatchReview() {
                   )}
                 />
                 <span className="truncate font-mono">{d.path.split("/").pop()}</span>
-                <span className="ml-auto shrink-0 font-mono text-[10px] text-ink-400">
+                <span className="ml-auto shrink-0 font-mono text-2xs text-ink-400">
                   +{d.additions}/−{d.deletions}
                 </span>
               </button>
@@ -139,7 +139,7 @@ export default function PatchReview() {
 
         {/* Footer */}
         <div className="flex items-center gap-2 border-t border-ink-200 bg-ink-50/50 px-4 py-2.5">
-          <span className="text-[11px] text-ink-500">
+          <span className="text-xs text-ink-500">
             Nothing is applied until you approve this diff.
           </span>
           <div className="ml-auto flex items-center gap-2">
@@ -171,7 +171,7 @@ function ValidationSummary({
 
   if (checking && !after) {
     return (
-      <div className="flex items-center gap-2 border-b border-ink-200 bg-ink-50/60 px-4 py-2 text-[11px] text-ink-600">
+      <div className="flex items-center gap-2 border-b border-ink-200 bg-ink-50/60 px-4 py-2 text-xs text-ink-600">
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
         Running lint + build validation…
       </div>
@@ -185,7 +185,7 @@ function ValidationSummary({
   return (
     <div
       className={cn(
-        "border-b px-4 py-2 text-[11px]",
+        "border-b px-4 py-2 text-xs",
         ok ? "border-emerald-200 bg-emerald-50/70 text-emerald-900" : "border-rose-200 bg-rose-50/70 text-rose-900",
       )}
     >
@@ -210,7 +210,7 @@ function ValidationSummary({
         )}
       </div>
       {open && (
-        <ul className="mt-1.5 max-h-28 space-y-0.5 overflow-auto font-mono text-[10.5px]">
+        <ul className="mt-1.5 max-h-28 space-y-0.5 overflow-auto font-mono text-2xs">
           {after.issues.map((i, idx) => (
             <li key={idx} className={i.level === "error" ? "text-rose-700" : "text-amber-700"}>
               [{i.level}] {i.path}
@@ -227,10 +227,10 @@ function DiffView({ diff }: { diff: FileDiffType }) {
   const lines = useMemo(() => collapseContext(diff.lines), [diff]);
   return (
     <div className="min-w-full">
-      <div className="sticky top-0 z-10 border-b border-ink-200 bg-white/95 px-3 py-1.5 font-mono text-[11px] text-ink-600 backdrop-blur">
+      <div className="sticky top-0 z-10 border-b border-ink-200 bg-white/95 px-3 py-1.5 font-mono text-xs text-ink-600 backdrop-blur">
         {diff.path} · {diff.status}
       </div>
-      <table className="w-full border-collapse font-mono text-[11px]">
+      <table className="w-full border-collapse font-mono text-xs">
         <tbody>
           {lines.map((l, i) => (
             <tr

@@ -17,7 +17,7 @@ export function PlanPicker({ value, onChange, className }: PlanPickerProps) {
         {(["chat", "plan", "code"] as const).map((action) => (
           <span
             key={action}
-            className="rounded-full border border-ink-200 bg-white/70 px-2 py-0.5 text-[10px] text-ink-600"
+            className="rounded-full border border-ink-200 bg-white/70 px-2 py-0.5 text-2xs text-ink-600"
           >
             {ACTION_RULES[action].label} · {formatCredits(ACTION_RULES[action].base)}+
           </span>
@@ -42,28 +42,28 @@ export function PlanPicker({ value, onChange, className }: PlanPickerProps) {
               )}
             >
               {plan.badge && (
-                <span className="absolute right-3 top-3 rounded-full bg-[color:var(--color-iris)] px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-white">
+                <span className="absolute right-3 top-3 rounded-full bg-[color:var(--color-iris)] px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-white">
                   {plan.badge}
                 </span>
               )}
               <div className="flex items-center gap-1.5">
-                <span className="font-display text-[15px] font-bold text-ink-900">{plan.name}</span>
+                <span className="font-display text-base font-bold text-ink-900">{plan.name}</span>
                 {selected && <Check className="h-3.5 w-3.5 text-[color:var(--color-iris)]" />}
               </div>
               <div className="mt-1 flex items-baseline gap-1">
                 <span className="font-display text-2xl font-bold text-ink-900">{plan.price}</span>
-                <span className="text-[11px] text-ink-500">{plan.cadence}</span>
+                <span className="text-xs text-ink-500">{plan.cadence}</span>
               </div>
-              <p className="mt-1 text-[11.5px] text-ink-600">{plan.tagline}</p>
+              <p className="mt-1 text-xs text-ink-600">{plan.tagline}</p>
               <ul className="mt-3 space-y-1.5">
                 {plan.perks.map((perk) => (
-                  <li key={perk} className="flex items-start gap-1.5 text-[11.5px] text-ink-700">
+                  <li key={perk} className="flex items-start gap-1.5 text-xs text-ink-700">
                     <Sparkles className="mt-[3px] h-3 w-3 shrink-0 text-[color:var(--color-iris)]" />
                     <span>{perk}</span>
                   </li>
                 ))}
               </ul>
-              <div className="mt-3 text-[10px] uppercase tracking-wider text-ink-500">
+              <div className="mt-3 text-2xs uppercase tracking-wider text-ink-500">
                 Model ceiling · {plan.ceiling}
               </div>
             </button>

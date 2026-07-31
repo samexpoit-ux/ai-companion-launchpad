@@ -1294,7 +1294,7 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
 
   return (
     <div className="mx-auto flex h-full w-full max-w-xl flex-col items-center justify-center px-6 py-10 text-center">
-      <h1 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink-900">
+      <h1 className="font-display text-lg font-bold leading-tight tracking-tight text-ink-900">
         What can I build for you?
       </h1>
       <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-500">
