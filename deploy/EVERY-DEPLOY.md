@@ -1,6 +1,23 @@
 # Deploy — every time (Nexura AI)
 
-## Option 1 — automatic (recommended)
+## Option 0 — one command: push my changes + update the VPS
+
+```bash
+bun run git:deploy                        # commit + push, then update the VPS
+bun run git:deploy -m "chat history fix"  # custom commit message
+bun run git:deploy --no-push              # VPS only: pull what's on GitHub
+```
+
+It does, in order: `git add -A` + commit (only if you have changes) → `git push`
+→ on the VPS `git reset --hard origin/main` → `bun install` → production build →
+`supabase/migrations/*.sql` → `systemctl restart nexuraai` → nginx reload →
+local + public health check, and prints the deployed commit hash so you can
+confirm the VPS is running exactly your code.
+
+Needs key-based SSH once: `ssh-copy-id root@169.58.105.190`.
+
+## Option 1 — automatic (no command at all)
+
 
 Every push to `main` deploys itself via `.github/workflows/deploy.yml`.
 
