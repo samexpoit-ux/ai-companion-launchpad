@@ -8,9 +8,9 @@ Everything runs on your own VPS: the app plus self-hosted Supabase
 |---|---|---|
 | A | @ | 169.58.105.190 |
 | A | www | 169.58.105.190 |
-| A | db | 169.58.105.190 |
+| A | supabase | 169.58.105.190 |
 
-`db.nexuraai.dev` serves the self-hosted Supabase API + Studio.
+`supabase.nexuraai.dev` serves the self-hosted Supabase API + Studio.
 
 Check: `dig +short nexuraai.dev` → `169.58.105.190`
 
@@ -42,10 +42,10 @@ The script installs Node 22, Bun, nginx, ufw, builds the app with
 The first run creates `/var/www/nexuraai/.env`. Fill it with the block printed by
 `supabase-selfhost.sh` plus your OpenRouter key:
 ```
-VITE_SUPABASE_URL=https://db.nexuraai.dev
+VITE_SUPABASE_URL=https://supabase.nexuraai.dev
 VITE_SUPABASE_PUBLISHABLE_KEY=<anon key>
 VITE_SUPABASE_PROJECT_ID=nexura
-SUPABASE_URL=https://db.nexuraai.dev
+SUPABASE_URL=https://supabase.nexuraai.dev
 SUPABASE_SERVICE_ROLE_KEY=<service role key>
 OPENROUTER_API_KEY=<openrouter key>
 ```
@@ -91,7 +91,7 @@ Redirect URLs:
 - `https://www.nexuraai.dev/**`
 
 Google OAuth console → authorized redirect URI
-`https://db.nexuraai.dev/auth/v1/callback`, authorized origin
+`https://supabase.nexuraai.dev/auth/v1/callback`, authorized origin
 `https://nexuraai.dev`. Then set `GOTRUE_EXTERNAL_GOOGLE_*` in
 `/opt/supabase/.env` and `docker compose up -d` again.
 

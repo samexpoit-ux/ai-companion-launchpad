@@ -1,6 +1,6 @@
 # Nexura AI — full deploy (GitHub → VPS), copy-paste
 
-VPS `169.58.105.190` · domain `nexuraai.dev` · self-hosted Supabase `db.nexuraai.dev`
+VPS `169.58.105.190` · domain `nexuraai.dev` · self-hosted Supabase `supabase.nexuraai.dev`
 
 ---
 
@@ -23,7 +23,7 @@ git push -u origin main
 Every later update:
 
 ```bash
-git add -A && git commit -m "update" && git push
+git add - A && git commit -m "update" && git push
 ```
 
 ---
@@ -59,10 +59,10 @@ nano /var/www/nexuraai/.env
 ```
 
 ```
-VITE_SUPABASE_URL=https://db.nexuraai.dev
+VITE_SUPABASE_URL=https://supabase.nexuraai.dev
 VITE_SUPABASE_PUBLISHABLE_KEY=<anon key>
 VITE_SUPABASE_PROJECT_ID=nexura
-SUPABASE_URL=https://db.nexuraai.dev
+SUPABASE_URL=https://supabase.nexuraai.dev
 SUPABASE_SERVICE_ROLE_KEY=<service role key>
 OPENROUTER_API_KEY=<openrouter key>
 ```
