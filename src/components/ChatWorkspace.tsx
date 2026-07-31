@@ -329,6 +329,26 @@ function ChatWorkspaceInner() {
     async (text: string, thread: ChatThread) => {
       const value = text.trim();
       if (!value) return;
+      const action = actionForMode(mode);
+      if (!credits.canAfford(action, value.length)) {
+        updateThread(thread.id, (t) => ({
+          ...t,
+          messages: [
+            ...t.messages,
+            {
+              id: uid(),
+              role: "assistant",
+              content: `**Out of credits**\n\nThis ${ACTION_RULES[action].label.toLowerCase()} needs ${formatCredits(
+                credits.quote(action, value.length),
+              )} credits but only ${formatCredits(credits.remaining)} remain. Upgrade your plan from the dashboard to continue.`,
+              createdAt: Date.now(),
+            },
+          ],
+          updatedAt: Date.now(),
+        }));
+        return;
+      }
+
       const userMsg: ChatMessage = { id: uid(), role: "user", content: value, createdAt: Date.now() };
       const isFirst = thread.messages.length === 0;
       updateThread(thread.id, (t) => ({
@@ -338,8 +358,18 @@ function ChatWorkspaceInner() {
         updatedAt: Date.now(),
       }));
       setIsSending(true);
+      if (isFirst) void renameDbThread(thread.id, value.slice(0, 48));
+      void saveMessage({
+        threadId: thread.id,
+        clientId: userMsg.id,
+        role: "user",
+        content: value,
+      });
       try {
-        const reply = await sendChatMessage([...(thread.messages ?? []), userMsg], modelId);
+        const reply = await sendChatMessage([...(thread.messages ?? []), userMsg], modelId, {
+          plan: credits.plan,
+          mode,
+        });
         const asstMsg: ChatMessage = {
           id: uid(),
           role: "assistant",
@@ -354,6 +384,20 @@ function ChatWorkspaceInner() {
           messages: [...t.messages, asstMsg],
           updatedAt: Date.now(),
         }));
+        void saveMessage({
+          threadId: thread.id,
+          clientId: asstMsg.id,
+          role: "assistant",
+          content: asstMsg.content,
+          model: asstMsg.model ?? null,
+          tokens: asstMsg.tokens ?? null,
+          latencyMs: asstMsg.latencyMs ?? null,
+        });
+        void credits.charge(action, {
+          inputChars: value.length,
+          model: reply.model,
+          threadId: thread.id,
+        });
       } catch (error) {
         const apiErr = parseApiError(error, "chat");
         const steps = apiErr.steps.map((s, i) => `${i + 1}. ${s}`).join("\n");
@@ -373,7 +417,7 @@ function ChatWorkspaceInner() {
         setIsSending(false);
       }
     },
-    [modelId, updateThread],
+    [modelId, updateThread, mode, credits],
   );
 
   const handleSend = async () => {
