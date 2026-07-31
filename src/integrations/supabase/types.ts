@@ -469,7 +469,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_spend_rate: { Args: { _user_id: string }; Returns: undefined }
       credit_balance: { Args: { _user_id?: string }; Returns: Json }
       downgrade_to_free: { Args: never; Returns: Json }
       has_role: {
