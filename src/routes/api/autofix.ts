@@ -164,6 +164,7 @@ export const Route = createFileRoute("/api/autofix")({
                   model: route.friendlyId,
                   tokens: result.tokens,
                   latencyMs: Date.now() - started,
+                  credits: { charged: charge.charged, remaining: charge.remaining },
                 });
               }
               return apiErrorResponse("bad_model_output", "autofix", "The model did not return a usable patch.");
@@ -176,6 +177,7 @@ export const Route = createFileRoute("/api/autofix")({
               model: route.friendlyId,
               tokens: result.tokens,
               latencyMs: Date.now() - started,
+              credits: { charged: charge.charged, remaining: charge.remaining },
             });
           }
 
@@ -191,6 +193,7 @@ export const Route = createFileRoute("/api/autofix")({
             model: route.friendlyId,
             tokens: result.tokens,
             latencyMs: Date.now() - started,
+            credits: { charged: charge.charged, remaining: charge.remaining },
           });
         } catch (err) {
           const e = err as Error & { status?: number };
