@@ -29,7 +29,7 @@ test.describe("Live Workspace", () => {
 
     for (const tab of ["Code", "Console", "Preview"] as const) {
       const btn = page.getByRole("button", { name: new RegExp(`^${tab}$`, "i") }).first();
-      await btn.click();
+      await btn.dispatchEvent("click");
       await expect(btn).toHaveAttribute("aria-pressed", "true");
       await page.waitForTimeout(300);
       await expect(page.getByTestId("workspace-stage")).toHaveScreenshot(

@@ -131,7 +131,7 @@ export function PreviewPanel() {
 
           <button
             onClick={() => setReloadKey((k) => k + 1)}
-            className="rounded-full p-1.5 text-ink-500 transition hover:bg-ink-900/5 hover:text-ink-900 active:scale-95"
+            className="hidden rounded-full p-1.5 text-ink-500 transition hover:bg-ink-900/5 hover:text-ink-900 active:scale-95 sm:inline-flex"
             aria-label="Reload preview"
             title="Reload"
           >
