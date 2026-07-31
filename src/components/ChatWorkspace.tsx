@@ -521,13 +521,11 @@ function ChatWorkspaceInner() {
                 ) : (
                   <>
                     <button
-                      onClick={() => {
-                        setActiveId(t.id);
-                        if (isMobile) setSidebarOpen(false);
-                      }}
+                      onClick={() => selectThread(t.id)}
                       onDoubleClick={() => startRename(t)}
                       className="min-w-0 flex-1 text-left"
                     >
+
                       <div className="truncate">{t.title}</div>
                       <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-ink-500">
                         <span>{new Date(t.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
