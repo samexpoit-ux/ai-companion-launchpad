@@ -117,3 +117,49 @@ test.describe("ChatWorkspace prompt box", () => {
     await expect(page.getByTestId("workspace-empty-state")).toHaveScreenshot("empty-state.png");
   });
 });
+
+test.describe("ChatWorkspace prompt box on mobile", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("controls never clip or overlap at 390px", async ({ page }) => {
+    await openWorkspace(page);
+    const c = await box(page, composer(page));
+    const viewport = page.viewportSize()!;
+
+    // Card fully inside the viewport with symmetric gutters.
+    expect(c.x).toBeGreaterThanOrEqual(4);
+    expect(c.x + c.width).toBeLessThanOrEqual(viewport.width - 3);
+    expect(c.y + c.height).toBeLessThanOrEqual(viewport.height + 1);
+
+    // Every visible control sits inside the composer bounds.
+    const controls = ["Add attachment", "Response mode", "Send message"];
+    for (const name of controls) {
+      const el = page.getByRole("button", { name: new RegExp(`^${name}$`, "i") });
+      if (!(await el.isVisible())) continue;
+      const b = await box(page, el);
+      expect(b.x, `${name} starts inside the card`).toBeGreaterThanOrEqual(c.x - 1);
+      expect(b.x + b.width, `${name} ends inside the card`).toBeLessThanOrEqual(c.x + c.width + 1);
+      expect(b.y + b.height, `${name} bottom inside the card`).toBeLessThanOrEqual(c.y + c.height + 1);
+    }
+
+    // Mode dropdown and send button must not collide.
+    const mode = await box(page, page.getByRole("button", { name: /^response mode$/i }));
+    const send = await box(page, page.getByRole("button", { name: /^send message$/i }));
+    expect(mode.x + mode.width).toBeLessThanOrEqual(send.x + 1);
+
+    await expect(composer(page)).toHaveScreenshot("composer-mobile.png");
+  });
+
+  test("multiline growth keeps the send button visible on mobile", async ({ page }) => {
+    await openWorkspace(page);
+    const ta = page.locator("textarea").first();
+    await ta.click();
+    await ta.fill(Array.from({ length: 10 }, (_, i) => `mobile line ${i + 1}`).join("\n"));
+    await page.waitForTimeout(200);
+
+    const c = await box(page, composer(page));
+    const send = await box(page, page.getByRole("button", { name: /^send message$/i }));
+    expect(send.y + send.height).toBeLessThanOrEqual(c.y + c.height + 1);
+    expect(c.y).toBeGreaterThanOrEqual(0);
+  });
+});
