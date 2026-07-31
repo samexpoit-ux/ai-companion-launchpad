@@ -238,18 +238,24 @@ function ChatWorkspaceInner() {
     ta.style.height = Math.min(ta.scrollHeight, 200) + "px";
   }, [input]);
 
-  const newChat = () => {
+  const newChat = async () => {
     if (active && active.messages.length === 0) {
       setInput("");
       return;
     }
-    const t: ChatThread = { id: uid(), title: "Untitled dossier", messages: [], updatedAt: Date.now() };
+    const created = await createDbThread({ title: "Untitled dossier", mode: mode.toLowerCase() });
+    const t: ChatThread = created
+      ? { id: created.id, title: created.title, messages: [], updatedAt: Date.now() }
+      : createFreshThread();
     setThreads((prev) => [t, ...prev]);
     setActiveId(t.id);
+    setLoadedThreads((prev) => new Set(prev).add(t.id));
     setInput("");
+    void navigate({ to: "/workspace", search: { thread: t.id }, replace: true });
   };
 
   const deleteThread = (id: string) => {
+    void deleteDbThread(id);
     setThreads((prev) => {
       const next = prev.filter((t) => t.id !== id);
       if (next.length === 0) {
@@ -271,6 +277,7 @@ function ChatWorkspaceInner() {
     const title = renameDraft.trim();
     if (id && title) {
       setThreads((prev) => prev.map((t) => (t.id === id ? { ...t, title } : t)));
+      void renameDbThread(id, title);
     }
     setRenamingId(null);
     setRenameDraft("");
@@ -290,8 +297,31 @@ function ChatWorkspaceInner() {
       setActiveId(id);
       if (isMobile) setSidebarOpen(false);
       void navigate({ to: "/workspace", search: { thread: id }, replace: true });
+      if (loadedThreads.has(id)) return;
+      void (async () => {
+        const rows = await listMessages(id);
+        setThreads((prev) =>
+          prev.map((t) =>
+            t.id === id
+              ? {
+                  ...t,
+                  messages: rows.map((m) => ({
+                    id: m.clientId ?? m.id,
+                    role: m.role === "assistant" ? ("assistant" as const) : ("user" as const),
+                    content: m.content,
+                    createdAt: new Date(m.createdAt).getTime(),
+                    model: m.model ?? undefined,
+                    tokens: m.tokens ?? undefined,
+                    latencyMs: m.latencyMs ?? undefined,
+                  })),
+                }
+              : t,
+          ),
+        );
+        setLoadedThreads((prev) => new Set(prev).add(id));
+      })();
     },
-    [isMobile, navigate],
+    [isMobile, navigate, loadedThreads],
   );
 
 
