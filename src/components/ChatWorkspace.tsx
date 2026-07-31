@@ -49,7 +49,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import nexusLogo from "@/assets/nexus-x-logo.png";
 import { ThemePicker } from "@/components/ThemePicker";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { takePendingPrompt } from "@/lib/pending-prompt";
+
 import { PreviewProvider, usePreview, isPreviewable } from "@/components/preview-context";
 import { PreviewPanel } from "@/components/PreviewPanel";
 import { PlayCircle, GripVertical, FolderTree, PanelRight } from "lucide-react";
@@ -159,6 +161,16 @@ function ChatWorkspaceInner() {
   
   const { isOpen: previewOpen, toggleWorkspace } = usePreview();
   const isMobile = useIsMobile();
+
+  // Deep link: /workspace?thread=<id> opens that conversation.
+  const requestedThreadId = useRouterState({
+    select: (state) => {
+      const search = state.location.search as Record<string, unknown> | undefined;
+      const value = search?.["thread"];
+      return typeof value === "string" && value ? value : null;
+    },
+  });
+
 
   const { user } = useAuth();
   const profile = useProfile(user?.id);
