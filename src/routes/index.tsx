@@ -114,9 +114,7 @@ function LandingPage() {
           </Button>
         </div>
 
-            <Link to="/image">Try Image Studio</Link>
-          </Button>
-        </div>
+
       </section>
 
       <section className="mx-auto grid w-full max-w-5xl gap-4 px-5 pb-20 sm:grid-cols-2">
