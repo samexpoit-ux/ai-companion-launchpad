@@ -427,6 +427,7 @@ function ChatWorkspaceInner() {
         const reply = await sendChatMessage([...(thread.messages ?? []), userMsg], modelId, {
           plan: credits.plan,
           mode,
+          threadId: thread.id,
         });
         const asstMsg: ChatMessage = {
           id: uid(),
@@ -435,6 +436,7 @@ function ChatWorkspaceInner() {
           model: reply.model,
           tokens: reply.tokens,
           latencyMs: reply.latencyMs,
+          credits: reply.credits?.charged,
           createdAt: Date.now(),
         };
         updateThread(thread.id, (t) => ({
@@ -451,11 +453,8 @@ function ChatWorkspaceInner() {
           tokens: asstMsg.tokens ?? null,
           latencyMs: asstMsg.latencyMs ?? null,
         });
-        void credits.charge(action, {
-          inputChars: value.length,
-          model: reply.model,
-          threadId: thread.id,
-        });
+        if (reply.credits) credits.applyServerBalance(reply.credits);
+        else void credits.refresh();
       } catch (error) {
         const apiErr = parseApiError(error, "chat");
         const steps = apiErr.steps.map((s, i) => `${i + 1}. ${s}`).join("\n");
@@ -1223,10 +1222,18 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           )}
 
         </div>
-        {!isUser && (message.tokens || message.latencyMs) && (
+        {!isUser && (message.tokens || message.latencyMs || message.credits != null) && (
           <div className="mt-1.5 flex items-center gap-2 text-[10px] font-mono text-ink-500">
             {message.latencyMs && <span>{(message.latencyMs / 1000).toFixed(2)}s</span>}
             {message.tokens && <><span className="text-ink-200">·</span><span>{message.tokens} tokens</span></>}
+            {message.credits != null && (
+              <>
+                <span className="text-ink-200">·</span>
+                <span className="text-[color:var(--color-iris)]">
+                  {formatCredits(message.credits)} credits
+                </span>
+              </>
+            )}
           </div>
         )}
       </div>

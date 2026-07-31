@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiSpendRouteImport } from './routes/api/spend'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiAutofixRouteImport } from './routes/api/autofix'
 import { Route as AuthenticatedWorkspaceRouteImport } from './routes/_authenticated/workspace'
@@ -31,6 +32,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSpendRoute = ApiSpendRouteImport.update({
+  id: '/api/spend',
+  path: '/api/spend',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/workspace': typeof AuthenticatedWorkspaceRoute
   '/api/autofix': typeof ApiAutofixRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/spend': typeof ApiSpendRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/workspace': typeof AuthenticatedWorkspaceRoute
   '/api/autofix': typeof ApiAutofixRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/spend': typeof ApiSpendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/_authenticated/workspace': typeof AuthenticatedWorkspaceRoute
   '/api/autofix': typeof ApiAutofixRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/spend': typeof ApiSpendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/workspace'
     | '/api/autofix'
     | '/api/chat'
+    | '/api/spend'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/workspace'
     | '/api/autofix'
     | '/api/chat'
+    | '/api/spend'
   id:
     | '__root__'
     | '/'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/_authenticated/workspace'
     | '/api/autofix'
     | '/api/chat'
+    | '/api/spend'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -136,6 +148,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ApiAutofixRoute: typeof ApiAutofixRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiSpendRoute: typeof ApiSpendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -159,6 +172,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/spend': {
+      id: '/api/spend'
+      path: '/api/spend'
+      fullPath: '/api/spend'
+      preLoaderRoute: typeof ApiSpendRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -229,6 +249,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ApiAutofixRoute: ApiAutofixRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiSpendRoute: ApiSpendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
