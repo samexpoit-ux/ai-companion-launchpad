@@ -2,6 +2,8 @@ import { apiErrorResponse, codeFromUpstream } from "@/lib/api-error";
 import { createFileRoute } from "@tanstack/react-router";
 import { resolveRoute, runWithFallback } from "@/lib/ai-gateway.server";
 import { isPlanId } from "@/lib/plans";
+import { actionForMode } from "@/lib/credits";
+import { CreditError, chargeRequest, creditErrorCode } from "@/lib/credit-guard.server";
 
 interface IncomingMessage {
   role: "user" | "assistant" | "system";
@@ -15,6 +17,8 @@ interface ChatBody {
   plan?: string;
   /** Composer mode, used to bias task detection ("build" | "chat" | "plan"). */
   mode?: string;
+  /** Thread the charge belongs to, for the ledger. */
+  threadId?: string;
 }
 
 const SYSTEM_PROMPT = `You are Nexura AI — a premium, precise coding and product intelligence assistant.
@@ -87,6 +91,23 @@ export const Route = createFileRoute("/api/chat")({
           return apiErrorResponse("no_provider", "chat", route.error);
         }
 
+        // ---- server-side credit enforcement (before any provider call) ----
+        let charge;
+        try {
+          charge = await chargeRequest(request, actionForMode(mode), {
+            inputChars: lastUser?.content.length ?? 0,
+            model: route.friendlyId,
+            threadId: typeof body.threadId === "string" ? body.threadId : null,
+          });
+        } catch (err) {
+          if (err instanceof CreditError) {
+            return apiErrorResponse(creditErrorCode(err), "chat", err.message, {
+              ...(err.remaining != null ? { remaining: err.remaining } : {}),
+            });
+          }
+          throw err;
+        }
+
         const started = Date.now();
         const cleanMessages = [
           { role: "system" as const, content: SYSTEM_PROMPT },
@@ -103,6 +124,13 @@ export const Route = createFileRoute("/api/chat")({
             task: route.task,
             tokens,
             latencyMs: Date.now() - started,
+            credits: {
+              charged: charge.charged,
+              remaining: charge.remaining,
+              total: charge.total,
+              used: charge.used,
+              plan: charge.plan,
+            },
           });
         } catch (err) {
           const e = err as Error & { status?: number };
