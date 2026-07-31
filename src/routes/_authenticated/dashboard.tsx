@@ -29,6 +29,7 @@ import { PlanPicker } from "@/components/PlanPicker";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { listThreads } from "@/lib/chat-store";
 import { WorkspaceSidebar, type RecentProject } from "@/components/dashboard/WorkspaceSidebar";
+import { planById } from "@/lib/plans";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
