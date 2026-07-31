@@ -1,11 +1,16 @@
 /**
- * Credit balance + charging, backed by `user_settings` (allowance) and
- * `credit_ledger` (spend). Exposed as one hook so every surface — dashboard
- * hero, workspace header, preview panel — shows the same remaining number.
+ * Credit balance for the signed-in user.
+ *
+ * The balance is authoritative on the server: `credit_balance()` computes it
+ * from `user_settings` (allowance) + `credit_ledger` (spend) inside the
+ * database, and only `spend_credits()` — called from `/api/chat` and
+ * `/api/autofix` — can write a charge. The browser therefore never charges
+ * itself; it only reads the balance and applies the number the server returned
+ * with the response, so the UI shows the exact credits that were consumed.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { estimateCost, type CreditAction, ACTION_RULES } from "@/lib/credits";
+import { estimateCost, type CreditAction } from "@/lib/credits";
 import { DEFAULT_PLAN, isPlanId, planById, type PlanId } from "@/lib/plans";
 
 interface CreditState {
@@ -15,17 +20,27 @@ interface CreditState {
   loading: boolean;
 }
 
+interface BalancePayload {
+  plan?: string;
+  total?: number;
+  used?: number;
+  remaining?: number;
+  period_start?: string;
+}
+
 export interface UseCredits extends CreditState {
   remaining: number;
   /** Cost preview for an action, before it runs. */
   quote: (action: CreditAction, inputChars?: number) => number;
-  /** True when the balance covers the action. */
+  /** True when the balance covers the action (server re-checks anyway). */
   canAfford: (action: CreditAction, inputChars?: number) => boolean;
-  /** Write a ledger row and update the local balance. Returns credits left. */
-  charge: (
-    action: CreditAction,
-    opts?: { inputChars?: number; model?: string | null; threadId?: string | null },
-  ) => Promise<number>;
+  /** Apply the authoritative balance returned by a billable API response. */
+  applyServerBalance: (payload: {
+    remaining?: number;
+    total?: number;
+    used?: number;
+    plan?: string;
+  }) => void;
   setPlan: (plan: PlanId) => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -40,74 +55,48 @@ export function useCredits(): UseCredits {
 
   const load = useCallback(async () => {
     const { data: auth } = await supabase.auth.getUser();
-    const userId = auth.user?.id;
-    if (!userId) {
+    if (!auth.user?.id) {
       setState((s) => ({ ...s, loading: false }));
       return;
     }
 
-    let settings = (
-      await supabase
-        .from("user_settings")
-        .select("plan,credits_total,period_start")
-        .eq("user_id", userId)
-        .maybeSingle()
-    ).data;
-
-    if (!settings) {
-      const inserted = await supabase
-        .from("user_settings")
-        .insert({ user_id: userId, plan: DEFAULT_PLAN, credits_total: planById(DEFAULT_PLAN).credits })
-        .select("plan,credits_total,period_start")
-        .single();
-      if (inserted.error) console.error("[credits] settings insert failed", inserted.error.message);
-      settings = inserted.data ?? null;
+    const { data, error } = await supabase.rpc("credit_balance", {});
+    if (error) {
+      console.error("[credits] balance read failed", error.message);
+      setState((s) => ({ ...s, loading: false }));
+      return;
     }
 
-    const plan: PlanId = isPlanId(settings?.plan) ? settings.plan : DEFAULT_PLAN;
-    const total = settings?.credits_total ?? planById(plan).credits;
-    const periodStart = settings?.period_start ?? new Date(0).toISOString();
-
-    const ledger = await supabase
-      .from("credit_ledger")
-      .select("credits")
-      .gte("created_at", periodStart);
-    if (ledger.error) console.error("[credits] ledger read failed", ledger.error.message);
-    const used = (ledger.data ?? []).reduce((sum, row) => sum + Number(row.credits ?? 0), 0);
-
-    setState({ plan, total, used, loading: false });
+    const payload = (data ?? {}) as BalancePayload;
+    const plan: PlanId = isPlanId(payload.plan) ? payload.plan : DEFAULT_PLAN;
+    setState({
+      plan,
+      total: Number(payload.total ?? planById(plan).credits),
+      used: Number(payload.used ?? 0),
+      loading: false,
+    });
   }, []);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  const charge = useCallback<UseCredits["charge"]>(
-    async (action, opts) => {
-      const cost = estimateCost(action, opts?.inputChars ?? 0);
-      const { data: auth } = await supabase.auth.getUser();
-      const userId = auth.user?.id;
-      if (userId) {
-        const { error } = await supabase.from("credit_ledger").insert({
-          user_id: userId,
-          action,
-          tier: ACTION_RULES[action].tier,
-          credits: cost,
-          model: opts?.model ?? null,
-          thread_id: opts?.threadId ?? null,
-        });
-        if (error) console.error("[credits] charge failed", error.message);
-      }
-      let left = 0;
-      setState((s) => {
-        const used = s.used + cost;
-        left = Math.max(0, s.total - used);
-        return { ...s, used };
-      });
-      return left;
-    },
-    [],
-  );
+  const applyServerBalance = useCallback<UseCredits["applyServerBalance"]>((payload) => {
+    setState((s) => {
+      const total = Number.isFinite(payload.total) ? Number(payload.total) : s.total;
+      const used = Number.isFinite(payload.used)
+        ? Number(payload.used)
+        : Number.isFinite(payload.remaining)
+          ? Math.max(0, total - Number(payload.remaining))
+          : s.used;
+      return {
+        ...s,
+        plan: isPlanId(payload.plan) ? payload.plan : s.plan,
+        total,
+        used,
+      };
+    });
+  }, []);
 
   const setPlan = useCallback(async (plan: PlanId) => {
     const total = planById(plan).credits;
@@ -119,7 +108,8 @@ export function useCredits(): UseCredits {
       .from("user_settings")
       .upsert({ user_id: userId, plan, credits_total: total }, { onConflict: "user_id" });
     if (error) console.error("[credits] setPlan failed", error.message);
-  }, []);
+    await load();
+  }, [load]);
 
   const remaining = useMemo(() => Math.max(0, state.total - state.used), [state.total, state.used]);
 
@@ -128,7 +118,7 @@ export function useCredits(): UseCredits {
     remaining,
     quote: (action, inputChars) => estimateCost(action, inputChars ?? 0),
     canAfford: (action, inputChars) => remaining >= estimateCost(action, inputChars ?? 0),
-    charge,
+    applyServerBalance,
     setPlan,
     refresh: load,
   };
