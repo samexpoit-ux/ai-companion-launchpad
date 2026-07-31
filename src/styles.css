@@ -626,3 +626,27 @@
     linear-gradient(170deg, #f6f8ff 0%, #eaeeff 46%, #e7e2fb 78%, #f4f1ff 100%);
   animation: aurora-drift 22s ease-in-out infinite;
 }
+
+/* Prompt-section movement design: soft rise-in entrances used by the composer + empty state */
+@keyframes nx-rise {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes nx-pop {
+  0%   { opacity: 0; transform: scale(0.82); }
+  60%  { transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@utility nx-rise {
+  animation: nx-rise 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility nx-pop {
+  animation: nx-pop 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nx-rise, .nx-pop { animation: none; }
+}

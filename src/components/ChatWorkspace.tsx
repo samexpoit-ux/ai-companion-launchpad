@@ -832,16 +832,16 @@ function ChatWorkspaceInner() {
             className="pointer-events-none absolute -top-10 left-0 right-0 h-10 bg-gradient-to-b from-transparent to-white"
           />
 
-          <div className="mx-auto w-full max-w-3xl px-3 pb-3 pt-2 sm:px-6 sm:pb-5 sm:pt-3">
+          <div className="nx-rise mx-auto w-full max-w-3xl px-3 pb-4 pt-2 sm:px-6 sm:pb-6 sm:pt-3">
             <div
               data-testid="composer"
               className={cn(
                 "group relative rounded-[26px] border border-ink-200 bg-white",
-                "transition-[box-shadow,border-color,transform] duration-200 ease-out",
+                "transition-[box-shadow,border-color,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
                 "shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-16px_rgba(16,24,40,0.18)]",
-                "hover:border-ink-300",
-                "focus-within:-translate-y-px focus-within:border-[color:var(--color-iris)]/50",
-                "focus-within:shadow-[0_1px_2px_rgba(16,24,40,0.05),0_18px_44px_-18px_color-mix(in_oklab,var(--color-iris)_45%,transparent)]",
+                "hover:border-ink-300 hover:shadow-[0_1px_2px_rgba(16,24,40,0.04),0_16px_38px_-18px_rgba(16,24,40,0.22)]",
+                "focus-within:-translate-y-0.5 focus-within:border-[color:var(--color-iris)]/50",
+                "focus-within:shadow-[0_1px_2px_rgba(16,24,40,0.05),0_22px_50px_-20px_color-mix(in_oklab,var(--color-iris)_50%,transparent)]",
               )}
             >
               <textarea
@@ -851,10 +851,10 @@ function ChatWorkspaceInner() {
                 onKeyDown={onKeyDown}
                 rows={1}
                 placeholder="Ask Nexura to build something…"
-                className="block max-h-56 w-full resize-none bg-transparent px-4 pb-1.5 pt-3.5 text-[15px] leading-6 text-ink-900 placeholder:text-ink-400 focus:outline-none sm:px-4.5 sm:pt-4"
+                className="block max-h-56 w-full resize-none bg-transparent px-4 pb-2 pt-4 text-[15px] leading-6 text-ink-900 transition-[height] duration-150 ease-out placeholder:text-ink-400 focus:outline-none sm:px-5 sm:pt-4.5"
               />
 
-              <div className="flex items-center gap-1.5 px-2.5 pb-2.5 pt-0.5 sm:px-3">
+              <div className="flex items-center gap-1.5 px-3 pb-3 pt-0.5 sm:px-3.5">
                 {/* + menu, exactly one entry point for attachments like Lovable */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -937,7 +937,7 @@ function ChatWorkspaceInner() {
               </div>
             </div>
 
-            <p className="mt-2.5 text-center text-2xs leading-relaxed text-ink-400">
+            <p className="mt-3 text-center text-2xs leading-relaxed text-ink-400">
               Smart routing · {formatCredits(credits.remaining)} of {formatCredits(credits.total)} credits left
             </p>
           </div>
@@ -978,10 +978,10 @@ function SendButton({ onClick, disabled, loading }: { onClick: () => void; disab
       disabled={disabled}
       aria-label={loading ? "Sending" : "Send message"}
       className={cn(
-        "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition duration-150 active:scale-95",
+        "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-95",
         ready
-          ? "text-white shadow-[0_6px_16px_-8px_color-mix(in_oklab,var(--color-iris-deep)_80%,transparent)]"
-          : "cursor-not-allowed bg-ink-200 text-ink-400",
+          ? "nx-pop scale-100 text-white shadow-[0_6px_16px_-8px_color-mix(in_oklab,var(--color-iris-deep)_80%,transparent)] hover:scale-105"
+          : "scale-95 cursor-not-allowed bg-ink-200 text-ink-400",
       )}
       style={ready ? { background: "var(--iris-gradient)" } : undefined}
     >
@@ -1320,7 +1320,7 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
       className="mx-auto flex h-full w-full max-w-2xl flex-col items-center justify-center gap-6 px-5 py-10 text-center sm:px-6"
     >
       {/* Illustration: brand mark on a soft aurora halo */}
-      <div className="relative flex items-center justify-center">
+      <div className="nx-rise relative flex items-center justify-center">
         <span
           aria-hidden
           className="absolute h-24 w-24 rounded-full blur-2xl sm:h-28 sm:w-28"
@@ -1333,7 +1333,7 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
         <BrandMark size="lg" className="relative" />
       </div>
 
-      <div className="space-y-2.5">
+      <div className="nx-rise space-y-2.5" style={{ animationDelay: "70ms" }}>
         <h1 className="font-display text-2xl font-semibold leading-tight tracking-tight text-ink-900 sm:text-3xl">
           What should we build today?
         </h1>
@@ -1344,17 +1344,18 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
 
       {/* Suggestion pills — two balanced rows on every viewport */}
       <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
-        {starters.map((s) => (
+        {starters.map((s, i) => (
           <button
             key={s.key}
             type="button"
             data-testid="starter-pill"
             onClick={() => onPick(s.prompt)}
             title={s.body}
+            style={{ animationDelay: `${140 + i * 60}ms` }}
             className={cn(
-              "group inline-flex min-w-0 items-center gap-2 rounded-full border border-ink-200 bg-white px-3.5 py-2 text-left",
-              "text-xs font-medium text-ink-700 transition-all duration-200",
-              "hover:-translate-y-px hover:border-[color:var(--color-iris)]/45 hover:text-ink-900 hover:shadow-[0_8px_20px_-14px_rgba(16,24,40,0.35)]",
+              "nx-rise group inline-flex min-w-0 items-center gap-2 rounded-full border border-ink-200 bg-white px-3.5 py-2 text-left",
+              "text-xs font-medium text-ink-700 transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+              "hover:-translate-y-0.5 hover:border-[color:var(--color-iris)]/45 hover:text-ink-900 hover:shadow-[0_10px_24px_-14px_rgba(16,24,40,0.35)]",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-iris)]/35",
             )}
           >
