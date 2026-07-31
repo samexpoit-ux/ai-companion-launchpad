@@ -15,7 +15,7 @@ import { CreditMeter } from "@/components/CreditMeter";
 import { PlanPicker } from "@/components/PlanPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useCredits } from "@/hooks/useCredits";
-import { ACTION_RULES, formatCredits, type CreditAction } from "@/lib/credits";
+import { formatCredits } from "@/lib/credits";
 import { breakdownByAction, listLedger, type LedgerEntry } from "@/lib/credit-ledger";
 import { listThreads, type StoredThread } from "@/lib/chat-store";
 import { PLANS, planById, type PlanId } from "@/lib/plans";
@@ -200,11 +200,11 @@ function AccountPage() {
                   aria-hidden="true"
                 />
                 <span className="text-ink-900">
-                  {ACTION_RULES[row.action as CreditAction]?.label ?? row.action}
+                  {row.label}
                 </span>
-                <span className="ml-auto text-xs text-ink-500">{row.count}×</span>
+                <span className="ml-auto text-xs text-ink-500">{row.charges}×</span>
                 <span className="w-20 text-right font-mono text-xs text-ink-900">
-                  {formatCredits(row.credits)}
+                  {formatCredits(row.net)}
                 </span>
               </li>
             ))}
@@ -236,7 +236,7 @@ function AccountPage() {
                     {thread.title || "Untitled build"}
                   </span>
                   <span className="shrink-0 text-[11px] text-ink-500">
-                    {fmtWhen(thread.updatedAt)}
+                    {fmtWhen(thread.lastMessageAt)}
                   </span>
                 </Link>
               </li>
