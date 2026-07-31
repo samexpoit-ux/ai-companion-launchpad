@@ -9,7 +9,7 @@ export NITRO_PRESET=node-server
 bun install
 bun run build
 chown -R nexuraai:nexuraai "$APP_DIR"
-systemctl restart nexura
+systemctl restart nexuraai
 sleep 2
-systemctl --no-pager status nexura | head -n 15
+systemctl --no-pager status nexuraai | head -n 15
 curl -sS -o /dev/null -w "local health: %{http_code}\n" http://127.0.0.1:3000/

@@ -17,7 +17,7 @@ bash vps-setup.sh
 Or if the repo isn't pushed yet: `scp -r deploy root@169.58.105.190:/root/` then `bash /root/deploy/vps-setup.sh`.
 
 The script installs Node 22, Bun, nginx, ufw, builds the app with
-`NITRO_PRESET=node-server`, registers the `nexura` systemd service on
+`NITRO_PRESET=node-server`, registers the `nexuraai` systemd service on
 127.0.0.1:3000, wires nginx, and issues a Let's Encrypt cert for both
 `nexuraai.dev` and `www.nexuraai.dev`.
 
@@ -40,15 +40,15 @@ callback URL, and authorized origins must include `https://nexuraai.dev`.
 
 ## 4) Everyday commands
 ```bash
-systemctl status nexura          # state
-journalctl -u nexura -f          # live logs
+systemctl status nexuraai          # state
+journalctl -u nexuraai -f          # live logs
 bash /var/www/nexuraai/deploy/deploy.sh   # pull + rebuild + restart
 nginx -t && systemctl reload nginx
 certbot renew --dry-run          # SSL auto-renew check
 ```
 
 ## Troubleshooting
-- **502 Bad Gateway** → app not running: `journalctl -u nexura -n 50`.
+- **502 Bad Gateway** → app not running: `journalctl -u nexuraai -n 50`.
 - **certbot fails** → DNS not propagated yet; wait and rerun
   `certbot --nginx -d nexuraai.dev -d www.nexuraai.dev`.
 - **Blank page / env errors** → `.env` missing `VITE_*` values at *build* time;
