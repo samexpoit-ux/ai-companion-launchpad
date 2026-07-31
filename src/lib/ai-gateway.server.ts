@@ -1,4 +1,4 @@
-// Nexus X AI — single-provider gateway (OpenRouter only).
+// Nexura AI — single-provider gateway (OpenRouter only).
 //
 // SMART COST ROUTER
 // The user never picks a model (same as Lovable). We inspect the task and the
@@ -35,7 +35,7 @@ export function openRouterConfig(): OpenRouterConfig | null {
     apiKey,
     extraHeaders: {
       "HTTP-Referer": "https://ai.nexus-x.cloud",
-      "X-Title": "Nexus X AI",
+      "X-Title": "Nexura AI",
     },
   };
 }
@@ -155,7 +155,7 @@ export function resolveRoute(
   if (!config) {
     return {
       error:
-        "OpenRouter is not configured. Add an OPENROUTER_API_KEY secret to enable Nexus X AI.",
+        "OpenRouter is not configured. Add an OPENROUTER_API_KEY secret to enable Nexura AI.",
     };
   }
 

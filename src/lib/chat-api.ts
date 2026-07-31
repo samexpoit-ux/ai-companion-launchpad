@@ -34,7 +34,7 @@ export interface AIModel {
 export const AI_MODELS: AIModel[] = [
   {
     id: "nx-auto",
-    name: "Nexus Auto",
+    name: "Nexura Auto",
     tier: "Signature",
     tagline: "Smart routing · cheapest capable model per task",
     context: "Adaptive",
@@ -43,7 +43,7 @@ export const AI_MODELS: AIModel[] = [
   },
   {
     id: "nx-builder",
-    name: "Nexus Builder",
+    name: "Nexura Builder",
     tier: "Signature",
     tagline: "Claude 3.7 Sonnet · app building, refactors & bug fixes",
     context: "200K tokens",
@@ -52,7 +52,7 @@ export const AI_MODELS: AIModel[] = [
   },
   {
     id: "nx-reasoner",
-    name: "Nexus Reasoner",
+    name: "Nexura Reasoner",
     tier: "Signature",
     tagline: "Claude 3.7 Sonnet · architecture & planning",
     context: "200K tokens",
@@ -61,7 +61,7 @@ export const AI_MODELS: AIModel[] = [
   },
   {
     id: "nx-flash",
-    name: "Nexus Flash",
+    name: "Nexura Flash",
     tier: "Reserve",
     tagline: "Claude 3.5 Haiku · fast, low-cost everyday chat",
     context: "200K tokens",
@@ -69,7 +69,7 @@ export const AI_MODELS: AIModel[] = [
   },
   {
     id: "nx-vision",
-    name: "Nexus Vision",
+    name: "Nexura Vision",
     tier: "Reserve",
     tagline: "Claude 3.5 Sonnet · balanced quality fallback",
     context: "200K tokens",

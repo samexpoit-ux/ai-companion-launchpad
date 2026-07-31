@@ -82,7 +82,7 @@ export function WorkspaceSidebar({
 
       <div className="flex items-center justify-between px-3 py-3">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <img src={nexusLogo} alt="Nexus X AI logo" className="h-6 w-6 rounded-md" />
+          <img src={nexusLogo} alt="Nexura AI logo" className="h-6 w-6 rounded-md" />
         </Link>
         <button
           type="button"
@@ -251,7 +251,7 @@ export function WorkspaceSidebar({
       <div className="border-t border-ink-200 p-3">
         <div className="flex items-center justify-between rounded-xl border border-ink-200 bg-ink-50 px-3 py-2.5 shadow-ds-xs">
           <div className="min-w-0">
-            <p className="text-[12.5px] font-semibold text-ink-900">Share Nexus X</p>
+            <p className="text-[12.5px] font-semibold text-ink-900">Share Nexura</p>
             <p className="truncate text-[11px] text-ink-400">100 credits per paid referral</p>
           </div>
           <Gift className="h-4 w-4 shrink-0 text-[color:var(--color-iris)]" />

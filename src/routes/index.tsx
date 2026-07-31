@@ -10,13 +10,13 @@ export const Route = createFileRoute("/")({
   component: LandingPage,
   head: () => ({
     meta: [
-      { title: "Nexus X AI — Build, Preview and Auto-Fix Apps with AI" },
+      { title: "Nexura AI — Build, Preview and Auto-Fix Apps with AI" },
       {
         name: "description",
         content:
-          "Nexus X AI routes every prompt to the right model automatically, generates multi-file projects, previews them live and fixes runtime errors for you.",
+          "Nexura AI routes every prompt to the right model automatically, generates multi-file projects, previews them live and fixes runtime errors for you.",
       },
-      { property: "og:title", content: "Nexus X AI" },
+      { property: "og:title", content: "Nexura AI" },
       {
         property: "og:description",
         content:
@@ -71,9 +71,9 @@ function LandingPage() {
     >
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5">
         <div className="flex items-center gap-2.5">
-          <img src={nexusLogo} alt="Nexus X AI logo" className="h-8 w-8 rounded-lg" />
+          <img src={nexusLogo} alt="Nexura AI logo" className="h-8 w-8 rounded-lg" />
           <span className="font-display text-[15px] font-semibold tracking-tight text-ink-900">
-            Nexus X AI
+            Nexura AI
           </span>
         </div>
         <nav className="flex items-center gap-2">
@@ -95,7 +95,7 @@ function LandingPage() {
         <h1 className="mt-6 font-display text-4xl font-semibold leading-[1.08] tracking-tight text-ink-900 sm:text-6xl">
           Describe it once.
           <br />
-          <span className="text-[color:var(--color-iris)]">Nexus X builds it.</span>
+          <span className="text-[color:var(--color-iris)]">Nexura builds it.</span>
         </h1>
 
         <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-ink-500">
@@ -135,7 +135,7 @@ function LandingPage() {
       </section>
 
       <footer className="border-t border-ink-200 px-5 py-6 text-center text-[12px] text-ink-400">
-        Nexus X AI · Developed by{" "}
+        Nexura AI · Developed by{" "}
         <span className="font-medium text-ink-600">Sam</span>
       </footer>
     </main>

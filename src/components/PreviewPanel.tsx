@@ -357,7 +357,7 @@ function EmptyWorkspace({ onClose, onStart }: { onClose: () => void; onStart: ()
           </div>
           <p className="text-sm font-medium text-ink-900">Nothing to preview yet</p>
           <p className="mt-1.5 text-[12px] leading-relaxed text-ink-500">
-            Ask Nexus X to build something — generated projects open here with live
+            Ask Nexura to build something — generated projects open here with live
             preview, a file explorer and console.
           </p>
           <button

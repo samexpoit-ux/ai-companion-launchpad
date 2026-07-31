@@ -29,13 +29,13 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
   head: () => ({
     meta: [
-      { title: "Dashboard — Nexus X AI" },
+      { title: "Dashboard — Nexura AI" },
       {
         name: "description",
         content:
           "Start a new build from a single prompt, reopen recent projects and jump into the live preview workspace.",
       },
-      { property: "og:title", content: "Nexus X AI Dashboard" },
+      { property: "og:title", content: "Nexura AI Dashboard" },
       {
         property: "og:description",
         content: "Prompt, preview and ship AI-built apps from one workspace.",
@@ -238,7 +238,7 @@ function DashboardPage() {
                     }
                   }}
                   rows={1}
-                  placeholder="Ask Nexus X to build an app that…"
+                  placeholder="Ask Nexura to build an app that…"
                   className="w-full resize-none bg-transparent px-1.5 py-1 text-[15px] text-ink-900 outline-none placeholder:text-ink-400"
                 />
 
@@ -362,7 +362,7 @@ function DashboardPage() {
                   {tab === "Templates" ? "Templates are coming soon" : "No projects yet"}
                 </p>
                 <p className="mt-1 max-w-sm text-[13px] text-ink-500">
-                  Describe what you want above and Nexus X will generate the files, run a live
+                  Describe what you want above and Nexura will generate the files, run a live
                   preview and fix runtime errors for you.
                 </p>
               </div>

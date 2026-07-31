@@ -13,16 +13,16 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
   head: () => ({
     meta: [
-      { title: "Sign in — Nexus X AI" },
+      { title: "Sign in — Nexura AI" },
       {
         name: "description",
         content:
-          "Sign in or create your Nexus X AI account to build, preview and auto-fix projects with smart model routing.",
+          "Sign in or create your Nexura AI account to build, preview and auto-fix projects with smart model routing.",
       },
-      { property: "og:title", content: "Sign in to Nexus X AI" },
+      { property: "og:title", content: "Sign in to Nexura AI" },
       {
         property: "og:description",
-        content: "Create your Nexus X AI account and start building.",
+        content: "Create your Nexura AI account and start building.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -119,14 +119,14 @@ function AuthPage() {
         <div className="mb-8 flex flex-col items-center text-center">
           <img
             src={nexusLogo}
-            alt="Nexus X AI logo"
+            alt="Nexura AI logo"
             className="h-12 w-12 rounded-xl"
           />
           <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight text-ink-900">
             {mode === "signin" ? "Welcome back" : "Create your account"}
           </h1>
           <p className="mt-1.5 text-sm text-ink-500">
-            Nexus X AI — build, preview and auto-fix in one workspace.
+            Nexura AI — build, preview and auto-fix in one workspace.
           </p>
         </div>
 
@@ -138,7 +138,7 @@ function AuthPage() {
               </h2>
               <p className="mt-2 text-sm text-ink-500">
                 We sent a confirmation link to <strong>{email}</strong>. Click it to
-                activate your Nexus X AI account.
+                activate your Nexura AI account.
               </p>
               <Button
                 variant="ghost"
@@ -222,7 +222,7 @@ function AuthPage() {
               </form>
 
               <p className="mt-5 text-center text-[13px] text-ink-500">
-                {mode === "signin" ? "New to Nexus X AI?" : "Already have an account?"}{" "}
+                {mode === "signin" ? "New to Nexura AI?" : "Already have an account?"}{" "}
                 <button
                   type="button"
                   className="font-medium text-[color:var(--color-iris)] underline-offset-4 hover:underline"
