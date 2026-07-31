@@ -11,8 +11,11 @@
     "start": "node .output/server/index.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
+    "test": "vitest run",
     "test:ui": "playwright test",
+    "test:a11y": "playwright test tests/ui/a11y",
     "test:ui:update": "playwright test --update-snapshots"
+
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.12",
