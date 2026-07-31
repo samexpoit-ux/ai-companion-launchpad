@@ -117,11 +117,16 @@ function AuthPage() {
     >
       <div className="w-full max-w-[400px]">
         <div className="mb-8 flex flex-col items-center text-center">
-          <img
-            src={nexuraLogo}
-            alt="Nexura AI logo"
-            className="h-12 w-12 rounded-xl"
-          />
+          <span className="relative inline-flex">
+            <img
+              src={nexuraLogo}
+              alt="Nexura AI logo"
+              className="h-20 w-20 object-contain"
+            />
+            <span className="absolute -bottom-1 -right-1 rounded-md bg-[color:var(--color-iris)] px-1.5 py-[2px] text-[9px] font-bold leading-none tracking-[0.08em] text-white">
+              AI
+            </span>
+          </span>
           <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight text-ink-900">
             {mode === "signin" ? "Welcome back" : "Create your account"}
           </h1>

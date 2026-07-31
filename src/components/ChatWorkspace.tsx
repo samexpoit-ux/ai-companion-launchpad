@@ -567,14 +567,17 @@ function ChatWorkspaceInner() {
 
         {/* Brand */}
         <div className="flex items-center gap-2.5 border-b border-ink-200 px-4 py-4">
-          <div className="relative flex h-9 w-9 items-center justify-center">
+          <div className="relative flex h-12 w-12 items-center justify-center">
             <img
               src={nexuraLogo}
               alt="Nexura AI logo"
-              width={36}
-              height={36}
-              className="h-9 w-9 object-contain"
+              width={48}
+              height={48}
+              className="h-12 w-12 object-contain"
             />
+            <span className="absolute -bottom-0.5 -right-1 rounded-[4px] bg-[color:var(--color-iris)] px-1 py-[1px] text-[7px] font-bold leading-none tracking-[0.08em] text-white">
+              AI
+            </span>
           </div>
           <div className="min-w-0">
             <div className="font-display text-[15px] font-bold leading-tight tracking-tight text-ink-900">
