@@ -264,8 +264,9 @@ export function PreviewPanel() {
             <PatchReview />
           </Suspense>
         )}
-
+        </div>
       </div>
+
 
     </aside>
   );
