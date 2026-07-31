@@ -1,5 +1,6 @@
 import { apiErrorResponse, codeFromUpstream } from "@/lib/api-error";
 import { createFileRoute } from "@tanstack/react-router";
+import { CreditError, chargeRequest, creditErrorCode } from "@/lib/credit-guard.server";
 import { resolveRoute, runWithFallback } from "@/lib/ai-gateway.server";
 
 interface AutofixBody {
@@ -91,6 +92,23 @@ export const Route = createFileRoute("/api/autofix")({
 
         const route = resolveRoute(body.modelId, { task: "fix" });
         if ("error" in route) return apiErrorResponse("no_provider", "autofix", route.error);
+
+        // ---- server-side credit enforcement (before any provider call) ----
+        let charge;
+        try {
+          charge = await chargeRequest(request, "autofix", {
+            inputChars: (files ? JSON.stringify(files).length : code.length),
+            model: route.friendlyId,
+            reason: `autofix attempt ${body.attempt ?? 1}`,
+          });
+        } catch (err) {
+          if (err instanceof CreditError) {
+            return apiErrorResponse(creditErrorCode(err), "autofix", err.message, {
+              ...(err.remaining != null ? { remaining: err.remaining } : {}),
+            });
+          }
+          throw err;
+        }
 
         const userPrompt = isProject
           ? [
