@@ -421,11 +421,14 @@ function ChatWorkspaceInner() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "flex h-full w-64 shrink-0 flex-col border-r border-ink-200 bg-ink-100 transition-transform duration-300",
+          "flex h-full w-[86vw] max-w-[300px] shrink-0 flex-col border-r border-ink-200 bg-ink-100 transition-transform duration-300 md:w-64 md:max-w-none",
           "fixed inset-y-0 left-0 z-40 md:relative md:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full md:w-0 md:-translate-x-0 md:overflow-hidden md:border-0",
+          sidebarOpen
+            ? "translate-x-0 shadow-2xl md:shadow-none"
+            : "-translate-x-full md:w-0 md:-translate-x-0 md:overflow-hidden md:border-0",
         )}
       >
+
 
         {/* Brand */}
         <div className="flex items-center gap-2.5 border-b border-ink-200 px-4 py-4">
@@ -467,9 +470,10 @@ function ChatWorkspaceInner() {
         </div>
 
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
-          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink-400">Recent sessions</span>
-          <span className="text-[10px] text-ink-400">{filtered.length}</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink-400">Chat history</span>
+          <span className="rounded-full bg-ink-200 px-1.5 text-[10px] text-ink-500">{filtered.length}</span>
         </div>
+
 
 
         <div className="flex-1 overflow-y-auto px-2 pb-2">
