@@ -22,10 +22,10 @@ import { cn } from "@/lib/utils";
 import { useAuth, useProfile, displayNameOf } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { queuePendingPrompt } from "@/lib/pending-prompt";
-import { actionForMode, ACTION_RULES, formatCredits } from "@/lib/credits";
+import { actionForMode, formatCredits } from "@/lib/credits";
 import { useCredits } from "@/hooks/useCredits";
 import { CreditMeter } from "@/components/CreditMeter";
-import { PlanPicker } from "@/components/PlanPicker";
+
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { listThreads } from "@/lib/chat-store";
 import { WorkspaceSidebar, type RecentProject } from "@/components/dashboard/WorkspaceSidebar";
