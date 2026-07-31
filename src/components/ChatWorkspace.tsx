@@ -546,7 +546,13 @@ function ChatWorkspaceInner() {
               </div>
             );
           })}
+          {filtered.length === 0 && (
+            <p className="px-3 py-6 text-center text-[12px] text-ink-400">
+              {query.trim() ? "No conversation matches that search." : "No conversations yet."}
+            </p>
+          )}
         </div>
+
 
         {/* User */}
         <div className="border-t border-ink-200 p-3">
