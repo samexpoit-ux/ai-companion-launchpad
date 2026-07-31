@@ -64,7 +64,7 @@ import {
   subscribeToChat,
 } from "@/lib/chat-store";
 
-import nexuraLogo from "@/assets/nexura-mark.png";
+import { BrandMark, BrandWordmark } from "@/components/BrandMark";
 import { ThemePicker } from "@/components/ThemePicker";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { takePendingPrompt } from "@/lib/pending-prompt";
@@ -567,22 +567,9 @@ function ChatWorkspaceInner() {
 
         {/* Brand */}
         <div className="flex items-center gap-2.5 border-b border-ink-200 px-4 py-4">
-          <div className="relative flex h-12 w-12 items-center justify-center">
-            <img
-              src={nexuraLogo}
-              alt="Nexura AI logo"
-              width={48}
-              height={48}
-              className="h-12 w-12 object-contain"
-            />
-            <span className="absolute -bottom-0.5 -right-1 rounded-[4px] bg-[color:var(--color-iris)] px-1 py-[1px] text-[7px] font-bold leading-none tracking-[0.08em] text-white">
-              AI
-            </span>
-          </div>
+          <BrandMark size="md" />
           <div className="min-w-0">
-            <div className="font-display text-[15px] font-bold leading-tight tracking-tight text-ink-900">
-              Nexura <span className="text-[color:var(--color-iris)]">AI</span>
-            </div>
+            <BrandWordmark className="block text-[14px] font-bold leading-tight sm:text-[15px]" />
             <div className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-ink-500">
               Build · Preview · Ship
             </div>
