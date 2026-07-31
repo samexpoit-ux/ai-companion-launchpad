@@ -165,7 +165,7 @@ function DashboardPage() {
           recents={recents}
           workspaceName={workspaceName}
           userLabel={displayNameOf(profile, user)}
-          credits={{ left: 304, total: 400 }}
+          credits={CREDITS}
           onCollapse={() => setSidebarOpen(false)}
           className={cn(isMobile && "fixed inset-y-0 left-0 z-50 w-[86vw] max-w-[300px] shadow-ds-lg")}
         />
