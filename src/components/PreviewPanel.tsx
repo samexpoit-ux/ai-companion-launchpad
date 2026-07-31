@@ -420,6 +420,7 @@ function TabBtn({
   return (
     <button
       onClick={onClick}
+      aria-label={label}
       aria-pressed={active}
       className={cn(
         "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
@@ -466,8 +467,8 @@ function DeviceBtn({
 function EmptyWorkspace({ onClose, onStart }: { onClose: () => void; onStart: () => void }) {
   return (
     <aside className="relative flex h-full min-w-0 flex-col border-l border-ink-200 bg-ink-100">
-      <div className="flex items-center gap-2 border-b border-ink-200 bg-white px-3 py-2">
-        <span className="text-2xs font-semibold uppercase tracking-[0.18em] text-ink-400">Live Workspace</span>
+      <div className="flex h-12 shrink-0 items-center gap-2 overflow-hidden border-b border-ink-200 bg-white px-2 sm:px-3">
+        <span className="shrink-0 text-2xs font-semibold uppercase tracking-[0.18em] text-ink-400">Live Workspace</span>
         <span className="rounded-md border border-ink-200 bg-ink-100 px-1.5 py-0.5 font-mono text-2xs text-ink-500">idle</span>
         <button
           onClick={onClose}
