@@ -40,6 +40,7 @@ import {
   Sparkle,
   Diamond,
   Mic,
+  Loader2,
   Image as ImageIcon,
   ChevronRight,
   Crown,
