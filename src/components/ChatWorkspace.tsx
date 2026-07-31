@@ -50,7 +50,18 @@ import {
 } from "@/lib/chat-api";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { CREDITS } from "@/lib/credits";
+import { actionForMode, formatCredits, ACTION_RULES } from "@/lib/credits";
+import { useCredits } from "@/hooks/useCredits";
+import { CreditMeter } from "@/components/CreditMeter";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
+import {
+  listThreads,
+  listMessages,
+  createThread as createDbThread,
+  deleteThread as deleteDbThread,
+  renameThread as renameDbThread,
+  saveMessage,
+} from "@/lib/chat-store";
 import nexuraLogo from "@/assets/nexura-logo.png";
 import { ThemePicker } from "@/components/ThemePicker";
 import { Link, useRouterState } from "@tanstack/react-router";
@@ -162,6 +173,9 @@ function ChatWorkspaceInner() {
   const [threads, setThreads] = useState<ChatThread[]>([]);
   const [activeId, setActiveId] = useState<string>("");
   const [modelId, setModelId] = useState<string>(AI_MODELS[0].id);
+  const [mode, setMode] = useState<"Build" | "Chat" | "Plan">("Build");
+  const [loadedThreads, setLoadedThreads] = useState<Set<string>>(() => new Set());
+  const credits = useCredits();
   
   const { isOpen: previewOpen, toggleWorkspace } = usePreview();
   const isMobile = useIsMobile();
@@ -201,23 +215,61 @@ function ChatWorkspaceInner() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
+  // Load conversations from the database (single source of truth).
   useEffect(() => {
-    const persisted = loadPersisted();
-    if (persisted && persisted.threads.length > 0) {
-      setThreads(persisted.threads);
-      setActiveId(
-        requestedThreadId && persisted.threads.some((t) => t.id === requestedThreadId)
+    let cancelled = false;
+    (async () => {
+      const rows = await listThreads();
+      if (cancelled) return;
+
+      let mapped: ChatThread[] = rows.map((r) => ({
+        id: r.id,
+        title: r.title,
+        messages: [],
+        updatedAt: new Date(r.lastMessageAt).getTime(),
+      }));
+
+      if (mapped.length === 0) {
+        const created = await createDbThread({ title: "Untitled dossier", mode: "build" });
+        if (cancelled) return;
+        mapped = created
+          ? [{ id: created.id, title: created.title, messages: [], updatedAt: Date.now() }]
+          : [createFreshThread()];
+      }
+
+      const openId =
+        requestedThreadId && mapped.some((t) => t.id === requestedThreadId)
           ? requestedThreadId
-          : persisted.activeId,
+          : mapped[0].id;
+
+      const messages = await listMessages(openId);
+      if (cancelled) return;
+      setThreads(
+        mapped.map((t) =>
+          t.id === openId
+            ? {
+                ...t,
+                messages: messages.map((m) => ({
+                  id: m.clientId ?? m.id,
+                  role: m.role === "assistant" ? "assistant" : "user",
+                  content: m.content,
+                  createdAt: new Date(m.createdAt).getTime(),
+                  model: m.model ?? undefined,
+                  tokens: m.tokens ?? undefined,
+                  latencyMs: m.latencyMs ?? undefined,
+                })),
+              }
+            : t,
+        ),
       );
-      setModelId(persisted.modelId);
-    } else {
-      const first = createFreshThread();
-      setThreads([first]);
-      setActiveId(first.id);
-    }
-    setHydrated(true);
-    // Only run once on mount; the deep link is read from the initial URL.
+      setActiveId(openId);
+      setLoadedThreads(new Set([openId]));
+      setHydrated(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Runs once; the deep link comes from the initial URL.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -230,14 +282,6 @@ function ChatWorkspaceInner() {
     });
   }, [hydrated, requestedThreadId]);
 
-  useEffect(() => {
-    if (!hydrated) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ threads, activeId, modelId }));
-    } catch {
-      /* ignore */
-    }
-  }, [threads, activeId, modelId, hydrated]);
 
 
   const active = useMemo(
