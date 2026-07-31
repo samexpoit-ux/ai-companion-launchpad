@@ -309,54 +309,91 @@ function ChatWorkspaceInner() {
     setThreads((prev) => prev.map((t) => (t.id === id ? updater(t) : t)));
   }, []);
 
+  const sendText = useCallback(
+    async (text: string, thread: ChatThread) => {
+      const value = text.trim();
+      if (!value) return;
+      const userMsg: ChatMessage = { id: uid(), role: "user", content: value, createdAt: Date.now() };
+      const isFirst = thread.messages.length === 0;
+      updateThread(thread.id, (t) => ({
+        ...t,
+        title: isFirst ? value.slice(0, 48) : t.title,
+        messages: [...t.messages, userMsg],
+        updatedAt: Date.now(),
+      }));
+      setIsSending(true);
+      try {
+        const reply = await sendChatMessage([...(thread.messages ?? []), userMsg], modelId);
+        const asstMsg: ChatMessage = {
+          id: uid(),
+          role: "assistant",
+          content: reply.content,
+          model: reply.model,
+          tokens: reply.tokens,
+          latencyMs: reply.latencyMs,
+          createdAt: Date.now(),
+        };
+        updateThread(thread.id, (t) => ({
+          ...t,
+          messages: [...t.messages, asstMsg],
+          updatedAt: Date.now(),
+        }));
+      } catch (error) {
+        const apiErr = parseApiError(error, "chat");
+        const steps = apiErr.steps.map((s, i) => `${i + 1}. ${s}`).join("\n");
+        const asstMsg: ChatMessage = {
+          id: uid(),
+          role: "assistant",
+          content: `**${apiErr.hint}**\n\n\`${apiErr.code}\` — ${apiErr.message}\n\n**What to do next**\n\n${steps}`,
+          model: modelId,
+          createdAt: Date.now(),
+        };
+        updateThread(thread.id, (t) => ({
+          ...t,
+          messages: [...t.messages, asstMsg],
+          updatedAt: Date.now(),
+        }));
+      } finally {
+        setIsSending(false);
+      }
+    },
+    [modelId, updateThread],
+  );
+
   const handleSend = async () => {
     const text = input.trim();
     if (!text || isSending || !active) return;
-    const userMsg: ChatMessage = { id: uid(), role: "user", content: text, createdAt: Date.now() };
-    const isFirst = active.messages.length === 0;
-    updateThread(active.id, (t) => ({
-      ...t,
-      title: isFirst ? text.slice(0, 48) : t.title,
-      messages: [...t.messages, userMsg],
-      updatedAt: Date.now(),
-    }));
     setInput("");
-    setIsSending(true);
-    try {
-      const reply = await sendChatMessage([...(active.messages ?? []), userMsg], modelId);
-      const asstMsg: ChatMessage = {
-        id: uid(),
-        role: "assistant",
-        content: reply.content,
-        model: reply.model,
-        tokens: reply.tokens,
-        latencyMs: reply.latencyMs,
-        createdAt: Date.now(),
-      };
-      updateThread(active.id, (t) => ({
-        ...t,
-        messages: [...t.messages, asstMsg],
-        updatedAt: Date.now(),
-      }));
-    } catch (error) {
-      const apiErr = parseApiError(error, "chat");
-      const steps = apiErr.steps.map((s, i) => `${i + 1}. ${s}`).join("\n");
-      const asstMsg: ChatMessage = {
-        id: uid(),
-        role: "assistant",
-        content: `**${apiErr.hint}**\n\n\`${apiErr.code}\` — ${apiErr.message}\n\n**What to do next**\n\n${steps}`,
-        model: modelId,
-        createdAt: Date.now(),
-      };
-      updateThread(active.id, (t) => ({
-        ...t,
-        messages: [...t.messages, asstMsg],
-        updatedAt: Date.now(),
-      }));
-    } finally {
-      setIsSending(false);
-    }
+    await sendText(text, active);
   };
+
+  // Prompt handed off from the dashboard hero: consumed exactly once, and always
+  // delivered into an empty thread so it never lands mid-conversation.
+  const handoffDone = useRef(false);
+  useEffect(() => {
+    if (!hydrated || handoffDone.current) return;
+    handoffDone.current = true;
+    const pending = takePendingPrompt();
+    if (!pending) return;
+
+    const current = threads.find((t) => t.id === activeId);
+    if (current && current.messages.length === 0) {
+      setInput("");
+      void sendText(pending.prompt, current);
+      return;
+    }
+    const fresh: ChatThread = {
+      id: uid(),
+      title: pending.prompt.slice(0, 48),
+      messages: [],
+      updatedAt: Date.now(),
+    };
+    setThreads((prev) => [fresh, ...prev]);
+    setActiveId(fresh.id);
+    setInput("");
+    void sendText(pending.prompt, fresh);
+  }, [hydrated, threads, activeId, sendText]);
+
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
