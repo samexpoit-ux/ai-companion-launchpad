@@ -469,6 +469,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      credit_balance: { Args: { _user_id?: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -477,6 +478,22 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id?: string }; Returns: boolean }
+      rollback_charge: {
+        Args: { _ledger_id: string; _reason?: string }
+        Returns: Json
+      }
+      spend_credits: {
+        Args: {
+          _action: string
+          _credits: number
+          _model?: string
+          _reason?: string
+          _thread_id?: string
+          _tier: string
+          _user_id?: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
