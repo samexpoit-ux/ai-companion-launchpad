@@ -1,6 +1,9 @@
-import { lazy, Suspense, useState } from "react";
-import { X, Code2, Eye, Terminal, RefreshCw, Monitor, Tablet, Smartphone, Wand2, Loader2, ShieldCheck, AlertTriangle, History, GitCompare } from "lucide-react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { X, Code2, Eye, Terminal, RefreshCw, Monitor, Tablet, Smartphone, Wand2, Loader2, ShieldCheck, AlertTriangle, History, GitCompare, Play, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCredits } from "@/hooks/useCredits";
+import { CreditMeter } from "@/components/CreditMeter";
+import { estimateCost, formatCredits } from "@/lib/credits";
 import { usePreview, MAX_FIX_ATTEMPTS, type PreviewPayload, type PreviewDevice } from "./preview-context";
 
 // Sandpack touches window at import; keep it out of the SSR graph.
@@ -48,6 +51,41 @@ export function PreviewPanel() {
   const [reloadKey, setReloadKey] = useState(0);
   const [historyOpen, setHistoryOpen] = useState(false);
   const { loadStarterProject } = usePreview();
+  const credits = useCredits();
+
+  // Safe run flow: nothing executes in the sandbox until the user explicitly
+  // arms this revision. A new AI patch (new revision) re-locks the preview.
+  const [armedRevision, setArmedRevision] = useState<number | null>(null);
+  const [runError, setRunError] = useState<string | null>(null);
+  const armed = armedRevision === revision;
+  const runCost = estimateCost("preview_run");
+
+  useEffect(() => {
+    setRunError(null);
+  }, [revision]);
+
+  const runPreview = useCallback(async () => {
+    if (!credits.canAfford("preview_run")) {
+      setRunError("Not enough credits to run the preview.");
+      return;
+    }
+    try {
+      await credits.charge("preview_run");
+      setArmedRevision(revision);
+      setReloadKey((k) => k + 1);
+    } catch {
+      setRunError("Could not start the preview. Try again.");
+    }
+  }, [credits, revision]);
+
+  const chargedAutoFix = useCallback(async () => {
+    if (!credits.canAfford("autofix")) {
+      setRunError("Not enough credits for an auto-fix attempt.");
+      return;
+    }
+    await credits.charge("autofix");
+    runAutoFix();
+  }, [credits, runAutoFix]);
 
   if (!isOpen) return null;
   if (!payload) return <EmptyWorkspace onClose={closePreview} onStart={loadStarterProject} />;
@@ -79,6 +117,13 @@ export function PreviewPanel() {
         )}
 
         <div className="ml-auto flex items-center gap-1">
+          <CreditMeter
+            plan={credits.plan}
+            remaining={credits.remaining}
+            total={credits.total}
+            compact
+            className="hidden px-2 py-1 md:block"
+          />
           <Suspense fallback={null}>
             <ValidationBadge />
           </Suspense>
@@ -150,7 +195,7 @@ export function PreviewPanel() {
         errors={runtimeErrors}
         log={fixLog}
         error={fixError}
-        onFix={runAutoFix}
+        onFix={() => void chargedAutoFix()}
         onReset={resetAutoFix}
       />
 
@@ -158,12 +203,23 @@ export function PreviewPanel() {
       <div className="relative flex-1 overflow-hidden">
         <Suspense fallback={<LoadingSkeleton />}>
           {tab === "preview" ? (
-            <LocalPreview
-              key={`local-${payload.lang}-${revision}`}
-              payload={payload}
-              device={device}
-              reloadKey={reloadKey}
-            />
+            armed ? (
+              <LocalPreview
+                key={`local-${payload.lang}-${revision}`}
+                payload={payload}
+                device={device}
+                reloadKey={reloadKey}
+              />
+            ) : (
+              <RunGate
+                cost={runCost}
+                remaining={credits.remaining}
+                affordable={credits.canAfford("preview_run")}
+                error={runError}
+                fileCount={payload.files ? Object.keys(payload.files).length : 1}
+                onRun={() => void runPreview()}
+              />
+            )
           ) : tab === "code" && payload.files ? (
             <ProjectExplorer key={`explorer-${revision}`} />
           ) : (
@@ -191,6 +247,55 @@ export function PreviewPanel() {
       </div>
 
     </aside>
+  );
+}
+
+/** Explicit, sandboxed run gate with the cost shown before execution. */
+function RunGate({
+  cost,
+  remaining,
+  affordable,
+  error,
+  fileCount,
+  onRun,
+}: {
+  cost: number;
+  remaining: number;
+  affordable: boolean;
+  error: string | null;
+  fileCount: number;
+  onRun: () => void;
+}) {
+  return (
+    <div className="flex h-full items-center justify-center p-6">
+      <div className="max-w-sm rounded-2xl border border-ink-200 bg-white p-5 text-center shadow-[0_18px_50px_-30px_rgba(15,23,42,0.35)]">
+        <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl border border-ink-200 bg-ink-100">
+          <Lock className="h-4 w-4 text-ink-500" />
+        </span>
+        <h3 className="mt-3 text-sm font-semibold text-ink-900">Preview is ready to run</h3>
+        <p className="mt-1 text-[11.5px] leading-relaxed text-ink-500">
+          {fileCount} file{fileCount === 1 ? "" : "s"} will run in an isolated sandbox iframe — no network access to your
+          account, no code executed until you press run.
+        </p>
+        <div className="mt-3 rounded-lg border border-ink-200 bg-ink-100 px-3 py-2 text-[11px] text-ink-600">
+          Cost <span className="font-semibold text-ink-900">{formatCredits(cost)}</span> credits ·{" "}
+          <span className="font-semibold text-ink-900">{formatCredits(remaining)}</span> left now ·{" "}
+          <span className="font-semibold text-ink-900">{formatCredits(Math.max(0, remaining - cost))}</span> after
+        </div>
+        <button
+          onClick={onRun}
+          disabled={!affordable}
+          className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-ink-900 px-3 py-2 text-[12px] font-semibold text-white transition hover:opacity-90 disabled:opacity-45"
+        >
+          <Play className="h-3.5 w-3.5" />
+          Run preview
+        </button>
+        {!affordable && (
+          <p className="mt-2 text-[10.5px] text-red-500">Not enough credits — upgrade your plan to keep building.</p>
+        )}
+        {error && <p className="mt-2 text-[10.5px] text-red-500">{error}</p>}
+      </div>
+    </div>
   );
 }
 
