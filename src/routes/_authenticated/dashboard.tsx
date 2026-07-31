@@ -125,7 +125,9 @@ function DashboardPage() {
 
   const firstName = useMemo(() => {
     const label = displayNameOf(profile, user);
-    return label.split(/[\s@]/)[0] ?? label;
+    const token = label.split(/[\s@._-]+/).filter(Boolean)[0] ?? label;
+    const clean = token.replace(/[^a-zA-Z]/g, "") || token;
+    return clean.charAt(0).toUpperCase() + clean.slice(1);
   }, [profile, user?.email]);
 
   const workspaceName = useMemo(
