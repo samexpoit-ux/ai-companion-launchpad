@@ -370,7 +370,7 @@ export async function saveSetting(key: string, value: Record<string, unknown>) {
   const { data: auth } = await supabase.auth.getUser();
   const { error } = await supabase
     .from("platform_settings")
-    .upsert({ key, value, updated_by: auth.user?.id ?? null }, { onConflict: "key" });
+    .upsert({ key, value: value as Json, updated_by: auth.user?.id ?? null }, { onConflict: "key" });
   if (error) throw new Error(error.message);
   await logAdmin("setting.updated", "platform_settings", key, value);
 }
