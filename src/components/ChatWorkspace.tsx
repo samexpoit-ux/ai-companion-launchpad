@@ -1307,40 +1307,37 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
   ];
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-xl flex-col items-center justify-center px-6 py-10 text-center">
-      <h1 className="font-display text-lg font-bold leading-tight tracking-tight text-ink-900">
-        What can I build for you?
+    <div className="mx-auto flex h-full w-full max-w-2xl flex-col items-center justify-center px-6 py-10 text-center">
+      <h1 className="font-display text-2xl font-semibold leading-tight tracking-tight text-ink-900 sm:text-3xl">
+        What should we build today?
       </h1>
-      <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-500">
-        Describe your project or choose a quick start below to begin building with Nexura AI.
+      <p className="mx-auto mt-2.5 max-w-md text-sm leading-relaxed text-ink-500">
+        Describe your idea below — Nexura builds, previews and ships it in one workspace.
       </p>
 
-      <div className="mt-8 grid w-full gap-2 sm:grid-cols-2">
+      {/* Lovable-style suggestion pills */}
+      <div className="mt-7 flex w-full flex-wrap items-center justify-center gap-2">
         {starters.map((s) => (
-          <Card
+          <button
             key={s.key}
-            role="button"
-            tabIndex={0}
+            type="button"
             onClick={() => onPick(s.prompt)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") onPick(s.prompt);
-            }}
-            className="cursor-pointer p-3 text-left transition hover:border-primary hover:bg-secondary"
+            title={s.body}
+            className="inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-3.5 py-1.5 text-xs font-medium text-ink-700 transition hover:-translate-y-px hover:border-[color:var(--color-iris)]/45 hover:text-ink-900 hover:shadow-sm"
           >
-            <span className="block text-sm font-semibold text-foreground">{s.title}</span>
-            <span className="mt-1 block text-xs leading-snug text-muted-foreground">{s.body}</span>
-          </Card>
+            {s.title}
+          </button>
         ))}
       </div>
 
       <div className="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-2xs text-ink-500">
         <span className="flex items-center gap-1.5"><Shield className="h-3 w-3 text-[color:var(--color-iris)]" />E2E encrypted</span>
         <span className="text-ink-300">·</span>
-        <span className="flex items-center gap-1.5"><Zap className="h-3 w-3 text-[color:var(--color-iris)]" />Sub-second routing</span>
+        <span className="flex items-center gap-1.5"><Zap className="h-3 w-3 text-[color:var(--color-iris)]" />Smart routing</span>
         <span className="text-ink-300">·</span>
         <span className="font-medium text-ink-600">{model.name}</span>
       </div>
     </div>
   );
-
 }
+
