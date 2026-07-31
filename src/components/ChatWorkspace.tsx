@@ -199,6 +199,22 @@ function ChatWorkspaceInner() {
     setHydrated(true);
   }, []);
 
+  // Prompt handed off from the dashboard hero input.
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      const pending = window.sessionStorage.getItem("nexusx.pendingPrompt");
+      if (pending) {
+        window.sessionStorage.removeItem("nexusx.pendingPrompt");
+        setInput(pending);
+        taRef.current?.focus();
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [hydrated]);
+
+
   useEffect(() => {
     if (!hydrated) return;
     try {
