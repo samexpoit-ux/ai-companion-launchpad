@@ -3,6 +3,7 @@
 set -euo pipefail
 APP_DIR="/var/www/nexuraai"
 cd "$APP_DIR"
+git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
 git pull --ff-only
 set -a; . "$APP_DIR/.env"; set +a
 export NITRO_PRESET=node-server
