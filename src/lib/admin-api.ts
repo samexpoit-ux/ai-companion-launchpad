@@ -8,6 +8,7 @@
  * to hide it.
  */
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 /* ------------------------------------------------------------------ types */
 
@@ -411,7 +412,7 @@ export async function logAdmin(
     action,
     target_table: targetTable,
     target_id: targetId,
-    details: details as never,
+    details: details as Json,
   });
   if (error) console.error("[admin] audit write failed", error.message);
 }
