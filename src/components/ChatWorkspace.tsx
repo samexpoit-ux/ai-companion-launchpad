@@ -621,6 +621,11 @@ function ChatWorkspaceInner() {
         </div>
 
 
+        {/* Credits */}
+        <div className="px-3 pb-1">
+          <CreditMeter plan={credits.plan} remaining={credits.remaining} total={credits.total} />
+        </div>
+
         {/* User */}
         <div className="border-t border-ink-200 p-3">
           <div className="flex items-center gap-3 rounded-xl border border-ink-200 bg-white/60 p-2.5">
