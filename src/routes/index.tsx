@@ -77,13 +77,11 @@ function LandingPage() {
           </span>
         </div>
         <nav className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm">
-            <Link to="/image">Image Studio</Link>
-          </Button>
           <Button asChild size="sm">
             <Link to="/auth">Sign in</Link>
           </Button>
         </nav>
+
       </header>
 
       <section className="mx-auto w-full max-w-4xl px-5 pb-16 pt-14 text-center sm:pt-20">
