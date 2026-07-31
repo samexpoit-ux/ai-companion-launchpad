@@ -1008,7 +1008,7 @@ const markdownComponents: Components = {
     );
   },
   th({ children }) {
-    return <th className="border-b border-ink-200/80 bg-[color:var(--color-iris)]/[0.06] px-3 py-2 text-left font-medium uppercase tracking-wider text-[11px] text-[color:var(--color-gold-soft)]">{children}</th>;
+    return <th className="border-b border-ink-200/80 bg-[color:var(--color-iris)]/[0.06] px-3 py-2 text-left font-medium uppercase tracking-wider text-xs text-[color:var(--color-gold-soft)]">{children}</th>;
   },
   td({ children }) {
     return <td className="border-b border-ink-200 px-3 py-2 align-top">{children}</td>;
@@ -1051,14 +1051,14 @@ function ArtifactCard({ project }: { project: ArtifactProject }) {
           <FolderTree className="h-3.5 w-3.5" />
         </span>
         <div className="min-w-0">
-          <div className="truncate text-[12.5px] font-medium text-ink-900">{project.title}</div>
-          <div className="font-mono text-[10px] text-ink-500">
+          <div className="truncate text-xs font-medium text-ink-900">{project.title}</div>
+          <div className="font-mono text-2xs text-ink-500">
             {paths.length} file{paths.length > 1 ? "s" : ""} · entry {project.entry}
           </div>
         </div>
         <button
           onClick={() => openProject(project)}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-white transition hover:brightness-110"
+          className="ml-auto inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-white transition hover:brightness-110"
           style={{ background: "var(--iris-gradient)" }}
         >
           <PlayCircle className="h-3.5 w-3.5" />
@@ -1067,7 +1067,7 @@ function ArtifactCard({ project }: { project: ArtifactProject }) {
       </div>
       <ul className="max-h-40 overflow-auto px-3 py-2">
         {paths.map((p) => (
-          <li key={p} className="truncate font-mono text-[11px] leading-6 text-ink-600">
+          <li key={p} className="truncate font-mono text-xs leading-6 text-ink-600">
             {p}
           </li>
         ))}
@@ -1102,7 +1102,7 @@ function CodeBlock({ language, value: rawValue }: { language: string; value: str
             <span className="h-2 w-2 rounded-full bg-[color:var(--color-iris)]/50" />
             <span className="h-2 w-2 rounded-full bg-[color:var(--color-iris-cyan)]/60" />
           </span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-500">{language}</span>
+          <span className="font-mono text-2xs uppercase tracking-[0.2em] text-ink-500">{language}</span>
         </div>
         <div className="flex items-center gap-1">
           {previewable && (
@@ -1110,7 +1110,7 @@ function CodeBlock({ language, value: rawValue }: { language: string; value: str
               variant="ghost"
               size="xs"
               onClick={() => openPreview(value, language)}
-              className="text-[10.5px] text-primary hover:bg-primary/10 hover:text-primary"
+              className="text-2xs text-primary hover:bg-primary/10 hover:text-primary"
               aria-label="Open in live preview"
               title="Open in live workspace"
             >
@@ -1122,7 +1122,7 @@ function CodeBlock({ language, value: rawValue }: { language: string; value: str
             variant="ghost"
             size="xs"
             onClick={onCopy}
-            className="text-[10.5px]"
+            className="text-2xs"
             aria-label="Copy code"
           >
             {copied ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
@@ -1172,7 +1172,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         )}
       </div>
       <div className={cn("min-w-0 max-w-[92%] sm:max-w-[85%]", isUser ? "text-right" : "text-left")}>
-        <div className={cn("mb-1.5 flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-ink-500", isUser && "justify-end")}>
+        <div className={cn("mb-1.5 flex items-center gap-2 text-2xs uppercase tracking-[0.18em] text-ink-500", isUser && "justify-end")}>
           <span>{isUser ? "You" : "Nexura"}</span>
           {!isUser && message.model && (
             <>
@@ -1187,7 +1187,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         </div>
         <div
           className={cn(
-            "relative rounded-2xl px-4 py-3 text-[14px] leading-relaxed",
+            "relative rounded-2xl px-4 py-3 text-base leading-relaxed",
             isUser
               ? "inline-block text-ink-900"
               : "border border-ink-200 text-ink-900",
@@ -1217,7 +1217,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 
         </div>
         {!isUser && (message.tokens || message.latencyMs || message.credits != null) && (
-          <div className="mt-1.5 flex items-center gap-2 text-[10px] font-mono text-ink-500">
+          <div className="mt-1.5 flex items-center gap-2 font-mono text-2xs text-ink-500">
             {message.latencyMs && <span>{(message.latencyMs / 1000).toFixed(2)}s</span>}
             {message.tokens && <><span className="text-ink-200">·</span><span>{message.tokens} tokens</span></>}
             {message.credits != null && (
@@ -1246,7 +1246,7 @@ function TypingIndicator({ model }: { model: AIModel }) {
         </div>
       </div>
       <div className="min-w-0">
-        <div className="mb-1.5 text-[10px] uppercase tracking-[0.18em] text-ink-500">
+        <div className="mb-1.5 text-2xs uppercase tracking-[0.18em] text-ink-500">
           Nexura · <span className="normal-case tracking-normal font-mono text-[color:var(--color-iris-cyan)]/90">{model.name}</span>
         </div>
         <div className="inline-flex items-center gap-2 rounded-2xl border border-ink-200 px-4 py-3" style={{
@@ -1256,7 +1256,7 @@ function TypingIndicator({ model }: { model: AIModel }) {
           <div className="relative h-4 w-16 overflow-hidden rounded-full bg-ink-100">
             <div className="absolute inset-0 shimmer-gold" />
           </div>
-          <span className="text-[11px] text-ink-700">reasoning…</span>
+          <span className="text-xs text-ink-700">reasoning…</span>
 
         </div>
       </div>
@@ -1297,7 +1297,7 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
       <h1 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink-900">
         What can I build for you?
       </h1>
-      <p className="mx-auto mt-3 max-w-sm text-[13.5px] leading-relaxed text-ink-500">
+      <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-500">
         Describe your project or choose a quick start below to begin building with Nexura AI.
       </p>
 
@@ -1313,13 +1313,13 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
             }}
             className="cursor-pointer p-3 text-left transition hover:border-primary hover:bg-secondary"
           >
-            <span className="block text-[12.5px] font-semibold text-foreground">{s.title}</span>
-            <span className="mt-0.5 block text-[11.5px] leading-snug text-muted-foreground">{s.body}</span>
+            <span className="block text-sm font-semibold text-foreground">{s.title}</span>
+            <span className="mt-1 block text-xs leading-snug text-muted-foreground">{s.body}</span>
           </Card>
         ))}
       </div>
 
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[10.5px] text-ink-500">
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-2xs text-ink-500">
         <span className="flex items-center gap-1.5"><Shield className="h-3 w-3 text-[color:var(--color-iris)]" />E2E encrypted</span>
         <span className="text-ink-300">·</span>
         <span className="flex items-center gap-1.5"><Zap className="h-3 w-3 text-[color:var(--color-iris)]" />Sub-second routing</span>
