@@ -219,8 +219,9 @@ export function PreviewPanel() {
         onReset={resetAutoFix}
       />
 
-      {/* Sandpack */}
-      <div className="relative flex-1 overflow-hidden">
+      {/* Canvas — inset rounded stage, like Lovable's right-hand preview surface */}
+      <div className="relative min-h-0 flex-1 p-2 sm:p-3">
+        <div className="relative h-full w-full overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_24px_60px_-38px_rgba(16,24,40,0.35)]">
         <Suspense fallback={<LoadingSkeleton />}>
           {tab === "preview" ? (
             armed ? (
