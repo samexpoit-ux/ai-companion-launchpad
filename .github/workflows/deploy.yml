@@ -1,0 +1,34 @@
+name: Deploy to VPS
+
+# Runs on every push to main, and can be triggered manually from
+# GitHub → Actions → "Deploy to VPS" → Run workflow.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: vps-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.VPS_HOST || '169.58.105.190' }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Pull, build, migrate, restart
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST || '169.58.105.190' }}
+          VPS_USER: ${{ secrets.VPS_USER || 'root' }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes "$VPS_USER@$VPS_HOST" \
+            'bash /var/www/nexuraai/deploy/deploy.sh'
+
+      - name: Public health check
+        run: curl -sS -o /dev/null -w "https://nexuraai.dev -> %{http_code}\n" https://nexuraai.dev
