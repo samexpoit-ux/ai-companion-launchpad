@@ -115,7 +115,7 @@ nginx -t && systemctl reload nginx
 echo "==> [7/7] TLS for ${DB_HOST}"
 command -v certbot >/dev/null 2>&1 || apt-get install -y certbot python3-certbot-nginx
 certbot --nginx -d "${DB_HOST}" --non-interactive --agree-tos -m "${EMAIL}" --redirect || \
-  echo "!! certbot failed — add an  A record for ${DB_HOST} -> 169.58.105.190 and rerun"
+  echo "!! certbot failed — add an A record for ${DB_HOST} -> 169.58.105.190 and rerun"
 
 echo
 echo "======================================================================="
