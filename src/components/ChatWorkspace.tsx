@@ -309,6 +309,17 @@ function ChatWorkspaceInner() {
     setThreads((prev) => prev.map((t) => (t.id === id ? updater(t) : t)));
   }, []);
 
+  /** Open a conversation from the history panel and keep the URL in sync. */
+  const selectThread = useCallback(
+    (id: string) => {
+      setActiveId(id);
+      if (isMobile) setSidebarOpen(false);
+      void navigate({ to: "/workspace", search: { thread: id }, replace: true });
+    },
+    [isMobile, navigate],
+  );
+
+
   const sendText = useCallback(
     async (text: string, thread: ChatThread) => {
       const value = text.trim();
