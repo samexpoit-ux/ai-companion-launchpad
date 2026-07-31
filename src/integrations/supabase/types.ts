@@ -105,6 +105,50 @@ export type Database = {
           },
         ]
       }
+      credit_audit_log: {
+        Row: {
+          action: string | null
+          actor_id: string | null
+          created_at: string
+          credits: number
+          details: Json
+          event: string
+          id: string
+          ledger_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action?: string | null
+          actor_id?: string | null
+          created_at?: string
+          credits?: number
+          details?: Json
+          event: string
+          id?: string
+          ledger_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string | null
+          actor_id?: string | null
+          created_at?: string
+          credits?: number
+          details?: Json
+          event?: string
+          id?: string
+          ledger_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_audit_log_ledger_id_fkey"
+            columns: ["ledger_id"]
+            isOneToOne: false
+            referencedRelation: "credit_ledger"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_ledger: {
         Row: {
           action: string
@@ -112,6 +156,9 @@ export type Database = {
           credits: number
           id: string
           model: string | null
+          reason: string | null
+          reversal_of: string | null
+          reversed_at: string | null
           thread_id: string | null
           tier: string
           updated_at: string
@@ -123,6 +170,9 @@ export type Database = {
           credits?: number
           id?: string
           model?: string | null
+          reason?: string | null
+          reversal_of?: string | null
+          reversed_at?: string | null
           thread_id?: string | null
           tier: string
           updated_at?: string
@@ -134,12 +184,22 @@ export type Database = {
           credits?: number
           id?: string
           model?: string | null
+          reason?: string | null
+          reversal_of?: string | null
+          reversed_at?: string | null
           thread_id?: string | null
           tier?: string
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "credit_ledger_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "credit_ledger"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "credit_ledger_thread_id_fkey"
             columns: ["thread_id"]
@@ -209,6 +269,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_settings: {
         Row: {
           created_at: string
@@ -241,10 +322,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -371,6 +458,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const

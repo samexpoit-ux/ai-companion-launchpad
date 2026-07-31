@@ -61,7 +61,9 @@ import {
   deleteThread as deleteDbThread,
   renameThread as renameDbThread,
   saveMessage,
+  subscribeToChat,
 } from "@/lib/chat-store";
+
 import nexuraLogo from "@/assets/nexura-logo.png";
 import { ThemePicker } from "@/components/ThemePicker";
 import { Link, useRouterState } from "@tanstack/react-router";
@@ -209,6 +211,58 @@ function ChatWorkspaceInner() {
       return prev;
     });
   }, [hydrated, requestedThreadId]);
+
+  /**
+   * Live sync: threads and messages written anywhere (another tab, another
+   * device, the server) land in this workspace immediately.
+   */
+  useEffect(() => {
+    const userId = user?.id;
+    if (!userId || !hydrated) return;
+    return subscribeToChat(userId, {
+      onThreadUpsert: (row) => {
+        setThreads((prev) => {
+          const at = prev.findIndex((t) => t.id === row.id);
+          const updatedAt = new Date(row.lastMessageAt).getTime();
+          if (at === -1) {
+            return [{ id: row.id, title: row.title, messages: [], updatedAt }, ...prev];
+          }
+          const next = [...prev];
+          next[at] = { ...next[at], title: row.title, updatedAt };
+          return next.sort((a, b) => b.updatedAt - a.updatedAt);
+        });
+      },
+      onThreadDelete: (threadId) => {
+        setThreads((prev) => prev.filter((t) => t.id !== threadId));
+      },
+      onMessage: (threadId, message) => {
+        const clientId = message.clientId ?? message.id;
+        setThreads((prev) =>
+          prev.map((t) => {
+            if (t.id !== threadId) return t;
+            if (t.messages.some((m) => m.id === clientId)) return t;
+            return {
+              ...t,
+              updatedAt: new Date(message.createdAt).getTime(),
+              messages: [
+                ...t.messages,
+                {
+                  id: clientId,
+                  role: message.role === "assistant" ? ("assistant" as const) : ("user" as const),
+                  content: message.content,
+                  createdAt: new Date(message.createdAt).getTime(),
+                  ...(message.model ? { model: message.model } : {}),
+                  ...(message.tokens != null ? { tokens: message.tokens } : {}),
+                  ...(message.latencyMs != null ? { latencyMs: message.latencyMs } : {}),
+                },
+              ],
+            };
+          }),
+        );
+      },
+    });
+  }, [user?.id, hydrated]);
+
 
 
 

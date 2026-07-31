@@ -186,3 +186,48 @@ export async function saveMessage(input: {
   await touchThread(input.threadId);
   return messageFromRow(data);
 }
+
+/* ------------------------------------------------------------------ *
+ * Realtime
+ *
+ * One channel per signed-in user streams thread + message changes to
+ * every open tab, so a message sent in one workspace tab (or on another
+ * device) shows up instantly in the others without a refresh.
+ * ------------------------------------------------------------------ */
+
+export interface ChatRealtimeHandlers {
+  onThreadUpsert?: (thread: StoredThread) => void;
+  onThreadDelete?: (threadId: string) => void;
+  onMessage?: (threadId: string, message: StoredMessage) => void;
+}
+
+/** Subscribe to live chat changes for one user. Returns an unsubscribe fn. */
+export function subscribeToChat(userId: string, handlers: ChatRealtimeHandlers): () => void {
+  const channel = supabase
+    .channel(`chat-sync-${userId}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "chat_threads", filter: `user_id=eq.${userId}` },
+      (payload) => {
+        if (payload.eventType === "DELETE") {
+          const old = payload.old as { id?: string } | null;
+          if (old?.id) handlers.onThreadDelete?.(old.id);
+          return;
+        }
+        handlers.onThreadUpsert?.(threadFromRow(payload.new as Parameters<typeof threadFromRow>[0]));
+      },
+    )
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "chat_messages", filter: `user_id=eq.${userId}` },
+      (payload) => {
+        const row = payload.new as Parameters<typeof messageFromRow>[0] & { thread_id: string };
+        handlers.onMessage?.(row.thread_id, messageFromRow(row));
+      },
+    )
+    .subscribe();
+
+  return () => {
+    void supabase.removeChannel(channel);
+  };
+}
