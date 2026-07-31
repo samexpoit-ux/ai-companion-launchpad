@@ -5,10 +5,13 @@
 // complexity of the prompt and send it to the cheapest model that can do the job
 // well:
 //   trivial / short chat  -> free or ultra-cheap model
-//   normal chat / plan    -> Claude 3.5 Haiku   (very cheap, very fast)
-//   coding / bug fixing   -> Claude 3.7 Sonnet  (best quality, used only when needed)
+//   normal chat / plan    -> cheap chat tier
+//   coding / bug fixing   -> best coding tier (used only when needed)
 // Every route has a fallback chain that ends on free models, so the service keeps
 // working even if the paid credit runs out.
+//
+// All model ids live in `model-tiers.ts` — edit that file, not this one.
+
 
 export type TaskKind = "chat" | "code" | "reason" | "fix" | "fast";
 
