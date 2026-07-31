@@ -112,7 +112,7 @@ export function useCredits(): UseCredits {
           error: "Paid plans are activated after checkout — the browser cannot grant credits.",
         };
       }
-      const { error } = await supabase.rpc("downgrade_to_free", {});
+      const { error } = await supabase.rpc("downgrade_to_free");
       if (error) return { ok: false, error: error.message };
       await load();
       return { ok: true };
