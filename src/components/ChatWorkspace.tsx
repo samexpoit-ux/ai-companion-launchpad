@@ -61,7 +61,9 @@ import {
   deleteThread as deleteDbThread,
   renameThread as renameDbThread,
   saveMessage,
+  subscribeToChat,
 } from "@/lib/chat-store";
+
 import nexuraLogo from "@/assets/nexura-logo.png";
 import { ThemePicker } from "@/components/ThemePicker";
 import { Link, useRouterState } from "@tanstack/react-router";
