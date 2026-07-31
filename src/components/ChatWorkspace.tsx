@@ -569,8 +569,8 @@ function ChatWorkspaceInner() {
         <div className="flex items-center gap-2.5 border-b border-ink-200 px-4 py-4">
           <BrandMark size="md" />
           <div className="min-w-0">
-            <BrandWordmark className="block text-[14px] font-bold leading-tight sm:text-[15px]" />
-            <div className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-ink-500">
+            <BrandWordmark className="block text-sm font-bold leading-tight" />
+            <div className="text-2xs font-semibold uppercase tracking-[0.16em] text-ink-500">
               Build · Preview · Ship
             </div>
           </div>
@@ -595,8 +595,8 @@ function ChatWorkspaceInner() {
         </div>
 
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
-          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink-400">Chat history</span>
-          <span className="rounded-full bg-ink-200 px-1.5 text-[10px] text-ink-500">{filtered.length}</span>
+          <span className="text-2xs font-bold uppercase tracking-[0.18em] text-ink-400">Chat history</span>
+          <span className="rounded-full bg-ink-200 px-1.5 text-2xs text-ink-500">{filtered.length}</span>
         </div>
 
 
@@ -609,7 +609,7 @@ function ChatWorkspaceInner() {
               <div
                 key={t.id}
                 className={cn(
-                  "group relative mb-0.5 flex items-center gap-2 rounded-lg border px-3 py-2 text-[13px] transition",
+                  "group relative mb-1 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition",
                   isActive
                     ? "border-ink-200 bg-[color:var(--color-iris-soft)]/60 font-medium text-ink-900"
                     : "border-transparent text-ink-700 hover:bg-[color:var(--color-iris-soft)]/30 hover:text-ink-900",
@@ -627,7 +627,7 @@ function ChatWorkspaceInner() {
                         if (e.key === "Enter") commitRename();
                         if (e.key === "Escape") cancelRename();
                       }}
-                      className="h-7 flex-1 px-1.5 text-[13px]"
+                      className="h-7 flex-1 px-1.5 text-sm"
                     />
                     <Button variant="ghost" size="icon-sm" onClick={commitRename} className="text-primary" aria-label="Save name"><Check className="h-3.5 w-3.5" /></Button>
                     <Button variant="ghost" size="icon-sm" onClick={cancelRename} aria-label="Cancel rename"><X className="h-3.5 w-3.5" /></Button>
@@ -641,7 +641,7 @@ function ChatWorkspaceInner() {
                     >
 
                       <div className="truncate">{t.title}</div>
-                      <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-ink-500">
+                      <div className="mt-0.5 flex items-center gap-1.5 text-2xs text-ink-500">
                         <span>{new Date(t.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
                         <span className="text-ink-300">·</span>
                         <span>{t.messages.length} turns</span>
@@ -661,7 +661,7 @@ function ChatWorkspaceInner() {
             );
           })}
           {filtered.length === 0 && (
-            <p className="px-3 py-6 text-center text-[12px] text-ink-400">
+            <p className="px-3 py-6 text-center text-xs text-ink-400">
               {query.trim() ? "No conversation matches that search." : "No conversations yet."}
             </p>
           )}
@@ -691,9 +691,9 @@ function ChatWorkspaceInner() {
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
-                <div className="truncate text-[13px] font-medium">{accountName}</div>
+                <div className="truncate text-sm font-medium">{accountName}</div>
               </div>
-              <div className="flex items-center gap-1.5 text-[10px]">
+              <div className="mt-0.5 flex items-center gap-1.5 text-2xs">
                 <span className="rounded-sm bg-[color:var(--color-iris)]/15 px-1 py-px font-medium uppercase text-[color:var(--color-iris)]">
                   {profile?.plan ?? "free"}
                 </span>
@@ -712,10 +712,10 @@ function ChatWorkspaceInner() {
 
         {/* Developer credit */}
         <div className="border-t border-ink-200 px-4 py-3 text-center">
-          <div className="text-[9.5px] font-semibold uppercase tracking-[0.2em] text-ink-400">
+          <div className="text-2xs font-semibold uppercase tracking-[0.2em] text-ink-400">
             Crafted with care
           </div>
-          <div className="mt-0.5 text-[12.5px] font-medium text-ink-700">
+          <div className="mt-1 text-xs font-medium text-ink-700">
             Developed by <span className="font-semibold text-[color:var(--color-iris)]">Sam</span>
           </div>
         </div>
@@ -728,7 +728,7 @@ function ChatWorkspaceInner() {
       <main className="relative flex h-full min-w-0 flex-1 flex-col">
 
         {/* Header */}
-        <header className="relative z-10 flex h-14 items-center gap-2 border-b border-ink-200 bg-white px-3 sm:gap-3 sm:px-6">
+        <header className="relative z-10 flex h-14 shrink-0 items-center gap-2 overflow-hidden border-b border-ink-200 bg-white px-3 sm:gap-3 sm:px-6">
 
 
           <Button
@@ -760,12 +760,12 @@ function ChatWorkspaceInner() {
             title="Nexura automatically picks the best-value model for each request"
           >
             <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[color:var(--color-iris)]" />
-            <span className="truncate text-[11.5px] font-semibold text-ink-900">Smart routing</span>
-            <span className="hidden text-[10px] text-ink-500 sm:inline">· auto</span>
+            <span className="truncate text-xs font-semibold text-ink-900">Smart routing</span>
+            <span className="hidden text-2xs text-ink-500 sm:inline">· auto</span>
           </div>
 
 
-          <div className="ml-auto flex shrink-0 items-center gap-1.5 text-[11px] text-ink-700 sm:gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-ink-700 sm:gap-2">
             <span className="hidden items-center gap-1 rounded-md border border-ink-200 bg-white/70 px-2 py-1 lg:flex">
               <Shield className="h-3 w-3 text-[color:var(--color-iris-cyan)]" />
               <span>End-to-end encrypted</span>
@@ -778,7 +778,7 @@ function ChatWorkspaceInner() {
               onClick={toggleWorkspace}
               title="Toggle the live workspace panel (preview, code, console)"
               className={cn(
-                "inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 text-[11px] font-medium transition",
+                "inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 text-xs font-medium transition",
                 previewOpen
                   ? "border-[color:var(--color-iris)]/45 bg-[color:var(--color-iris)]/10 text-ink-900"
                   : "border-ink-200 bg-white/70 text-ink-700 hover:border-[color:var(--color-iris)]/40 hover:text-ink-900",
@@ -788,7 +788,7 @@ function ChatWorkspaceInner() {
               <span className="hidden sm:inline">Workspace</span>
             </button>
             <span
-              className="inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-ink-200 bg-white/70 px-2.5 text-[11px] font-medium text-ink-700"
+              className="inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-ink-200 bg-white/70 px-2.5 text-xs font-medium text-ink-700"
               title="Credits included in your workspace plan"
             >
               <Coins className="h-3.5 w-3.5 text-[color:var(--color-iris)]" />
@@ -808,7 +808,7 @@ function ChatWorkspaceInner() {
           {!active || active.messages.length === 0 ? (
             <EmptyState onPick={(q) => setInput(q)} model={model} />
           ) : (
-            <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-10 sm:px-6">
+            <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8 sm:px-6 lg:py-10">
               {active?.messages.map((m) => (
                 <MessageBubble key={m.id} message={m} />
               ))}
@@ -818,7 +818,7 @@ function ChatWorkspaceInner() {
         </div>
 
         {/* Composer */}
-        <div className="relative border-t border-ink-200 bg-white">
+        <div className="relative shrink-0 border-t border-ink-200 bg-white">
 
 
           <div className="mx-auto max-w-3xl px-4 py-4 sm:px-6">
@@ -831,7 +831,7 @@ function ChatWorkspaceInner() {
                   onKeyDown={onKeyDown}
                   rows={1}
                   placeholder="Ask Nexura to build something…"
-                  className="max-h-52 w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-[14px] leading-relaxed text-ink-900 placeholder:text-ink-400 focus:outline-none"
+                  className="max-h-52 w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-base leading-relaxed text-ink-900 placeholder:text-ink-400 focus:outline-none"
                 />
                 <div className="flex items-center justify-between gap-2 px-1.5 pb-1 pt-1.5">
                   <div className="flex items-center gap-0.5">
@@ -848,7 +848,7 @@ function ChatWorkspaceInner() {
                           aria-pressed={mode === m}
                           title={`${ACTION_RULES[actionForMode(m)].label} · ${ACTION_RULES[actionForMode(m)].note}`}
                           className={cn(
-                            "rounded-md px-2 py-1 text-[11px] font-medium transition",
+                            "rounded-md px-2 py-1 text-xs font-medium transition",
                             mode === m
                               ? "bg-white text-ink-900 shadow-sm"
                               : "text-ink-500 hover:text-ink-900",
@@ -864,7 +864,7 @@ function ChatWorkspaceInner() {
                     <ComposerBtn label="Commands"><Command className="h-4 w-4" /></ComposerBtn>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="hidden text-[10px] text-ink-400 sm:inline">
+                    <span className="hidden text-2xs text-ink-400 sm:inline">
                       <kbd className="rounded border border-ink-200 bg-ink-100 px-1 py-0.5 font-mono">⏎</kbd> send
                     </span>
                     <SendButton
@@ -877,7 +877,7 @@ function ChatWorkspaceInner() {
               </div>
             </div>
 
-            <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[10.5px] text-ink-400">
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-2xs leading-relaxed text-ink-400">
               <span>
                 Smart routing · {ACTION_RULES[actionForMode(mode)].label} costs{" "}
                 <span className="font-medium text-ink-600">
