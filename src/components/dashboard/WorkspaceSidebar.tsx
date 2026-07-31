@@ -59,6 +59,7 @@ export function WorkspaceSidebar({
   className?: string;
 }) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const { isAdmin } = useAdmin();
   const switcherRef = useRef<HTMLDivElement | null>(null);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
