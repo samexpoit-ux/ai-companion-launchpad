@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { useAuth, useProfile, displayNameOf } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { queuePendingPrompt } from "@/lib/pending-prompt";
+import { CREDITS } from "@/lib/credits";
 import { WorkspaceSidebar, type RecentProject } from "@/components/dashboard/WorkspaceSidebar";
 
 
