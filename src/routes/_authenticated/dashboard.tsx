@@ -119,7 +119,7 @@ function DashboardPage() {
   }, [prompt]);
 
   const firstName = useMemo(() => {
-    const label = displayNameOf(profile, user?.email ?? null);
+    const label = displayNameOf(profile, user);
     return label.split(/[\s@]/)[0] ?? label;
   }, [profile, user?.email]);
 
@@ -148,7 +148,7 @@ function DashboardPage() {
         <WorkspaceSidebar
           recents={recents}
           workspaceName={workspaceName}
-          userLabel={displayNameOf(profile, user?.email ?? null)}
+          userLabel={displayNameOf(profile, user)}
           credits={{ left: 304, total: 400 }}
           onCollapse={() => setSidebarOpen(false)}
         />
