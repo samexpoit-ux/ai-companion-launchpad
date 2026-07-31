@@ -1320,7 +1320,7 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
       className="mx-auto flex h-full w-full max-w-2xl flex-col items-center justify-center gap-6 px-5 py-10 text-center sm:px-6"
     >
       {/* Illustration: brand mark on a soft aurora halo */}
-      <div className="relative flex items-center justify-center">
+      <div className="nx-rise relative flex items-center justify-center">
         <span
           aria-hidden
           className="absolute h-24 w-24 rounded-full blur-2xl sm:h-28 sm:w-28"
@@ -1333,7 +1333,7 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
         <BrandMark size="lg" className="relative" />
       </div>
 
-      <div className="space-y-2.5">
+      <div className="nx-rise space-y-2.5" style={{ animationDelay: "70ms" }}>
         <h1 className="font-display text-2xl font-semibold leading-tight tracking-tight text-ink-900 sm:text-3xl">
           What should we build today?
         </h1>
@@ -1344,17 +1344,18 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
 
       {/* Suggestion pills — two balanced rows on every viewport */}
       <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
-        {starters.map((s) => (
+        {starters.map((s, i) => (
           <button
             key={s.key}
             type="button"
             data-testid="starter-pill"
             onClick={() => onPick(s.prompt)}
             title={s.body}
+            style={{ animationDelay: `${140 + i * 60}ms` }}
             className={cn(
-              "group inline-flex min-w-0 items-center gap-2 rounded-full border border-ink-200 bg-white px-3.5 py-2 text-left",
-              "text-xs font-medium text-ink-700 transition-all duration-200",
-              "hover:-translate-y-px hover:border-[color:var(--color-iris)]/45 hover:text-ink-900 hover:shadow-[0_8px_20px_-14px_rgba(16,24,40,0.35)]",
+              "nx-rise group inline-flex min-w-0 items-center gap-2 rounded-full border border-ink-200 bg-white px-3.5 py-2 text-left",
+              "text-xs font-medium text-ink-700 transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+              "hover:-translate-y-0.5 hover:border-[color:var(--color-iris)]/45 hover:text-ink-900 hover:shadow-[0_10px_24px_-14px_rgba(16,24,40,0.35)]",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-iris)]/35",
             )}
           >
