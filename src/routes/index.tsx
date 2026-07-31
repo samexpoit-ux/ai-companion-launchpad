@@ -110,6 +110,10 @@ function LandingPage() {
             </Link>
           </Button>
           <Button asChild size="lg" variant="outline">
+            <Link to="/auth">Sign in</Link>
+          </Button>
+        </div>
+
             <Link to="/image">Try Image Studio</Link>
           </Button>
         </div>
