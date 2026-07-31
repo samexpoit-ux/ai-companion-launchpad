@@ -832,16 +832,16 @@ function ChatWorkspaceInner() {
             className="pointer-events-none absolute -top-10 left-0 right-0 h-10 bg-gradient-to-b from-transparent to-white"
           />
 
-          <div className="mx-auto w-full max-w-3xl px-3 pb-3 pt-2 sm:px-6 sm:pb-5 sm:pt-3">
+          <div className="nx-rise mx-auto w-full max-w-3xl px-3 pb-4 pt-2 sm:px-6 sm:pb-6 sm:pt-3">
             <div
               data-testid="composer"
               className={cn(
                 "group relative rounded-[26px] border border-ink-200 bg-white",
-                "transition-[box-shadow,border-color,transform] duration-200 ease-out",
+                "transition-[box-shadow,border-color,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
                 "shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-16px_rgba(16,24,40,0.18)]",
-                "hover:border-ink-300",
-                "focus-within:-translate-y-px focus-within:border-[color:var(--color-iris)]/50",
-                "focus-within:shadow-[0_1px_2px_rgba(16,24,40,0.05),0_18px_44px_-18px_color-mix(in_oklab,var(--color-iris)_45%,transparent)]",
+                "hover:border-ink-300 hover:shadow-[0_1px_2px_rgba(16,24,40,0.04),0_16px_38px_-18px_rgba(16,24,40,0.22)]",
+                "focus-within:-translate-y-0.5 focus-within:border-[color:var(--color-iris)]/50",
+                "focus-within:shadow-[0_1px_2px_rgba(16,24,40,0.05),0_22px_50px_-20px_color-mix(in_oklab,var(--color-iris)_50%,transparent)]",
               )}
             >
               <textarea
