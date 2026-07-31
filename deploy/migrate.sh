@@ -38,6 +38,11 @@ alter table public.schema_migrations enable row level security;
 applied=0
 skipped=0
 changed=0
+baselined=0
+
+# BASELINE=1 records every pending migration as applied WITHOUT running it.
+# Use once when the schema was already created by deploy/supabase-schema.sh.
+BASELINE="${BASELINE:-0}"
 
 shopt -s nullglob
 for file in $(ls -1 "$MIG_DIR"/*.sql | sort); do
