@@ -39,21 +39,38 @@ The script installs Node 22, Bun, nginx, ufw, builds the app with
 `nexuraai.dev` and `www.nexuraai.dev`.
 
 ## 2) Environment variables
-The first run creates `/var/www/nexuraai/.env`. Fill it with the values from this
-Lovable project's `.env` (backend URL + publishable key + project id, service role
-key, `OPENROUTER_API_KEY`), then:
+The first run creates `/var/www/nexuraai/.env`. Fill it with the block printed by
+`supabase-selfhost.sh` plus your OpenRouter key:
+```
+VITE_SUPABASE_URL=https://db.nexuraai.dev
+VITE_SUPABASE_PUBLISHABLE_KEY=<anon key>
+VITE_SUPABASE_PROJECT_ID=nexura
+SUPABASE_URL=https://db.nexuraai.dev
+SUPABASE_SERVICE_ROLE_KEY=<service role key>
+OPENROUTER_API_KEY=<openrouter key>
+```
+then:
 ```bash
 bash /var/www/nexuraai/deploy/deploy.sh
 ```
 
-## 3) Backend (auth) settings
-In Lovable Cloud → Auth, add to Site URL / redirect URLs:
-- `https://nexuraai.dev`
-- `https://www.nexuraai.dev`
-- `https://nexuraai.dev/auth/callback`
+## 3) Auth settings (self-hosted Studio → Authentication → URL configuration)
+Site URL: `https://nexuraai.dev`
+Redirect URLs:
+- `https://nexuraai.dev/**`
+- `https://www.nexuraai.dev/**`
 
-Google OAuth console → Authorized redirect URI must include the backend
-callback URL, and authorized origins must include `https://nexuraai.dev`.
+Google OAuth console → authorized redirect URI
+`https://db.nexuraai.dev/auth/v1/callback`, authorized origin
+`https://nexuraai.dev`. Then set `GOTRUE_EXTERNAL_GOOGLE_*` in
+`/opt/supabase/.env` and `docker compose up -d` again.
+
+## 3b) Models & credits
+- All OpenRouter model ids live in `src/lib/model-tiers.ts` — the only file to
+  edit. Chat/plan use the cheap tier, coding/auto-fix use Claude 3.7 → 3.5
+  Sonnet, with free-model fallbacks so the app keeps working without credit.
+- The credit allowance shown in the UI lives in `src/lib/credits.ts`.
+
 
 ## 4) Everyday commands
 ```bash
