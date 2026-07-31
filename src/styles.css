@@ -619,10 +619,10 @@
 
 @utility aurora-canvas {
   background:
-    radial-gradient(120% 90% at 12% 4%, #ffffff 0%, rgba(255,255,255,0) 55%),
-    radial-gradient(90% 70% at 88% 8%, #ff7a3d 0%, rgba(255,122,61,0) 58%),
-    radial-gradient(85% 75% at 8% 42%, #7aa7ff 0%, rgba(122,167,255,0) 62%),
-    radial-gradient(110% 95% at 78% 92%, #ff3d8b 0%, rgba(255,61,139,0) 60%),
-    linear-gradient(165deg, #eaf1ff 0%, #b9a8f2 42%, #f45fa5 74%, #ff7a3d 100%);
-  animation: aurora-drift 18s ease-in-out infinite;
+    radial-gradient(130% 100% at 50% -10%, #ffffff 0%, rgba(255,255,255,0) 62%),
+    radial-gradient(80% 70% at 84% 6%, rgba(120,150,255,0.55) 0%, rgba(120,150,255,0) 60%),
+    radial-gradient(80% 75% at 10% 30%, rgba(160,130,255,0.45) 0%, rgba(160,130,255,0) 62%),
+    radial-gradient(100% 90% at 70% 100%, rgba(196,150,255,0.40) 0%, rgba(196,150,255,0) 64%),
+    linear-gradient(170deg, #f6f8ff 0%, #eaeeff 46%, #e7e2fb 78%, #f4f1ff 100%);
+  animation: aurora-drift 22s ease-in-out infinite;
 }
