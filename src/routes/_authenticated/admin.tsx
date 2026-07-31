@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
+import { PageBar, PageHeader, PageShell } from "@/components/page-shell";
+
 import { OverviewTab } from "@/components/admin/OverviewTab";
 import { UsersTab } from "@/components/admin/UsersTab";
 import { PaymentsTab } from "@/components/admin/PaymentsTab";
