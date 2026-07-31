@@ -203,16 +203,13 @@ function DashboardPage() {
         <section className="relative isolate flex min-h-[420px] flex-col items-center justify-center overflow-hidden px-4 py-12 sm:min-h-[520px] sm:px-5 sm:py-16 lg:rounded-bl-[28px]">
           <div className="aurora-canvas absolute inset-0 -z-10" />
 
-          <Link
-            to="/image"
-            className="inline-flex items-center gap-2 rounded-full border border-white/50 bg-white/70 px-3 py-1.5 text-[12.5px] font-medium text-ink-700 shadow-ds-sm backdrop-blur transition hover:bg-white"
-          >
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/50 bg-white/70 px-3 py-1.5 text-[12.5px] font-medium text-ink-700 shadow-ds-sm backdrop-blur">
             <span className="rounded-full bg-[color:var(--color-iris)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[color:var(--color-iris-fg)]">
               New
             </span>
-            Image Studio now runs on smart routing
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+            Smart routing picks the model — you just build
+          </span>
+
 
           <h1 className="mt-8 text-center font-display text-3xl font-bold tracking-tight text-ink-900 sm:text-4xl">
             Got an idea, {firstName}?

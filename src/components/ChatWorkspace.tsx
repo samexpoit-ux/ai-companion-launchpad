@@ -670,19 +670,15 @@ function ChatWorkspaceInner() {
               <PanelRight className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Workspace</span>
             </button>
-            <Link
-
-              to="/image"
-              className="inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-ink-200 bg-white/70 px-2.5 text-[11px] font-medium text-ink-700 transition hover:border-[color:var(--color-iris-cyan)]/40 hover:bg-[color:var(--color-iris-cyan)]/[0.08] hover:text-ink-900"
-              title="Free unlimited AI image generation"
+            <span
+              className="inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-ink-200 bg-white/70 px-2.5 text-[11px] font-medium text-ink-700"
+              title="Credits included in your workspace plan"
             >
-              <span className="relative flex h-3.5 w-3.5 shrink-0 items-center justify-center">
-                <span className="absolute inset-0 rounded-full opacity-70 blur-[3px]" style={{ background: "linear-gradient(135deg, var(--color-iris-deep), var(--color-iris-cyan))" }} />
-                <span className="relative h-2 w-2 rounded-full" style={{ background: "linear-gradient(135deg, var(--color-iris-cyan), var(--color-iris-warm))" }} />
-              </span>
-              <span className="hidden sm:inline">Image Studio</span>
-              <span className="sm:hidden">Image</span>
-            </Link>
+              <Coins className="h-3.5 w-3.5 text-[color:var(--color-iris)]" />
+              {CREDITS.left}
+              <span className="hidden text-ink-400 sm:inline">/ {CREDITS.total} credits</span>
+            </span>
+
             <ThemePicker />
           </div>
 
