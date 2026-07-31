@@ -1,0 +1,21 @@
+[Unit]
+Description=Nexura AI (TanStack Start SSR server)
+After=network.target
+
+[Service]
+Type=simple
+User=nexura
+Group=nexura
+WorkingDirectory=/var/www/nexura
+EnvironmentFile=/var/www/nexura/.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOST=127.0.0.1
+ExecStart=/usr/bin/node /var/www/nexura/.output/server/index.mjs
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
