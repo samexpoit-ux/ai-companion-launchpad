@@ -41,7 +41,7 @@ export interface UseCredits extends CreditState {
     used?: number;
     plan?: string;
   }) => void;
-  setPlan: (plan: PlanId) => Promise<void>;
+  setPlan: (plan: PlanId) => Promise<{ ok: boolean; error?: string }>;
   refresh: () => Promise<void>;
 }
 
@@ -98,18 +98,27 @@ export function useCredits(): UseCredits {
     });
   }, []);
 
-  const setPlan = useCallback(async (plan: PlanId) => {
-    const total = planById(plan).credits;
-    setState((s) => ({ ...s, plan, total }));
-    const { data: auth } = await supabase.auth.getUser();
-    const userId = auth.user?.id;
-    if (!userId) return;
-    const { error } = await supabase
-      .from("user_settings")
-      .upsert({ user_id: userId, plan, credits_total: total }, { onConflict: "user_id" });
-    if (error) console.error("[credits] setPlan failed", error.message);
-    await load();
-  }, [load]);
+  /**
+   * Plan changes are privileged: the database rejects any client-side attempt to
+   * raise `plan` or `credits_total`, so a paid upgrade must go through checkout
+   * (or an admin). Self-service is limited to downgrading back to Free.
+   */
+  const setPlan = useCallback(
+    async (plan: PlanId): Promise<{ ok: boolean; error?: string }> => {
+      if (plan === state.plan) return { ok: true };
+      if (plan !== "free") {
+        return {
+          ok: false,
+          error: "Paid plans are activated after checkout — the browser cannot grant credits.",
+        };
+      }
+      const { error } = await supabase.rpc("downgrade_to_free", {});
+      if (error) return { ok: false, error: error.message };
+      await load();
+      return { ok: true };
+    },
+    [load, state.plan],
+  );
 
   const remaining = useMemo(() => Math.max(0, state.total - state.used), [state.total, state.used]);
 

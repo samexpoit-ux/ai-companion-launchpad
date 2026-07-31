@@ -53,6 +53,7 @@ function AccountPage() {
   const [threads, setThreads] = useState<StoredThread[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<PlanId | null>(null);
+  const [planNotice, setPlanNotice] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -77,8 +78,10 @@ function AccountPage() {
   const choosePlan = useCallback(
     async (id: PlanId) => {
       setSaving(id);
-      await credits.setPlan(id);
+      setPlanNotice(null);
+      const result = await credits.setPlan(id);
       setSaving(null);
+      if (!result.ok) setPlanNotice(result.error ?? "Could not change the plan.");
     },
     [credits],
   );
@@ -181,6 +184,11 @@ function AccountPage() {
           className="mt-4"
         />
         {saving && <p className="mt-2 text-xs text-ink-500">Switching to {planById(saving).name}…</p>}
+        {planNotice && (
+          <p role="alert" className="mt-2 text-xs text-red-600">
+            {planNotice}
+          </p>
+        )}
       </section>
 
       <section className="mt-10" aria-labelledby="usage-heading">
