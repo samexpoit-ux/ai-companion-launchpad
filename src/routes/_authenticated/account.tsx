@@ -226,8 +226,14 @@ function AccountPage() {
         )}
       </section>
 
-      <section className="mt-10" aria-labelledby="activity-heading">
-        <h2 id="activity-heading" className="text-sm font-semibold text-ink-900">
+      <section
+        className="mt-6 rounded-2xl border border-ink-200 bg-white/70 p-5"
+        aria-labelledby="activity-heading"
+      >
+        <h2
+          id="activity-heading"
+          className="font-display text-lg font-bold tracking-tight text-ink-900"
+        >
           Recent activity
         </h2>
         {loading ? (
