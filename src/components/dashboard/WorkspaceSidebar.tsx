@@ -227,7 +227,16 @@ export function WorkspaceSidebar({
             <span className="min-w-0 flex-1 truncate">{item.label}</span>
           </button>
         ))}
+        <Link
+          to="/credits"
+          className="mt-0.5 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] text-ink-600 transition hover:bg-ink-200/60 hover:text-ink-900"
+        >
+          <Coins className="h-4 w-4 shrink-0" aria-hidden />
+          <span className="min-w-0 flex-1 truncate">Credit usage</span>
+        </Link>
       </div>
+
+
 
       <div className="mt-5 min-h-0 flex-1 overflow-y-auto px-3 pb-3">
         <p className="px-2 pb-1 text-[11px] font-medium text-ink-400">Recents</p>
