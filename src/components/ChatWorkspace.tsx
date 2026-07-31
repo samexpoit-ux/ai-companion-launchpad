@@ -740,8 +740,10 @@ function ChatWorkspaceInner() {
               title="Credits included in your workspace plan"
             >
               <Coins className="h-3.5 w-3.5 text-[color:var(--color-iris)]" />
-              {CREDITS.left}
-              <span className="hidden text-ink-400 sm:inline">/ {CREDITS.total} credits</span>
+              {formatCredits(credits.remaining)}
+              <span className="hidden text-ink-400 sm:inline">
+                / {formatCredits(credits.total)} credits
+              </span>
             </span>
 
             <ThemePicker />
@@ -779,8 +781,31 @@ function ChatWorkspaceInner() {
                   placeholder="Ask Nexura to build something…"
                   className="max-h-52 w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-[14px] leading-relaxed text-ink-900 placeholder:text-ink-400 focus:outline-none"
                 />
-                <div className="flex items-center justify-between px-1.5 pb-1 pt-1.5">
+                <div className="flex items-center justify-between gap-2 px-1.5 pb-1 pt-1.5">
                   <div className="flex items-center gap-0.5">
+                    <div
+                      role="group"
+                      aria-label="Response mode"
+                      className="mr-1 flex items-center rounded-lg border border-ink-200 bg-ink-100 p-0.5"
+                    >
+                      {(["Build", "Chat", "Plan"] as const).map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setMode(m)}
+                          aria-pressed={mode === m}
+                          title={`${ACTION_RULES[actionForMode(m)].label} · ${ACTION_RULES[actionForMode(m)].note}`}
+                          className={cn(
+                            "rounded-md px-2 py-1 text-[11px] font-medium transition",
+                            mode === m
+                              ? "bg-white text-ink-900 shadow-sm"
+                              : "text-ink-500 hover:text-ink-900",
+                          )}
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
                     <ComposerBtn label="Attach"><Paperclip className="h-4 w-4" /></ComposerBtn>
                     <ComposerBtn label="Image"><ImageIcon className="h-4 w-4" /></ComposerBtn>
                     <ComposerBtn label="Voice"><Mic className="h-4 w-4" /></ComposerBtn>
@@ -800,8 +825,24 @@ function ChatWorkspaceInner() {
               </div>
             </div>
 
-            <div className="mt-2.5 text-center text-[10.5px] text-ink-400">
-              Powered by <span className="font-medium text-ink-600">{model.name}</span> · Verify critical outputs.
+            <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[10.5px] text-ink-400">
+              <span>
+                Smart routing · {ACTION_RULES[actionForMode(mode)].label} costs{" "}
+                <span className="font-medium text-ink-600">
+                  {formatCredits(credits.quote(actionForMode(mode), input.length))}
+                </span>{" "}
+                credits
+              </span>
+              <span className="text-ink-300">·</span>
+              <span>
+                <span className="font-medium text-ink-600">{formatCredits(credits.remaining)}</span>{" "}
+                left after this you have{" "}
+                <span className="font-medium text-ink-600">
+                  {formatCredits(
+                    Math.max(0, credits.remaining - credits.quote(actionForMode(mode), input.length)),
+                  )}
+                </span>
+              </span>
             </div>
 
           </div>
