@@ -233,12 +233,20 @@ export function WorkspaceSidebar({
           </button>
         ))}
         <Link
+          to="/account"
+          className="mt-0.5 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] text-ink-600 transition hover:bg-ink-200/60 hover:text-ink-900"
+        >
+          <UserCircle className="h-4 w-4 shrink-0" aria-hidden />
+          <span className="min-w-0 flex-1 truncate">Account &amp; plan</span>
+        </Link>
+        <Link
           to="/credits"
           className="mt-0.5 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] text-ink-600 transition hover:bg-ink-200/60 hover:text-ink-900"
         >
           <Coins className="h-4 w-4 shrink-0" aria-hidden />
           <span className="min-w-0 flex-1 truncate">Credit usage</span>
         </Link>
+
         {isAdmin && (
           <Link
             to="/admin"
