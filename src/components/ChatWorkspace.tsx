@@ -829,15 +829,18 @@ function ChatWorkspaceInner() {
           {/* soft fade so the transcript melts into the composer instead of a hard rule */}
           <div
             aria-hidden
-            className="pointer-events-none absolute -top-8 left-0 right-0 h-8 bg-gradient-to-b from-transparent to-white"
+            className="pointer-events-none absolute -top-10 left-0 right-0 h-10 bg-gradient-to-b from-transparent to-white"
           />
 
-          <div className="mx-auto w-full max-w-3xl px-3 pb-3 pt-1 sm:px-6 sm:pb-5">
+          <div className="mx-auto w-full max-w-3xl px-3 pb-3 pt-2 sm:px-6 sm:pb-5 sm:pt-3">
             <div
+              data-testid="composer"
               className={cn(
-                "relative rounded-[26px] border border-ink-200 bg-white transition-all duration-200",
+                "group relative rounded-[26px] border border-ink-200 bg-white",
+                "transition-[box-shadow,border-color,transform] duration-200 ease-out",
                 "shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-16px_rgba(16,24,40,0.18)]",
-                "focus-within:border-[color:var(--color-iris)]/50",
+                "hover:border-ink-300",
+                "focus-within:-translate-y-px focus-within:border-[color:var(--color-iris)]/50",
                 "focus-within:shadow-[0_1px_2px_rgba(16,24,40,0.05),0_18px_44px_-18px_color-mix(in_oklab,var(--color-iris)_45%,transparent)]",
               )}
             >
@@ -848,19 +851,19 @@ function ChatWorkspaceInner() {
                 onKeyDown={onKeyDown}
                 rows={1}
                 placeholder="Ask Nexura to build something…"
-                className="block max-h-56 w-full resize-none bg-transparent px-4 pb-1 pt-4 text-[15px] leading-6 text-ink-900 placeholder:text-ink-400 focus:outline-none"
+                className="block max-h-56 w-full resize-none bg-transparent px-4 pb-1.5 pt-3.5 text-[15px] leading-6 text-ink-900 placeholder:text-ink-400 focus:outline-none sm:px-4.5 sm:pt-4"
               />
 
-              <div className="flex items-center gap-1.5 px-2.5 pb-2.5 pt-1">
+              <div className="flex items-center gap-1.5 px-2.5 pb-2.5 pt-0.5 sm:px-3">
                 {/* + menu, exactly one entry point for attachments like Lovable */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
                       aria-label="Add attachment"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 text-ink-600 transition hover:border-ink-300 hover:bg-ink-100 hover:text-ink-900"
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-ink-200 text-ink-600 transition-all duration-150 hover:border-ink-300 hover:bg-ink-100 hover:text-ink-900 active:scale-95 data-[state=open]:border-[color:var(--color-iris)]/45 data-[state=open]:text-ink-900"
                     >
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-45" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" side="top" className="w-52">
@@ -876,7 +879,7 @@ function ChatWorkspaceInner() {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <span className="hidden text-2xs text-ink-400 sm:inline">
+                <span className="hidden min-w-0 truncate text-2xs text-ink-400 sm:inline">
                   {ACTION_RULES[actionForMode(mode)].label} ·{" "}
                   <span className="font-medium text-ink-600">
                     {formatCredits(credits.quote(actionForMode(mode), input.length))}
@@ -884,14 +887,14 @@ function ChatWorkspaceInner() {
                   credits
                 </span>
 
-                <div className="ml-auto flex items-center gap-1.5">
+                <div className="ml-auto flex shrink-0 items-center gap-1">
                   {/* Mode as a compact dropdown, not a tab strip */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
                         type="button"
                         aria-label="Response mode"
-                        className="inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-xs font-medium text-ink-700 transition hover:bg-ink-100 hover:text-ink-900"
+                        className="inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-xs font-medium text-ink-700 transition-colors duration-150 hover:bg-ink-100 hover:text-ink-900 data-[state=open]:bg-ink-100 data-[state=open]:text-ink-900"
                       >
                         {mode}
                         <ChevronDown className="h-3.5 w-3.5 text-ink-400" />
@@ -920,7 +923,7 @@ function ChatWorkspaceInner() {
                   <button
                     type="button"
                     aria-label="Voice input"
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full text-ink-500 transition hover:bg-ink-100 hover:text-ink-900"
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-500 transition-all duration-150 hover:bg-ink-100 hover:text-ink-900 active:scale-95"
                   >
                     <Mic className="h-4 w-4" />
                   </button>
@@ -934,11 +937,12 @@ function ChatWorkspaceInner() {
               </div>
             </div>
 
-            <p className="mt-2 text-center text-2xs text-ink-400">
+            <p className="mt-2.5 text-center text-2xs leading-relaxed text-ink-400">
               Smart routing · {formatCredits(credits.remaining)} of {formatCredits(credits.total)} credits left
             </p>
           </div>
         </div>
+
 
       </main>
       </Panel>
@@ -1282,24 +1286,28 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
   const starters = [
     {
       key: "saas",
+      icon: Sparkle,
       title: "SaaS landing page",
       body: "Hero, pricing tiers and a comparison table.",
       prompt: "Build a modern SaaS landing page with a hero, 3 pricing tiers and a feature comparison table.",
     },
     {
       key: "table",
-      title: "Data visualization table",
+      icon: Command,
+      title: "Data table",
       body: "Responsive, sortable and filterable.",
       prompt: "Create a responsive data table with sorting, filtering and pagination.",
     },
     {
       key: "arch",
+      icon: Diamond,
       title: "Architect a system",
       body: "Multi-tenant SaaS with auth and billing.",
       prompt: "Draft a scalable multi-tenant SaaS architecture with auth, billing and analytics.",
     },
     {
       key: "dash",
+      icon: Zap,
       title: "Analytics dashboard",
       body: "Charts, KPI cards and a sidebar shell.",
       prompt: "Build an analytics dashboard with KPI cards, a line chart and a collapsible sidebar.",
@@ -1307,37 +1315,72 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
   ];
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-2xl flex-col items-center justify-center px-6 py-10 text-center">
-      <h1 className="font-display text-2xl font-semibold leading-tight tracking-tight text-ink-900 sm:text-3xl">
-        What should we build today?
-      </h1>
-      <p className="mx-auto mt-2.5 max-w-md text-sm leading-relaxed text-ink-500">
-        Describe your idea below — Nexura builds, previews and ships it in one workspace.
-      </p>
+    <div
+      data-testid="workspace-empty-state"
+      className="mx-auto flex h-full w-full max-w-2xl flex-col items-center justify-center gap-6 px-5 py-10 text-center sm:px-6"
+    >
+      {/* Illustration: brand mark on a soft aurora halo */}
+      <div className="relative flex items-center justify-center">
+        <span
+          aria-hidden
+          className="absolute h-24 w-24 rounded-full blur-2xl sm:h-28 sm:w-28"
+          style={{ background: "var(--iris-gradient)", opacity: 0.22 }}
+        />
+        <span
+          aria-hidden
+          className="absolute h-16 w-16 rounded-full border border-[color:var(--color-iris)]/25 sm:h-20 sm:w-20"
+        />
+        <BrandMark size="lg" className="relative" />
+      </div>
 
-      {/* Lovable-style suggestion pills */}
-      <div className="mt-7 flex w-full flex-wrap items-center justify-center gap-2">
+      <div className="space-y-2.5">
+        <h1 className="font-display text-2xl font-semibold leading-tight tracking-tight text-ink-900 sm:text-3xl">
+          What should we build today?
+        </h1>
+        <p className="mx-auto max-w-md text-sm leading-relaxed text-ink-500">
+          Describe your idea below — Nexura builds, previews and ships it in one workspace.
+        </p>
+      </div>
+
+      {/* Suggestion pills — two balanced rows on every viewport */}
+      <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
         {starters.map((s) => (
           <button
             key={s.key}
             type="button"
+            data-testid="starter-pill"
             onClick={() => onPick(s.prompt)}
             title={s.body}
-            className="inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-3.5 py-1.5 text-xs font-medium text-ink-700 transition hover:-translate-y-px hover:border-[color:var(--color-iris)]/45 hover:text-ink-900 hover:shadow-sm"
+            className={cn(
+              "group inline-flex min-w-0 items-center gap-2 rounded-full border border-ink-200 bg-white px-3.5 py-2 text-left",
+              "text-xs font-medium text-ink-700 transition-all duration-200",
+              "hover:-translate-y-px hover:border-[color:var(--color-iris)]/45 hover:text-ink-900 hover:shadow-[0_8px_20px_-14px_rgba(16,24,40,0.35)]",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-iris)]/35",
+            )}
           >
-            {s.title}
+            <s.icon className="h-3.5 w-3.5 shrink-0 text-[color:var(--color-iris)]" />
+            <span className="truncate">{s.title}</span>
+            <ChevronRight className="ml-auto h-3.5 w-3.5 shrink-0 text-ink-300 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-[color:var(--color-iris)]" />
           </button>
         ))}
       </div>
 
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-2xs text-ink-500">
-        <span className="flex items-center gap-1.5"><Shield className="h-3 w-3 text-[color:var(--color-iris)]" />E2E encrypted</span>
+      {/* Credit / trust note — same rhythm as the composer footnote */}
+      <div className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1.5 text-2xs text-ink-500">
+        <span className="inline-flex items-center gap-1.5">
+          <Shield className="h-3 w-3 text-[color:var(--color-iris)]" />
+          E2E encrypted
+        </span>
         <span className="text-ink-300">·</span>
-        <span className="flex items-center gap-1.5"><Zap className="h-3 w-3 text-[color:var(--color-iris)]" />Smart routing</span>
+        <span className="inline-flex items-center gap-1.5">
+          <Zap className="h-3 w-3 text-[color:var(--color-iris)]" />
+          Smart routing
+        </span>
         <span className="text-ink-300">·</span>
         <span className="font-medium text-ink-600">{model.name}</span>
       </div>
     </div>
   );
 }
+
 
