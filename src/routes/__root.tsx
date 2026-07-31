@@ -80,11 +80,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Nexura AI — Free Multi-Model Intelligence Workspace" },
+      { title: "Nexura AI — Prompt to Web App Workspace" },
       { name: "description", content: "Nexura AI — an AI workspace that turns prompts into multi-file web projects with live preview, code view, console and automatic error fixing." },
       { name: "author", content: "Nexura" },
       { property: "og:title", content: "Nexura AI" },
-      { property: "og:description", content: "Free multi-model AI workspace with editorial-grade UI." },
+      { property: "og:description", content: "Prompt, preview, edit code and ship — Nexura AI builds web projects for you." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
