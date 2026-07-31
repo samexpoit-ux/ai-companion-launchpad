@@ -2,6 +2,17 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, RotateCcw, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  PageBar,
+  PageBody,
+  PageEmpty,
+  PageHeader,
+  PageSection,
+  PageShell,
+  PageStat,
+  PageStatGrid,
+} from "@/components/page-shell";
+
 import { formatCredits } from "@/lib/credits";
 import { useCredits } from "@/hooks/useCredits";
 import {
