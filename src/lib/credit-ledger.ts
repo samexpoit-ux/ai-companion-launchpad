@@ -187,31 +187,23 @@ export async function rollbackCharge(entry: LedgerEntry, reason: string): Promis
   if (entry.credits <= 0) return { ok: false, error: "Only a charge can be rolled back." };
   if (entry.reversedAt) return { ok: false, error: "This charge was already rolled back." };
 
-  const insert = await supabase
-    .from("credit_ledger")
-    .insert({
-      user_id: entry.userId,
-      action: entry.action,
-      tier: entry.tier,
-      credits: -entry.credits,
-      model: entry.model,
-      thread_id: entry.threadId,
-      reason: reason.trim() || "Manual rollback",
-      reversal_of: entry.id,
-    })
-    .select("id")
-    .single();
+  // Rollbacks go through the admin-only database routine: ledger rows are no
+  // longer writable from the browser, so the reversal + stamp stay atomic.
+  const { error } = await supabase.rpc("rollback_charge", {
+    _ledger_id: entry.id,
+    _reason: reason.trim() || "Manual rollback",
+  });
 
-  if (insert.error) {
-    console.error("[ledger] rollback insert failed", insert.error.message);
-    return { ok: false, error: insert.error.message };
+  if (error) {
+    console.error("[ledger] rollback failed", error.message);
+    return {
+      ok: false,
+      error: /not allowed/i.test(error.message)
+        ? "Only admins can roll back a charge."
+        : error.message,
+    };
   }
 
-  const stamp = await supabase
-    .from("credit_ledger")
-    .update({ reversed_at: new Date().toISOString() })
-    .eq("id", entry.id);
-  if (stamp.error) console.error("[ledger] rollback stamp failed", stamp.error.message);
-
   return { ok: true, refunded: entry.credits };
+
 }

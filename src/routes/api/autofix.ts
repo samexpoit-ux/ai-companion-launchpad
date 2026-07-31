@@ -1,5 +1,6 @@
 import { apiErrorResponse, codeFromUpstream } from "@/lib/api-error";
 import { createFileRoute } from "@tanstack/react-router";
+import { CreditError, chargeRequest, creditErrorCode } from "@/lib/credit-guard.server";
 import { resolveRoute, runWithFallback } from "@/lib/ai-gateway.server";
 
 interface AutofixBody {
@@ -92,6 +93,23 @@ export const Route = createFileRoute("/api/autofix")({
         const route = resolveRoute(body.modelId, { task: "fix" });
         if ("error" in route) return apiErrorResponse("no_provider", "autofix", route.error);
 
+        // ---- server-side credit enforcement (before any provider call) ----
+        let charge;
+        try {
+          charge = await chargeRequest(request, "autofix", {
+            inputChars: (files ? JSON.stringify(files).length : code.length),
+            model: route.friendlyId,
+            reason: `autofix attempt ${body.attempt ?? 1}`,
+          });
+        } catch (err) {
+          if (err instanceof CreditError) {
+            return apiErrorResponse(creditErrorCode(err), "autofix", err.message, {
+              ...(err.remaining != null ? { remaining: err.remaining } : {}),
+            });
+          }
+          throw err;
+        }
+
         const userPrompt = isProject
           ? [
               `Entry file: ${body.entry ?? "src/App.tsx"}`,
@@ -146,6 +164,7 @@ export const Route = createFileRoute("/api/autofix")({
                   model: route.friendlyId,
                   tokens: result.tokens,
                   latencyMs: Date.now() - started,
+                  credits: { charged: charge.charged, remaining: charge.remaining },
                 });
               }
               return apiErrorResponse("bad_model_output", "autofix", "The model did not return a usable patch.");
@@ -158,6 +177,7 @@ export const Route = createFileRoute("/api/autofix")({
               model: route.friendlyId,
               tokens: result.tokens,
               latencyMs: Date.now() - started,
+              credits: { charged: charge.charged, remaining: charge.remaining },
             });
           }
 
@@ -173,6 +193,7 @@ export const Route = createFileRoute("/api/autofix")({
             model: route.friendlyId,
             tokens: result.tokens,
             latencyMs: Date.now() - started,
+            credits: { charged: charge.charged, remaining: charge.remaining },
           });
         } catch (err) {
           const e = err as Error & { status?: number };

@@ -1,0 +1,111 @@
+/**
+ * Server-side credit enforcement.
+ *
+ * Every billable endpoint charges *before* it calls a model, through the
+ * `spend_credits` database routine. The routine locks the caller's settings
+ * row, recomputes the period spend from the ledger and refuses the write when
+ * the balance does not cover the cost — so two parallel tabs (or a scripted
+ * client) can never overspend, and the browser can never grant itself credits.
+ *
+ * Server-only: this file reads `SUPABASE_*` env vars and must never be
+ * imported from a component.
+ */
+import { createClient } from "@supabase/supabase-js";
+import { ACTION_RULES, estimateCost, type CreditAction } from "@/lib/credits";
+
+export interface ChargeResult {
+  id: string;
+  charged: number;
+  plan: string;
+  total: number;
+  used: number;
+  remaining: number;
+}
+
+export class CreditError extends Error {
+  constructor(
+    readonly kind: "unauthenticated" | "insufficient_credits" | "unavailable",
+    message: string,
+    readonly remaining?: number,
+  ) {
+    super(message);
+    this.name = "CreditError";
+  }
+}
+
+function bearer(request: Request): string | null {
+  const header = request.headers.get("authorization") ?? request.headers.get("Authorization");
+  if (!header) return null;
+  const [scheme, token] = header.split(" ");
+  if (!token || scheme.toLowerCase() !== "bearer") return null;
+  return token.trim() || null;
+}
+
+/**
+ * Charges the signed-in caller for `action` and returns the new balance.
+ * Throws `CreditError` — callers map that onto the unified API error envelope.
+ */
+export async function chargeRequest(
+  request: Request,
+  action: CreditAction,
+  opts: { inputChars?: number; model?: string | null; threadId?: string | null; reason?: string } = {},
+): Promise<ChargeResult> {
+  const token = bearer(request);
+  if (!token) {
+    throw new CreditError("unauthenticated", "Sign in to use Nexura AI.");
+  }
+
+  const url = process.env["SUPABASE_URL"];
+  const key = process.env["SUPABASE_PUBLISHABLE_KEY"] ?? process.env["SUPABASE_ANON_KEY"];
+  if (!url || !key) {
+    throw new CreditError("unavailable", "Credit service is not configured on the server.");
+  }
+
+  const supabase = createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+
+  const cost = estimateCost(action, opts.inputChars ?? 0);
+  const { data, error } = await supabase.rpc("spend_credits", {
+    _action: action,
+    _tier: ACTION_RULES[action].tier,
+    _credits: cost,
+    _model: opts.model ?? null,
+    _thread_id: opts.threadId ?? null,
+    _reason: opts.reason ?? null,
+  });
+
+  if (error) {
+    const msg = error.message ?? "Credit check failed";
+    if (/insufficient credits/i.test(msg)) {
+      const remaining = Number(/([\d.]+) remaining/.exec(msg)?.[1] ?? 0);
+      throw new CreditError(
+        "insufficient_credits",
+        `This ${ACTION_RULES[action].label.toLowerCase()} costs ${cost} credits but only ${remaining} remain.`,
+        remaining,
+      );
+    }
+    if (/not authenticated|not allowed|jwt|token/i.test(msg)) {
+      throw new CreditError("unauthenticated", "Your session expired — sign in again.");
+    }
+    throw new CreditError("unavailable", msg);
+  }
+
+  const row = (data ?? {}) as Partial<ChargeResult>;
+  return {
+    id: String(row.id ?? ""),
+    charged: Number(row.charged ?? cost),
+    plan: String(row.plan ?? "free"),
+    total: Number(row.total ?? 0),
+    used: Number(row.used ?? 0),
+    remaining: Number(row.remaining ?? 0),
+  };
+}
+
+/** Maps a CreditError onto the shared API error envelope codes. */
+export function creditErrorCode(err: CreditError) {
+  if (err.kind === "unauthenticated") return "unauthenticated" as const;
+  if (err.kind === "insufficient_credits") return "insufficient_credits" as const;
+  return "unknown" as const;
+}

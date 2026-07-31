@@ -1,4 +1,5 @@
 import { buildApiError, parseApiError, type ApiError } from "@/lib/api-error";
+import { apiFetch } from "@/lib/api-fetch";
 import {
   createContext,
   useCallback,
@@ -396,17 +397,13 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
     setFixError(null);
 
     try {
-      const res = await fetch("/api/autofix", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code: current.code,
-          lang: current.lang,
-          errors,
-          attempt,
-          files: current.files,
-          entry: current.entry,
-        }),
+      const res = await apiFetch("/api/autofix", {
+        code: current.code,
+        lang: current.lang,
+        errors,
+        attempt,
+        files: current.files,
+        entry: current.entry,
       });
       const data = (await res.json()) as {
         code?: string;

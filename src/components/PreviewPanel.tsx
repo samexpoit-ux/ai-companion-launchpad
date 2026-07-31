@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { spendAction } from "@/lib/api-fetch";
 import { X, Code2, Eye, Terminal, RefreshCw, Monitor, Tablet, Smartphone, Wand2, Loader2, ShieldCheck, AlertTriangle, History, GitCompare, Play, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCredits } from "@/hooks/useCredits";
@@ -70,11 +71,12 @@ export function PreviewPanel() {
       return;
     }
     try {
-      await credits.charge("preview_run");
+      const balance = await spendAction("preview_run");
+      credits.applyServerBalance(balance);
       setArmedRevision(revision);
       setReloadKey((k) => k + 1);
-    } catch {
-      setRunError("Could not start the preview. Try again.");
+    } catch (err) {
+      setRunError(err instanceof Error ? err.message : "Could not start the preview. Try again.");
     }
   }, [credits, revision]);
 
@@ -83,8 +85,9 @@ export function PreviewPanel() {
       setRunError("Not enough credits for an auto-fix attempt.");
       return;
     }
-    await credits.charge("autofix");
+    // The /api/autofix route charges the account server-side; refresh after.
     runAutoFix();
+    void credits.refresh();
   }, [credits, runAutoFix]);
 
   if (!isOpen) return null;

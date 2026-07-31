@@ -16,6 +16,8 @@ export type ApiErrorCode =
   | "invalid_json"
   | "missing_input"
   | "no_provider"
+  | "unauthenticated"
+  | "insufficient_credits"
   | "rate_limited"
   | "quota_exhausted"
   | "upstream_failed"
@@ -60,6 +62,19 @@ const CATALOG: Record<ApiErrorCode, { status: number; hint: string; steps: strin
     steps: [
       "Set the OPENROUTER_API_KEY environment variable on the server.",
       "Restart the app after adding the key.",
+    ],
+  },
+  unauthenticated: {
+    status: 401,
+    hint: "You need to be signed in for this action.",
+    steps: ["Sign in again from the account menu.", "Reload the page if the session looks stale."],
+  },
+  insufficient_credits: {
+    status: 402,
+    hint: "Your credit balance does not cover this request.",
+    steps: [
+      "Open your account panel to see the remaining balance.",
+      "Upgrade your plan to get more monthly credits.",
     ],
   },
   rate_limited: {

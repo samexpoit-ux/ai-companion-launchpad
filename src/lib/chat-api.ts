@@ -1,4 +1,5 @@
 import { readApiError, type ApiError } from "./api-error";
+import { apiFetch } from "./api-fetch";
 // Real AI backend. Server route: /api/chat keeps provider calls server-side.
 
 export type ChatRole = "user" | "assistant";
@@ -11,6 +12,8 @@ export interface ChatMessage {
   model?: string;
   tokens?: number;
   latencyMs?: number;
+  /** Credits charged for the prompt that produced this reply. */
+  credits?: number;
 }
 
 export interface ChatThread {
@@ -82,21 +85,24 @@ export const AI_MODELS: AIModel[] = [
 export async function sendChatMessage(
   messages: ChatMessage[],
   modelId?: string,
-  options?: { plan?: string; mode?: string },
-): Promise<{ content: string; model: string; tokens: number; latencyMs: number }> {
+  options?: { plan?: string; mode?: string; threadId?: string },
+): Promise<{
+  content: string;
+  model: string;
+  tokens: number;
+  latencyMs: number;
+  credits?: { charged: number; remaining: number; total: number; used: number; plan: string };
+}> {
   const payload = {
     modelId,
     plan: options?.plan,
     mode: options?.mode,
+    threadId: options?.threadId,
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
   };
 
 
-  const res = await fetch("/api/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  const res = await apiFetch("/api/chat", payload);
 
   if (!res.ok) {
     const apiErr = await readApiError(res, "chat");
@@ -111,6 +117,7 @@ export async function sendChatMessage(
     model: string;
     tokens: number;
     latencyMs: number;
+    credits?: { charged: number; remaining: number; total: number; used: number; plan: string };
   };
   return data;
 }
