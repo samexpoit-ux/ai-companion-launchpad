@@ -38,6 +38,7 @@ import {
   ChevronRight,
   Crown,
   History as HistoryIcon,
+  Coins,
 
 } from "lucide-react";
 import {
@@ -49,7 +50,8 @@ import {
 } from "@/lib/chat-api";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import nexusLogo from "@/assets/nexus-x-logo.png";
+import { CREDITS } from "@/lib/credits";
+import nexuraLogo from "@/assets/nexura-logo.png";
 import { ThemePicker } from "@/components/ThemePicker";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { takePendingPrompt } from "@/lib/pending-prompt";
@@ -447,7 +449,7 @@ function ChatWorkspaceInner() {
         <div className="flex items-center gap-2.5 border-b border-ink-200 px-4 py-4">
           <div className="relative flex h-9 w-9 items-center justify-center">
             <img
-              src={nexusLogo}
+              src={nexuraLogo}
               alt="Nexura AI logo"
               width={36}
               height={36}

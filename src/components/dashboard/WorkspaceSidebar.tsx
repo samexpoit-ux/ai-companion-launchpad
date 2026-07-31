@@ -21,7 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import nexusLogo from "@/assets/nexus-x-logo.png";
+import nexuraLogo from "@/assets/nexura-logo.png";
 
 export type RecentProject = { id: string; title: string; updatedAt: number };
 
@@ -82,7 +82,7 @@ export function WorkspaceSidebar({
 
       <div className="flex items-center justify-between px-3 py-3">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <img src={nexusLogo} alt="Nexura AI logo" className="h-6 w-6 rounded-md" />
+          <img src={nexuraLogo} alt="Nexura AI logo" className="h-6 w-6 rounded-md" />
         </Link>
         <button
           type="button"

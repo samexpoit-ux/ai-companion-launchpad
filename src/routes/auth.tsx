@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import nexusLogo from "@/assets/nexus-x-logo.png";
+import nexuraLogo from "@/assets/nexura-logo.png";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -118,7 +118,7 @@ function AuthPage() {
       <div className="w-full max-w-[400px]">
         <div className="mb-8 flex flex-col items-center text-center">
           <img
-            src={nexusLogo}
+            src={nexuraLogo}
             alt="Nexura AI logo"
             className="h-12 w-12 rounded-xl"
           />
