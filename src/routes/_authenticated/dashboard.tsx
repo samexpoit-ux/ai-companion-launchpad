@@ -20,7 +20,10 @@ import {
 
 import { cn } from "@/lib/utils";
 import { useAuth, useProfile, displayNameOf } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { queuePendingPrompt } from "@/lib/pending-prompt";
 import { WorkspaceSidebar, type RecentProject } from "@/components/dashboard/WorkspaceSidebar";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,

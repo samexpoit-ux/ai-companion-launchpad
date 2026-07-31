@@ -45,12 +45,14 @@ export function WorkspaceSidebar({
   userLabel,
   credits,
   onCollapse,
+  className,
 }: {
   recents: RecentProject[];
   workspaceName: string;
   userLabel: string;
   credits: { left: number; total: number };
   onCollapse?: () => void;
+  className?: string;
 }) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const switcherRef = useRef<HTMLDivElement | null>(null);
@@ -71,7 +73,13 @@ export function WorkspaceSidebar({
   );
 
   return (
-    <aside className="flex h-dvh w-[248px] shrink-0 flex-col border-r border-ink-200 bg-ink-100/70">
+    <aside
+      className={cn(
+        "flex h-dvh w-[248px] shrink-0 flex-col overflow-y-auto border-r border-ink-200 bg-ink-100/70",
+        className,
+      )}
+    >
+
       <div className="flex items-center justify-between px-3 py-3">
         <Link to="/dashboard" className="flex items-center gap-2">
           <img src={nexusLogo} alt="Nexus X AI logo" className="h-6 w-6 rounded-md" />
