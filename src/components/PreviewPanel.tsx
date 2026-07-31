@@ -420,15 +420,16 @@ function TabBtn({
   return (
     <button
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs transition",
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
         active
           ? "bg-white text-ink-900 shadow-sm ring-1 ring-ink-200"
           : "text-ink-500 hover:text-ink-900",
       )}
     >
-      <Icon className="h-3 w-3" />
-      {label}
+      <Icon className="h-3 w-3 shrink-0" />
+      <span className="hidden sm:inline">{label}</span>
     </button>
   );
 }
