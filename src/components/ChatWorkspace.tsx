@@ -894,7 +894,7 @@ function ChatWorkspaceInner() {
                       <button
                         type="button"
                         aria-label="Response mode"
-                        className="inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-xs font-medium text-ink-700 transition-colors duration-150 hover:bg-ink-100 hover:text-ink-900 data-[state=open]:bg-ink-100 data-[state=open]:text-ink-900"
+                        className="inline-flex h-8 max-w-[7.5rem] shrink-0 items-center gap-1 truncate rounded-full px-2.5 text-xs font-medium text-ink-700 transition-colors duration-150 hover:bg-ink-100 hover:text-ink-900 data-[state=open]:bg-ink-100 data-[state=open]:text-ink-900"
                       >
                         {mode}
                         <ChevronDown className="h-3.5 w-3.5 text-ink-400" />
@@ -923,7 +923,7 @@ function ChatWorkspaceInner() {
                   <button
                     type="button"
                     aria-label="Voice input"
-                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-500 transition-all duration-150 hover:bg-ink-100 hover:text-ink-900 active:scale-95"
+                    className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-500 transition-all duration-150 hover:bg-ink-100 hover:text-ink-900 active:scale-95 xs:inline-flex sm:inline-flex"
                   >
                     <Mic className="h-4 w-4" />
                   </button>
