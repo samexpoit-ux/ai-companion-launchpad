@@ -170,8 +170,11 @@ function AccountPage() {
         </div>
       </section>
 
-      <section className="mt-10" aria-labelledby="plan-heading">
-        <h2 id="plan-heading" className="text-sm font-semibold text-ink-900">
+      <section
+        className="mt-10 rounded-2xl border border-ink-200 bg-white/70 p-5"
+        aria-labelledby="plan-heading"
+      >
+        <h2 id="plan-heading" className="font-display text-lg font-bold tracking-tight text-ink-900">
           Plan &amp; billing
         </h2>
         <p className="mt-1 text-xs text-ink-500">
