@@ -337,41 +337,42 @@ function DashboardPage() {
           </div>
         </section>
 
-        {/* Plan, credits and cost transparency */}
-        <section className="relative z-10 mx-auto -mt-2 w-full max-w-5xl px-3 pb-2 sm:px-5">
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
-            <div className="rounded-2xl border border-ink-200 bg-white/70 p-4">
-              <PlanPicker value={credits.plan} onChange={(plan) => void credits.setPlan(plan)} />
+        {/* Compact plan + credit strip */}
+        <section className="mx-auto w-full max-w-5xl px-3 pt-6 sm:px-5" aria-label="Plan and credits">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-ink-200 bg-ink-50 px-4 py-3 shadow-ds-xs">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Plan</p>
+              <p className="font-display text-[15px] font-bold text-ink-900">
+                {planById(credits.plan).name}
+              </p>
             </div>
-            <div className="space-y-2">
+            <div className="h-8 w-px bg-ink-200 max-sm:hidden" />
+            <div className="min-w-[150px] flex-1">
               <CreditMeter
                 plan={credits.plan}
                 remaining={credits.remaining}
                 total={credits.total}
                 pending={prompt.trim() ? cost : undefined}
+                compact
+                className="border-0 bg-transparent p-0"
               />
-              <div className="rounded-xl border border-ink-200 bg-white/70 p-3 text-[11px] text-ink-600">
-                <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-400">
-                  What each action costs
-                </div>
-                <ul className="space-y-1">
-                  {(["chat", "plan", "code", "autofix", "preview_run", "export"] as const).map((key) => (
-                    <li key={key} className="flex items-center justify-between gap-2">
-                      <span>{ACTION_RULES[key].label}</span>
-                      <span className="font-mono text-ink-800">
-                        {formatCredits(ACTION_RULES[key].base)}
-                        {ACTION_RULES[key].perKChars > 0 ? "+" : ""}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
             </div>
+            <p className="text-[11.5px] text-ink-500 max-lg:hidden">
+              {mode} costs {formatCredits(cost)} credits · smart routing picks the model
+            </p>
+            <Link
+              to="/account"
+              className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border border-ink-200 px-3 py-1.5 text-[12.5px] font-semibold text-ink-800 transition hover:bg-ink-100"
+            >
+              Plans &amp; usage
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
         </section>
 
         {/* Projects panel */}
-        <section className="relative -mt-6 min-h-[420px] rounded-t-[28px] border border-ink-200 bg-ink-50 px-3 py-5 shadow-ds-lg sm:px-5">
+        <section className="min-h-[360px] px-3 py-8 sm:px-5">
+
           <div className="mx-auto w-full max-w-5xl">
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex min-w-0 items-center gap-2 rounded-full border border-ink-200 bg-ink-100/70 px-3 py-1.5">
