@@ -5,31 +5,13 @@ import { test, expect, type Page } from "@playwright/test";
  * Catches UI drift (spacing/shape changes) and structural regressions such as
  * the composer overlapping the transcript or its controls colliding.
  */
-const FREEZE_CSS = `
-  *, *::before, *::after {
-    animation: none !important;
-    transition: none !important;
-    caret-color: transparent !important;
-  }
-`;
+import { installMockBackend, openWorkspace } from "./fixtures/mock-backend";
 
-const EMAIL = process.env["UI_TEST_EMAIL"] ?? process.env["A11Y_TEST_EMAIL"];
-const PASSWORD = process.env["UI_TEST_PASSWORD"] ?? process.env["A11Y_TEST_PASSWORD"];
-
-// The workspace lives behind auth — without credentials the suite is skipped
-// instead of failing (set UI_TEST_EMAIL / UI_TEST_PASSWORD to enable).
-test.skip(!EMAIL || !PASSWORD, "workspace visual checks need UI_TEST_EMAIL / UI_TEST_PASSWORD");
-
-async function openWorkspace(page: Page) {
-  await page.goto("/auth", { waitUntil: "domcontentloaded" });
-  await page.getByLabel(/email/i).first().fill(EMAIL!);
-  await page.getByLabel(/password/i).first().fill(PASSWORD!);
-  await page.getByRole("button", { name: /sign in|log in/i }).first().click();
-  await page.waitForURL(/dashboard|workspace/, { timeout: 30_000 });
-  await page.goto("/workspace", { waitUntil: "networkidle" });
-  await page.addStyleTag({ content: FREEZE_CSS });
-  await page.waitForTimeout(400);
-}
+// UI test mode: the workspace renders against a fully mocked backend, so these
+// checks run on every commit without signing into the self-hosted database.
+test.beforeEach(async ({ page }) => {
+  await installMockBackend(page);
+});
 
 function composer(page: Page) {
   return page.getByTestId("composer");
