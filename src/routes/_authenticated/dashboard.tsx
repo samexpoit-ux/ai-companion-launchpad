@@ -342,36 +342,39 @@ function DashboardPage() {
 
         {/* Compact plan + credit strip */}
         <section className="mx-auto w-full max-w-5xl px-3 pt-6 sm:px-5" aria-label="Plan and credits">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-ink-200 bg-ink-50 px-4 py-3 shadow-ds-xs">
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Plan</p>
-              <p className="font-display text-[15px] font-bold text-ink-900">
-                {planById(credits.plan).name}
-              </p>
+          <div className="rounded-2xl border border-ink-200 bg-ink-50 p-4 shadow-ds-xs sm:p-5">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Plan</p>
+                <p className="font-display text-[16px] font-bold leading-tight text-ink-900">
+                  {planById(credits.plan).name}
+                </p>
+              </div>
+              <div className="h-9 w-px bg-ink-200 max-sm:hidden" />
+              <div className="w-full max-w-[280px] shrink-0 sm:w-[240px]">
+                <CreditMeter
+                  plan={credits.plan}
+                  remaining={credits.remaining}
+                  total={credits.total}
+                  compact
+                  className="border-0 bg-transparent p-0"
+                />
+              </div>
+              <Link
+                to="/account"
+                className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border border-ink-200 bg-ink-50 px-3.5 py-2 text-[12.5px] font-semibold text-ink-800 transition hover:bg-ink-100"
+              >
+                Plans &amp; usage
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
-            <div className="h-8 w-px bg-ink-200 max-sm:hidden" />
-            <div className="min-w-[150px] flex-1">
-              <CreditMeter
-                plan={credits.plan}
-                remaining={credits.remaining}
-                total={credits.total}
-                pending={prompt.trim() ? cost : undefined}
-                compact
-                className="border-0 bg-transparent p-0"
-              />
-            </div>
-            <p className="text-[11.5px] text-ink-500 max-lg:hidden">
-              {mode} costs {formatCredits(cost)} credits · smart routing picks the model
+            <p className="mt-3 border-t border-ink-200 pt-3 text-[12px] text-ink-500">
+              {mode} costs {formatCredits(cost)} credits — smart routing always picks the cheapest
+              capable model for you.
             </p>
-            <Link
-              to="/account"
-              className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border border-ink-200 px-3 py-1.5 text-[12.5px] font-semibold text-ink-800 transition hover:bg-ink-100"
-            >
-              Plans &amp; usage
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
           </div>
         </section>
+
 
         {/* Projects panel */}
         <section className="min-h-[360px] px-3 py-8 sm:px-5">
