@@ -17,6 +17,7 @@ import {
   Compass,
   Zap,
   Coins,
+  ShieldCheck,
 } from "lucide-react";
 
 
@@ -24,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import nexuraLogo from "@/assets/nexura-logo.png";
+import { useAdmin } from "@/hooks/useAdmin";
 
 export type RecentProject = { id: string; title: string; updatedAt: number };
 
@@ -57,6 +59,7 @@ export function WorkspaceSidebar({
   className?: string;
 }) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const { isAdmin } = useAdmin();
   const switcherRef = useRef<HTMLDivElement | null>(null);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -236,6 +239,15 @@ export function WorkspaceSidebar({
           <Coins className="h-4 w-4 shrink-0" aria-hidden />
           <span className="min-w-0 flex-1 truncate">Credit usage</span>
         </Link>
+        {isAdmin && (
+          <Link
+            to="/admin"
+            className="mt-0.5 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] text-ink-600 transition hover:bg-ink-200/60 hover:text-ink-900"
+          >
+            <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden />
+            <span className="min-w-0 flex-1 truncate">Admin panel</span>
+          </Link>
+        )}
       </div>
 
 
