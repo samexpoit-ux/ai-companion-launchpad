@@ -187,7 +187,7 @@ function DashboardPage() {
         </div>
       )}
 
-      <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+      <main className="flex min-w-0 flex-1 flex-col overflow-y-auto bg-ink-100">
         {/* Mobile top bar */}
         <div className="sticky top-0 z-30 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 border-b border-ink-200 bg-ink-50/90 px-3 py-2 backdrop-blur md:hidden">
           <button
