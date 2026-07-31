@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX IF NOT EXISTS chat_messages_thread_client_uniq ON public.chat_messages (thread_id, client_id) WHERE client_id IS NOT NULL;
+ALTER TABLE public.chat_messages ADD CONSTRAINT chat_messages_thread_client_key UNIQUE (thread_id, client_id);
