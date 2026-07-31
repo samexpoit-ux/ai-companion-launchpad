@@ -4,7 +4,7 @@
 #
 # Installs Docker + the official Supabase docker stack under /opt/supabase,
 # generates fresh secrets (JWT secret, anon + service keys, DB + dashboard
-# passwords), exposes Studio and the API through nginx on db.nexuraai.dev,
+# passwords), exposes Studio and the API through nginx on supabase.nexuraai.dev,
 # and prints the env values to paste into /var/www/nexuraai/.env.
 #
 # Cloud VPS 12: 12 vCPU / 48 GB RAM / 400 GB disk — plenty for this stack.
@@ -15,7 +15,7 @@
 set -euo pipefail
 
 DOMAIN="nexuraai.dev"
-DB_HOST="db.${DOMAIN}"          # Supabase API + Studio hostname
+DB_HOST="supabase.${DOMAIN}"          # Supabase API + Studio hostname
 SB_DIR="/opt/supabase"
 EMAIL="admin@${DOMAIN}"
 
@@ -115,7 +115,7 @@ nginx -t && systemctl reload nginx
 echo "==> [7/7] TLS for ${DB_HOST}"
 command -v certbot >/dev/null 2>&1 || apt-get install -y certbot python3-certbot-nginx
 certbot --nginx -d "${DB_HOST}" --non-interactive --agree-tos -m "${EMAIL}" --redirect || \
-  echo "!! certbot failed — add an A record for ${DB_HOST} -> 169.58.105.190 and rerun"
+  echo "!! certbot failed — add an  A record for ${DB_HOST} -> 169.58.105.190 and rerun"
 
 echo
 echo "======================================================================="
