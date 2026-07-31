@@ -189,7 +189,11 @@ function ChatWorkspaceInner() {
     const persisted = loadPersisted();
     if (persisted && persisted.threads.length > 0) {
       setThreads(persisted.threads);
-      setActiveId(persisted.activeId);
+      setActiveId(
+        requestedThreadId && persisted.threads.some((t) => t.id === requestedThreadId)
+          ? requestedThreadId
+          : persisted.activeId,
+      );
       setModelId(persisted.modelId);
     } else {
       const first = createFreshThread();
@@ -197,23 +201,18 @@ function ChatWorkspaceInner() {
       setActiveId(first.id);
     }
     setHydrated(true);
+    // Only run once on mount; the deep link is read from the initial URL.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Prompt handed off from the dashboard hero input.
+  // Follow ?thread= deep links after the initial hydration too.
   useEffect(() => {
-    if (!hydrated) return;
-    try {
-      const pending = window.sessionStorage.getItem("nexusx.pendingPrompt");
-      if (pending) {
-        window.sessionStorage.removeItem("nexusx.pendingPrompt");
-        setInput(pending);
-        taRef.current?.focus();
-      }
-    } catch {
-      /* ignore */
-    }
-  }, [hydrated]);
-
+    if (!hydrated || !requestedThreadId) return;
+    setThreads((prev) => {
+      if (prev.some((t) => t.id === requestedThreadId)) setActiveId(requestedThreadId);
+      return prev;
+    });
+  }, [hydrated, requestedThreadId]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -223,6 +222,7 @@ function ChatWorkspaceInner() {
       /* ignore */
     }
   }, [threads, activeId, modelId, hydrated]);
+
 
   const active = useMemo(
     () => threads.find((t) => t.id === activeId) ?? threads[0],
