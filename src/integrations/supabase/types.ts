@@ -470,6 +470,7 @@ export type Database = {
     }
     Functions: {
       credit_balance: { Args: { _user_id?: string }; Returns: Json }
+      downgrade_to_free: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -25,7 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import nexuraLogo from "@/assets/nexura-logo.png";
+import nexuraLogo from "@/assets/nexura-mark.png";
 import { useAdmin } from "@/hooks/useAdmin";
 
 export type RecentProject = { id: string; title: string; updatedAt: number };

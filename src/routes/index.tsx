@@ -4,7 +4,7 @@ import { ArrowRight, Boxes, Gauge, ShieldCheck, Sparkles, Wand2 } from "lucide-r
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import nexuraLogo from "@/assets/nexura-logo.png";
+import nexuraLogo from "@/assets/nexura-mark.png";
 
 export const Route = createFileRoute("/")({
   component: LandingPage,

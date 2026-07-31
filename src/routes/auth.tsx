@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import nexuraLogo from "@/assets/nexura-logo.png";
+import nexuraLogo from "@/assets/nexura-mark.png";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,

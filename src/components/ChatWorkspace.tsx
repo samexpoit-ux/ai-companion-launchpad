@@ -64,7 +64,7 @@ import {
   subscribeToChat,
 } from "@/lib/chat-store";
 
-import nexuraLogo from "@/assets/nexura-logo.png";
+import nexuraLogo from "@/assets/nexura-mark.png";
 import { ThemePicker } from "@/components/ThemePicker";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { takePendingPrompt } from "@/lib/pending-prompt";
