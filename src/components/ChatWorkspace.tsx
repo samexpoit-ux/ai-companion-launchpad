@@ -38,6 +38,7 @@ import {
   ChevronRight,
   Crown,
   History as HistoryIcon,
+  Coins,
 
 } from "lucide-react";
 import {
@@ -49,7 +50,8 @@ import {
 } from "@/lib/chat-api";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import nexusLogo from "@/assets/nexus-x-logo.png";
+import { CREDITS } from "@/lib/credits";
+import nexuraLogo from "@/assets/nexura-logo.png";
 import { ThemePicker } from "@/components/ThemePicker";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { takePendingPrompt } from "@/lib/pending-prompt";
@@ -447,8 +449,8 @@ function ChatWorkspaceInner() {
         <div className="flex items-center gap-2.5 border-b border-ink-200 px-4 py-4">
           <div className="relative flex h-9 w-9 items-center justify-center">
             <img
-              src={nexusLogo}
-              alt="Nexus X AI logo"
+              src={nexuraLogo}
+              alt="Nexura AI logo"
               width={36}
               height={36}
               className="h-9 w-9 object-contain"
@@ -640,7 +642,7 @@ function ChatWorkspaceInner() {
           {/* Smart auto-router — no model picker, Lovable style */}
           <div
             className="flex min-w-0 items-center gap-1.5 rounded-full border border-ink-200 bg-ink-100 px-2.5 py-1"
-            title="Nexus X automatically picks the best-value model for each request"
+            title="Nexura automatically picks the best-value model for each request"
           >
             <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[color:var(--color-iris)]" />
             <span className="truncate text-[11.5px] font-semibold text-ink-900">Smart routing</span>
@@ -670,19 +672,15 @@ function ChatWorkspaceInner() {
               <PanelRight className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Workspace</span>
             </button>
-            <Link
-
-              to="/image"
-              className="inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-ink-200 bg-white/70 px-2.5 text-[11px] font-medium text-ink-700 transition hover:border-[color:var(--color-iris-cyan)]/40 hover:bg-[color:var(--color-iris-cyan)]/[0.08] hover:text-ink-900"
-              title="Free unlimited AI image generation"
+            <span
+              className="inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-ink-200 bg-white/70 px-2.5 text-[11px] font-medium text-ink-700"
+              title="Credits included in your workspace plan"
             >
-              <span className="relative flex h-3.5 w-3.5 shrink-0 items-center justify-center">
-                <span className="absolute inset-0 rounded-full opacity-70 blur-[3px]" style={{ background: "linear-gradient(135deg, var(--color-iris-deep), var(--color-iris-cyan))" }} />
-                <span className="relative h-2 w-2 rounded-full" style={{ background: "linear-gradient(135deg, var(--color-iris-cyan), var(--color-iris-warm))" }} />
-              </span>
-              <span className="hidden sm:inline">Image Studio</span>
-              <span className="sm:hidden">Image</span>
-            </Link>
+              <Coins className="h-3.5 w-3.5 text-[color:var(--color-iris)]" />
+              {CREDITS.left}
+              <span className="hidden text-ink-400 sm:inline">/ {CREDITS.total} credits</span>
+            </span>
+
             <ThemePicker />
           </div>
 
@@ -715,7 +713,7 @@ function ChatWorkspaceInner() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={onKeyDown}
                   rows={1}
-                  placeholder="Ask Nexus X to build something…"
+                  placeholder="Ask Nexura to build something…"
                   className="max-h-52 w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-[14px] leading-relaxed text-ink-900 placeholder:text-ink-400 focus:outline-none"
                 />
                 <div className="flex items-center justify-between px-1.5 pb-1 pt-1.5">
@@ -1019,7 +1017,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
       </div>
       <div className={cn("min-w-0 max-w-[92%] sm:max-w-[85%]", isUser ? "text-right" : "text-left")}>
         <div className={cn("mb-1.5 flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-ink-500", isUser && "justify-end")}>
-          <span>{isUser ? "You" : "Nexus X"}</span>
+          <span>{isUser ? "You" : "Nexura"}</span>
           {!isUser && message.model && (
             <>
               <span className="text-ink-300">·</span>
@@ -1085,7 +1083,7 @@ function TypingIndicator({ model }: { model: AIModel }) {
       </div>
       <div className="min-w-0">
         <div className="mb-1.5 text-[10px] uppercase tracking-[0.18em] text-ink-500">
-          Nexus X · <span className="normal-case tracking-normal font-mono text-[color:var(--color-iris-cyan)]/90">{model.name}</span>
+          Nexura · <span className="normal-case tracking-normal font-mono text-[color:var(--color-iris-cyan)]/90">{model.name}</span>
         </div>
         <div className="inline-flex items-center gap-2 rounded-2xl border border-ink-200 px-4 py-3" style={{
           background: "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(244,246,249,0.88))",
@@ -1136,7 +1134,7 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
         What can I build for you?
       </h1>
       <p className="mx-auto mt-3 max-w-sm text-[13.5px] leading-relaxed text-ink-500">
-        Describe your project or choose a quick start below to begin building with Nexus X AI.
+        Describe your project or choose a quick start below to begin building with Nexura AI.
       </p>
 
       <div className="mt-8 grid w-full gap-2 sm:grid-cols-2">

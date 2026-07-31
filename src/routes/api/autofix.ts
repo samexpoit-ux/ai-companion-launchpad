@@ -13,7 +13,7 @@ interface AutofixBody {
   entry?: string;
 }
 
-const FIX_SYSTEM = `You are Nexus X AI Auto-Fix — an expert runtime debugger.
+const FIX_SYSTEM = `You are Nexura AI Auto-Fix — an expert runtime debugger.
 You receive a single code file that crashed in a browser sandbox, plus the captured console errors.
 Return the COMPLETE corrected file, nothing else.
 
@@ -24,7 +24,7 @@ Rules:
 - Guard against undefined/null access, fix typos, close JSX tags, add missing default exports, and fix bad hooks usage.
 - If the errors are not caused by the code (network/CDN noise), return the file unchanged.`;
 
-const FIX_SYSTEM_PROJECT = `You are Nexus X AI Auto-Fix — an expert runtime debugger for multi-file React projects.
+const FIX_SYSTEM_PROJECT = `You are Nexura AI Auto-Fix — an expert runtime debugger for multi-file React projects.
 You receive every file of a virtual project that crashed in a browser sandbox, plus the captured console errors.
 
 Rules:

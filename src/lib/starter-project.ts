@@ -19,9 +19,9 @@ const features = [
 export default function App() {
   return (
     <main className="page">
-      <h1>Nexus X Live Workspace</h1>
+      <h1>Nexura Live Workspace</h1>
       <p className="lead">
-        This is a starter project. Ask Nexus X to build something and it will
+        This is a starter project. Ask Nexura to build something and it will
         replace these files.
       </p>
       <div className="grid">
