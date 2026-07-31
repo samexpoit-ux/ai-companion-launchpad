@@ -82,11 +82,15 @@ export const AI_MODELS: AIModel[] = [
 export async function sendChatMessage(
   messages: ChatMessage[],
   modelId?: string,
+  options?: { plan?: string; mode?: string },
 ): Promise<{ content: string; model: string; tokens: number; latencyMs: number }> {
   const payload = {
     modelId,
+    plan: options?.plan,
+    mode: options?.mode,
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
   };
+
 
   const res = await fetch("/api/chat", {
     method: "POST",
