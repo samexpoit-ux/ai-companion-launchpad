@@ -60,6 +60,13 @@ for file in $(ls -1 "$MIG_DIR"/*.sql | sort); do
     continue
   fi
 
+  if [ "$BASELINE" = "1" ]; then
+    echo "   = $version (baselined, not executed)"
+    psql_q "insert into public.schema_migrations (version, checksum) values ('$version', '$checksum') on conflict (version) do nothing;" >/dev/null
+    baselined=$((baselined + 1))
+    continue
+  fi
+
   echo "   + $version"
   {
     echo "begin;"
@@ -67,8 +74,12 @@ for file in $(ls -1 "$MIG_DIR"/*.sql | sort); do
     echo ";"
     echo "insert into public.schema_migrations (version, checksum) values ('$version', '$checksum');"
     echo "commit;"
-  } | psql_f || { echo "migration $version failed — nothing was committed"; exit 1; }
+  } | psql_f || {
+    echo "migration $version failed — nothing was committed"
+    echo "if this schema already exists, run once: BASELINE=1 bash $APP_DIR/deploy/migrate.sh"
+    exit 1
+  }
   applied=$((applied + 1))
 done
 
-echo "-- migrations: $applied applied, $skipped already up to date${changed:+, $changed modified after apply}"
+echo "-- migrations: $applied applied, $skipped already up to date, $baselined baselined${changed:+, $changed modified after apply}"
