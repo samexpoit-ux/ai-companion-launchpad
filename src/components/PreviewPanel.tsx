@@ -1,6 +1,14 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { spendAction } from "@/lib/api-fetch";
-import { X, Code2, Eye, Terminal, RefreshCw, Monitor, Tablet, Smartphone, Wand2, Loader2, ShieldCheck, AlertTriangle, History, GitCompare, Play, Lock } from "lucide-react";
+import { X, Code2, Eye, Terminal, RefreshCw, Monitor, Tablet, Smartphone, Wand2, Loader2, ShieldCheck, AlertTriangle, History, GitCompare, Play, Lock, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useCredits } from "@/hooks/useCredits";
 import { CreditMeter } from "@/components/CreditMeter";
@@ -96,95 +104,104 @@ export function PreviewPanel() {
 
   return (
     <aside className="relative flex h-full min-w-0 flex-col border-l border-ink-200 bg-ink-100">
-      {/* Header */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-ink-200 bg-white px-3 py-2">
-        <span className="text-2xs font-semibold uppercase tracking-[0.18em] text-ink-400">Live Workspace</span>
-        <span className="rounded-md border border-ink-200 bg-ink-100 px-1.5 py-0.5 font-mono text-2xs text-ink-500">
-          {payload.files ? `${Object.keys(payload.files).length} files` : payload.lang}
-        </span>
-
-
-        <div className="flex items-center gap-0.5 rounded-lg border border-ink-200 bg-ink-100 p-0.5">
-
+      {/* Header — Lovable-style single row: segmented tabs left, viewport + actions right */}
+      <div className="flex h-12 shrink-0 items-center gap-2 overflow-hidden border-b border-ink-200 bg-white px-2 sm:px-3">
+        <div className="flex min-w-0 items-center gap-1 rounded-full border border-ink-200 bg-ink-100 p-0.5">
           <TabBtn active={tab === "preview"} onClick={() => setTab("preview")} icon={Eye} label="Preview" />
           <TabBtn active={tab === "code"} onClick={() => setTab("code")} icon={Code2} label="Code" />
           <TabBtn active={tab === "console"} onClick={() => setTab("console")} icon={Terminal} label="Console" />
         </div>
 
-        {tab === "preview" && (
-          <div className="flex items-center gap-0.5 rounded-lg border border-ink-200 bg-ink-100 p-0.5">
-            <DeviceBtn active={device === "desktop"} onClick={() => setDevice("desktop")} icon={Monitor} label="Desktop" />
-            <DeviceBtn active={device === "tablet"} onClick={() => setDevice("tablet")} icon={Tablet} label="Tablet" />
-            <DeviceBtn active={device === "mobile"} onClick={() => setDevice("mobile")} icon={Smartphone} label="Mobile" />
-          </div>
-        )}
+        <span className="hidden min-w-0 shrink truncate rounded-full border border-ink-200 bg-ink-100 px-2 py-1 font-mono text-2xs text-ink-500 lg:inline">
+          {payload.files ? `${Object.keys(payload.files).length} files` : payload.lang}
+        </span>
 
-        <div className="ml-auto flex items-center gap-1">
-          <CreditMeter
-            plan={credits.plan}
-            remaining={credits.remaining}
-            total={credits.total}
-            compact
-            className="hidden px-2 py-1 md:block"
-          />
+        <div className="ml-auto flex shrink-0 items-center gap-1">
+          {tab === "preview" && (
+            <div className="hidden items-center gap-0.5 rounded-full border border-ink-200 bg-ink-100 p-0.5 sm:flex">
+              <DeviceBtn active={device === "desktop"} onClick={() => setDevice("desktop")} icon={Monitor} label="Desktop" />
+              <DeviceBtn active={device === "tablet"} onClick={() => setDevice("tablet")} icon={Tablet} label="Tablet" />
+              <DeviceBtn active={device === "mobile"} onClick={() => setDevice("mobile")} icon={Smartphone} label="Mobile" />
+            </div>
+          )}
+
           <Suspense fallback={null}>
             <ValidationBadge />
           </Suspense>
-          <button
-            onClick={() => setReviewBeforeApply(!reviewBeforeApply)}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-2xs transition",
-              reviewBeforeApply
-                ? "border-[color:var(--color-iris)]/40 bg-[color:var(--color-iris)]/10 text-ink-800"
-                : "border-ink-200 bg-white/60 text-ink-500 hover:text-ink-800",
-            )}
-            title="Review the diff of every AI patch before it is applied"
-          >
-            <GitCompare className="h-3 w-3" />
-            Review {reviewBeforeApply ? "on" : "off"}
-          </button>
-          <button
-            onClick={() => setAutoFixEnabled(!autoFixEnabled)}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-2xs transition",
-              autoFixEnabled
-                ? "border-[color:var(--color-iris)]/40 bg-[color:var(--color-iris)]/10 text-ink-800"
-                : "border-ink-200 bg-white/60 text-ink-500 hover:text-ink-800",
-            )}
-            title="Auto bug-fix: capture sandbox console errors and patch the code with AI"
-          >
-            <Wand2 className="h-3 w-3" />
-            Auto-fix {autoFixEnabled ? "on" : "off"}
-          </button>
-          <button
-            onClick={() => setHistoryOpen((h) => !h)}
-            className={cn(
-              "inline-flex items-center gap-1 rounded-md p-1.5 transition",
-              historyOpen ? "bg-ink-900/5 text-ink-900" : "text-ink-500 hover:bg-ink-900/5 hover:text-ink-900",
-            )}
-            aria-label="Patch history"
-            title="Patch history & rollback"
-          >
-            <History className="h-3.5 w-3.5" />
-            <span className="font-mono text-2xs">{versions.length}</span>
-          </button>
+
           <button
             onClick={() => setReloadKey((k) => k + 1)}
-            className="rounded-md p-1.5 text-ink-500 hover:bg-ink-900/5 hover:text-ink-900"
+            className="rounded-full p-1.5 text-ink-500 transition hover:bg-ink-900/5 hover:text-ink-900 active:scale-95"
             aria-label="Reload preview"
             title="Reload"
           >
             <RefreshCw className="h-3.5 w-3.5" />
           </button>
+
+          {/* Secondary controls collapse into one menu so the bar never wraps */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Workspace options"
+                className="rounded-full p-1.5 text-ink-500 transition hover:bg-ink-900/5 hover:text-ink-900 active:scale-95 data-[state=open]:bg-ink-900/5 data-[state=open]:text-ink-900"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-60">
+              <DropdownMenuLabel className="flex items-center justify-between gap-2 text-2xs font-semibold uppercase tracking-[0.18em] text-ink-400">
+                Live Workspace
+                <span className="font-mono text-2xs normal-case tracking-normal text-ink-500">
+                  {payload.files ? `${Object.keys(payload.files).length} files` : payload.lang}
+                </span>
+              </DropdownMenuLabel>
+              <div className="px-2 pb-1.5">
+                <CreditMeter
+                  plan={credits.plan}
+                  remaining={credits.remaining}
+                  total={credits.total}
+                  compact
+                  className="w-full px-2 py-1"
+                />
+              </div>
+              <DropdownMenuSeparator />
+              {tab === "preview" && (
+                <div className="flex items-center gap-1 px-2 py-1.5 sm:hidden">
+                  <span className="mr-auto text-xs text-ink-600">Viewport</span>
+                  <DeviceBtn active={device === "desktop"} onClick={() => setDevice("desktop")} icon={Monitor} label="Desktop" />
+                  <DeviceBtn active={device === "tablet"} onClick={() => setDevice("tablet")} icon={Tablet} label="Tablet" />
+                  <DeviceBtn active={device === "mobile"} onClick={() => setDevice("mobile")} icon={Smartphone} label="Mobile" />
+                </div>
+              )}
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setReviewBeforeApply(!reviewBeforeApply); }}>
+                <GitCompare className="mr-2 h-3.5 w-3.5" />
+                Review patches
+                <span className="ml-auto text-2xs text-ink-500">{reviewBeforeApply ? "On" : "Off"}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setAutoFixEnabled(!autoFixEnabled); }}>
+                <Wand2 className="mr-2 h-3.5 w-3.5" />
+                Auto-fix errors
+                <span className="ml-auto text-2xs text-ink-500">{autoFixEnabled ? "On" : "Off"}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setHistoryOpen((h) => !h)}>
+                <History className="mr-2 h-3.5 w-3.5" />
+                Patch history
+                <span className="ml-auto font-mono text-2xs text-ink-500">{versions.length}</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <button
             onClick={closePreview}
-            className="rounded-md p-1.5 text-ink-500 hover:bg-ink-900/5 hover:text-ink-900"
+            className="rounded-full p-1.5 text-ink-500 transition hover:bg-ink-900/5 hover:text-ink-900 active:scale-95"
             aria-label="Close preview"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
       </div>
+
 
       {historyOpen && (
         <Suspense fallback={null}>
@@ -202,8 +219,9 @@ export function PreviewPanel() {
         onReset={resetAutoFix}
       />
 
-      {/* Sandpack */}
-      <div className="relative flex-1 overflow-hidden">
+      {/* Canvas — inset rounded stage, like Lovable's right-hand preview surface */}
+      <div className="relative min-h-0 flex-1 p-2 sm:p-3">
+        <div className="relative h-full w-full overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_24px_60px_-38px_rgba(16,24,40,0.35)]">
         <Suspense fallback={<LoadingSkeleton />}>
           {tab === "preview" ? (
             armed ? (
@@ -246,8 +264,9 @@ export function PreviewPanel() {
             <PatchReview />
           </Suspense>
         )}
-
+        </div>
       </div>
+
 
     </aside>
   );
@@ -401,15 +420,17 @@ function TabBtn({
   return (
     <button
       onClick={onClick}
+      aria-label={label}
+      aria-pressed={active}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs transition",
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
         active
           ? "bg-white text-ink-900 shadow-sm ring-1 ring-ink-200"
           : "text-ink-500 hover:text-ink-900",
       )}
     >
-      <Icon className="h-3 w-3" />
-      {label}
+      <Icon className="h-3 w-3 shrink-0" />
+      <span className="hidden sm:inline">{label}</span>
     </button>
   );
 }
@@ -446,8 +467,8 @@ function DeviceBtn({
 function EmptyWorkspace({ onClose, onStart }: { onClose: () => void; onStart: () => void }) {
   return (
     <aside className="relative flex h-full min-w-0 flex-col border-l border-ink-200 bg-ink-100">
-      <div className="flex items-center gap-2 border-b border-ink-200 bg-white px-3 py-2">
-        <span className="text-2xs font-semibold uppercase tracking-[0.18em] text-ink-400">Live Workspace</span>
+      <div className="flex h-12 shrink-0 items-center gap-2 overflow-hidden border-b border-ink-200 bg-white px-2 sm:px-3">
+        <span className="shrink-0 text-2xs font-semibold uppercase tracking-[0.18em] text-ink-400">Live Workspace</span>
         <span className="rounded-md border border-ink-200 bg-ink-100 px-1.5 py-0.5 font-mono text-2xs text-ink-500">idle</span>
         <button
           onClick={onClose}
