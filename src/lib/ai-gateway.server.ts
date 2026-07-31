@@ -22,7 +22,9 @@ import {
   FREE_SMART,
   LIGHT_CODE_CHAIN,
   TIER_CHAINS,
+  clampChainToCeiling,
 } from "./model-tiers";
+import { planById, type PlanId } from "./plans";
 
 
 export type TaskKind = "chat" | "code" | "reason" | "fix" | "fast";
@@ -146,7 +148,7 @@ function chainFor(task: TaskKind, prompt: string): string[] {
  */
 export function resolveRoute(
   friendlyId: string | undefined,
-  options?: { prompt?: string; task?: TaskKind },
+  options?: { prompt?: string; task?: TaskKind; plan?: PlanId },
 ): ResolvedRoute | { error: string } {
   const config = openRouterConfig();
   if (!config) {
@@ -158,7 +160,8 @@ export function resolveRoute(
 
   const prompt = options?.prompt ?? "";
   const task: TaskKind = options?.task ?? detectTask(prompt);
-  const chain = chainFor(task, prompt);
+  const ceiling = planById(options?.plan).ceiling;
+  const chain = clampChainToCeiling(chainFor(task, prompt), ceiling);
 
   // A legacy explicit pick only nudges the chain to the front; it never
   // overrides a cheaper-is-fine decision for trivial prompts.

@@ -22,7 +22,12 @@ import { cn } from "@/lib/utils";
 import { useAuth, useProfile, displayNameOf } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { queuePendingPrompt } from "@/lib/pending-prompt";
-import { CREDITS } from "@/lib/credits";
+import { actionForMode, ACTION_RULES, formatCredits } from "@/lib/credits";
+import { useCredits } from "@/hooks/useCredits";
+import { CreditMeter } from "@/components/CreditMeter";
+import { PlanPicker } from "@/components/PlanPicker";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { listThreads } from "@/lib/chat-store";
 import { WorkspaceSidebar, type RecentProject } from "@/components/dashboard/WorkspaceSidebar";
 
 
@@ -59,35 +64,14 @@ const CHIPS = [
 const MODES = ["Build", "Chat", "Plan"] as const;
 const TABS = ["My projects", "Recently viewed", "Templates"] as const;
 
-const THREAD_STORAGE_KEY = "nexusx.chat.v1";
-const PENDING_PROMPT_KEY = "nexusx.pendingPrompt";
-
-function readRecents(): RecentProject[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(THREAD_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as { threads?: unknown };
-    if (!Array.isArray(parsed.threads)) return [];
-    return parsed.threads
-      .map((thread) => {
-        if (typeof thread !== "object" || thread === null) return null;
-        const record = thread as Record<string, unknown>;
-        const id = typeof record["id"] === "string" ? record["id"] : null;
-        if (!id) return null;
-        const messages = Array.isArray(record["messages"]) ? record["messages"] : [];
-        if (messages.length === 0) return null;
-        return {
-          id,
-          title: typeof record["title"] === "string" ? record["title"] : "Untitled project",
-          updatedAt: typeof record["updatedAt"] === "number" ? record["updatedAt"] : Date.now(),
-        } satisfies RecentProject;
-      })
-      .filter((item): item is RecentProject => item !== null)
-      .sort((a, b) => b.updatedAt - a.updatedAt);
-  } catch {
-    return [];
-  }
+/** Recent conversations come from the database so they survive a refresh. */
+async function fetchRecents(): Promise<RecentProject[]> {
+  const threads = await listThreads();
+  return threads.map((thread) => ({
+    id: thread.id,
+    title: thread.title,
+    updatedAt: new Date(thread.lastMessageAt).getTime(),
+  }));
 }
 
 function relativeTime(timestamp: number) {
@@ -113,9 +97,22 @@ function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const isMobile = useIsMobile();
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
+  const credits = useCredits();
+  const action = actionForMode(mode);
+  const cost = credits.quote(action, prompt.length);
+  useFocusTrap(sidebarRef, isMobile && sidebarOpen, () => setSidebarOpen(false));
 
   useEffect(() => setSidebarOpen(!isMobile), [isMobile]);
-  useEffect(() => setRecents(readRecents()), []);
+  useEffect(() => {
+    let cancelled = false;
+    void fetchRecents().then((items) => {
+      if (!cancelled) setRecents(items);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
 
   useEffect(() => {
@@ -145,6 +142,7 @@ function DashboardPage() {
   const launch = (text: string) => {
     const value = text.trim();
     if (!value) return;
+    if (!credits.canAfford(action, value.length)) return;
     const token = queuePendingPrompt(value, mode);
     if (!token) return;
     setPrompt("");
@@ -162,14 +160,28 @@ function DashboardPage() {
       )}
 
       {sidebarOpen && (
-        <WorkspaceSidebar
-          recents={recents}
-          workspaceName={workspaceName}
-          userLabel={displayNameOf(profile, user)}
-          credits={CREDITS}
-          onCollapse={() => setSidebarOpen(false)}
-          className={cn(isMobile && "fixed inset-y-0 left-0 z-50 w-[86vw] max-w-[300px] shadow-ds-lg")}
-        />
+        <div
+          ref={sidebarRef}
+          role={isMobile ? "dialog" : undefined}
+          aria-modal={isMobile ? true : undefined}
+          aria-label="Workspace navigation"
+          tabIndex={-1}
+          className={cn(
+            "flex min-h-0 outline-none",
+            isMobile
+              ? "fixed inset-y-0 left-0 z-50 animate-in slide-in-from-left duration-300"
+              : "shrink-0",
+          )}
+        >
+          <WorkspaceSidebar
+            recents={recents}
+            workspaceName={workspaceName}
+            userLabel={displayNameOf(profile, user)}
+            credits={{ left: credits.remaining, total: credits.total }}
+            onCollapse={() => setSidebarOpen(false)}
+            className={cn(isMobile && "w-[86vw] max-w-[300px] shadow-ds-lg")}
+          />
+        </div>
       )}
 
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
@@ -264,6 +276,7 @@ function DashboardPage() {
                         className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-[12.5px] font-medium text-ink-600 transition hover:bg-ink-200/70"
                       >
                         {mode}
+                        <span className="text-[10.5px] text-ink-400">· {formatCredits(cost)}</span>
                         <ChevronDown className="h-3.5 w-3.5" />
                       </button>
                       {modeOpen && (
@@ -321,6 +334,39 @@ function DashboardPage() {
                 {chip.label}
               </button>
             ))}
+          </div>
+        </section>
+
+        {/* Plan, credits and cost transparency */}
+        <section className="relative z-10 mx-auto -mt-2 w-full max-w-5xl px-3 pb-2 sm:px-5">
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
+            <div className="rounded-2xl border border-ink-200 bg-white/70 p-4">
+              <PlanPicker value={credits.plan} onChange={(plan) => void credits.setPlan(plan)} />
+            </div>
+            <div className="space-y-2">
+              <CreditMeter
+                plan={credits.plan}
+                remaining={credits.remaining}
+                total={credits.total}
+                pending={prompt.trim() ? cost : undefined}
+              />
+              <div className="rounded-xl border border-ink-200 bg-white/70 p-3 text-[11px] text-ink-600">
+                <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-400">
+                  What each action costs
+                </div>
+                <ul className="space-y-1">
+                  {(["chat", "plan", "code", "autofix", "preview_run", "export"] as const).map((key) => (
+                    <li key={key} className="flex items-center justify-between gap-2">
+                      <span>{ACTION_RULES[key].label}</span>
+                      <span className="font-mono text-ink-800">
+                        {formatCredits(ACTION_RULES[key].base)}
+                        {ACTION_RULES[key].perKChars > 0 ? "+" : ""}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
         </section>
 

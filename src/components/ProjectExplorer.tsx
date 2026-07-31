@@ -1,5 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRight, File as FileIcon, Folder, FolderOpen, Save, Zap, ZapOff } from "lucide-react";
+import {
+  ChevronRight,
+  Copy,
+  Download,
+  File as FileIcon,
+  FileArchive,
+  Folder,
+  FolderOpen,
+  Pencil,
+  Save,
+  Zap,
+  ZapOff,
+} from "lucide-react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 import { cn } from "@/lib/utils";
 import { usePreview } from "./preview-context";
@@ -38,21 +52,38 @@ function buildTree(paths: string[]): TreeNode[] {
   return sort(root);
 }
 
+/** Prism language for a file path. */
+function langFor(path: string): string {
+  const ext = path.split(".").pop()?.toLowerCase() ?? "";
+  if (ext === "tsx" || ext === "ts") return "tsx";
+  if (ext === "jsx" || ext === "js" || ext === "mjs" || ext === "cjs") return "jsx";
+  if (ext === "json") return "json";
+  if (ext === "css") return "css";
+  if (ext === "html" || ext === "htm") return "markup";
+  if (ext === "md" || ext === "mdx") return "markdown";
+  if (ext === "sql") return "sql";
+  if (ext === "sh" || ext === "bash") return "bash";
+  return "text";
+}
+
 function TreeItem({
   node,
   depth,
   active,
+  changed,
   onSelect,
 }: {
   node: TreeNode;
   depth: number;
   active: string | null;
+  changed: Set<string>;
   onSelect: (p: string) => void;
 }) {
   const [open, setOpen] = useState(true);
 
   if (!node.children) {
     const isActive = active === node.path;
+    const isChanged = changed.has(node.path);
     return (
       <button
         onClick={() => onSelect(node.path)}
@@ -66,6 +97,12 @@ function TreeItem({
       >
         <FileIcon className="h-3 w-3 shrink-0 opacity-60" />
         <span className="truncate">{node.name}</span>
+        {isChanged && (
+          <span
+            title="Changed in the latest AI edit"
+            className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--color-iris)]"
+          />
+        )}
       </button>
     );
   }
@@ -83,22 +120,46 @@ function TreeItem({
       </button>
       {open &&
         node.children.map((child) => (
-          <TreeItem key={child.path} node={child} depth={depth + 1} active={active} onSelect={onSelect} />
+          <TreeItem
+            key={child.path}
+            node={child}
+            depth={depth + 1}
+            active={active}
+            changed={changed}
+            onSelect={onSelect}
+          />
         ))}
     </div>
   );
 }
 
-/** File explorer + inline editor for multi-file artifact projects. */
+/** File explorer + read-only highlighted view + inline editor for artifact projects. */
 export default function ProjectExplorer() {
-  const { payload, activeFile, setActiveFile, updateFile, liveUpdateFile, liveEdit, setLiveEdit } =
-    usePreview();
+  const {
+    payload,
+    activeFile,
+    setActiveFile,
+    updateFile,
+    liveUpdateFile,
+    liveEdit,
+    setLiveEdit,
+    versions,
+  } = usePreview();
   const files = payload?.files ?? {};
   const paths = useMemo(() => Object.keys(files), [files]);
   const tree = useMemo(() => buildTree(paths), [paths]);
 
+  /** Files touched by the most recent AI patch — shown with a dot in the tree. */
+  const changed = useMemo(() => {
+    const latest = versions.find((v) => v.current) ?? versions[versions.length - 1];
+    return new Set(latest?.changedPaths ?? []);
+  }, [versions]);
+
   const current = activeFile && files[activeFile] != null ? activeFile : (payload?.entry ?? paths[0]);
   const [draft, setDraft] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [zipping, setZipping] = useState(false);
   const value = draft ?? files[current] ?? "";
   const dirty = draft != null && draft !== files[current];
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -118,29 +179,121 @@ export default function ProjectExplorer() {
     timer.current = setTimeout(() => liveUpdateFile(current, next), 400);
   };
 
+  const copyFile = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1400);
+    } catch {
+      /* clipboard blocked */
+    }
+  };
+
+  const downloadBlob = (blob: Blob, name: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadFile = () => {
+    downloadBlob(new Blob([value], { type: "text/plain;charset=utf-8" }), current.split("/").pop() || "file.txt");
+  };
+
+  /** Export every file of the project as a zip the user can run locally. */
+  const downloadZip = async () => {
+    setZipping(true);
+    try {
+      const { default: JSZip } = await import("jszip");
+      const zip = new JSZip();
+      for (const [path, code] of Object.entries(files)) zip.file(path, code);
+      const readme = [
+        `# ${payload?.title ?? "Nexura AI project"}`,
+        "",
+        "Exported from Nexura AI.",
+        `Entry file: \`${payload?.entry ?? paths[0]}\``,
+        "",
+        "Runtime packages used by the live preview: react, react-dom, lucide-react.",
+      ].join("\n");
+      zip.file("README.md", readme);
+      const blob = await zip.generateAsync({ type: "blob" });
+      const slug = (payload?.title ?? "nexura-project").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      downloadBlob(blob, `${slug || "nexura-project"}.zip`);
+    } finally {
+      setZipping(false);
+    }
+  };
+
   return (
     <div className="flex h-full min-h-0">
       <div className="w-52 shrink-0 overflow-auto border-r border-ink-200 bg-white/50 py-2">
         <div className="ds-label px-3 pb-1.5">{payload?.title ?? "Project"}</div>
         {tree.map((node) => (
-          <TreeItem key={node.path} node={node} depth={0} active={current} onSelect={select} />
+          <TreeItem key={node.path} node={node} depth={0} active={current} changed={changed} onSelect={select} />
         ))}
+        <button
+          onClick={() => void downloadZip()}
+          disabled={zipping}
+          className="mx-2 mt-3 flex w-[calc(100%-16px)] items-center justify-center gap-1.5 rounded-md border border-ink-200 px-2 py-1.5 text-[10.5px] text-ink-600 transition hover:border-[color:var(--color-iris)]/40 hover:text-ink-900 disabled:opacity-50"
+        >
+          <FileArchive className="h-3 w-3" />
+          {zipping ? "Packaging…" : "Export project (.zip)"}
+        </button>
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex items-center gap-2 border-b border-ink-200 px-3 py-1.5">
+        <div className="flex flex-wrap items-center gap-2 border-b border-ink-200 px-3 py-1.5">
           <span className="truncate font-mono text-[11px] text-ink-700">{current}</span>
           {current === payload?.entry && (
             <span className="rounded border border-ink-200 px-1 text-[9.5px] uppercase tracking-wider text-ink-500">
               entry
             </span>
           )}
+          {changed.has(current) && (
+            <span className="rounded border border-[color:var(--color-iris)]/40 bg-[color:var(--color-iris)]/10 px-1 text-[9.5px] uppercase tracking-wider text-ink-700">
+              changed
+            </span>
+          )}
+
+          <button
+            onClick={() => setEditing((e) => !e)}
+            className={cn(
+              "ml-auto inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[10.5px] transition",
+              editing
+                ? "border-[color:var(--color-iris)]/40 bg-[color:var(--color-iris)]/10 text-ink-900"
+                : "border-ink-200 text-ink-500 hover:text-ink-900",
+            )}
+            title={editing ? "Switch to read-only highlighted view" : "Edit this file"}
+          >
+            <Pencil className="h-3 w-3" />
+            {editing ? "Editing" : "Read-only"}
+          </button>
+
+          <button
+            onClick={() => void copyFile()}
+            className="inline-flex items-center gap-1 rounded-md border border-ink-200 px-2 py-1 text-[10.5px] text-ink-500 transition hover:text-ink-900"
+            title="Copy this file"
+          >
+            <Copy className="h-3 w-3" />
+            {copied ? "Copied" : "Copy"}
+          </button>
+
+          <button
+            onClick={downloadFile}
+            className="inline-flex items-center gap-1 rounded-md border border-ink-200 px-2 py-1 text-[10.5px] text-ink-500 transition hover:text-ink-900"
+            title="Download this file"
+          >
+            <Download className="h-3 w-3" />
+            File
+          </button>
 
           <button
             onClick={() => setLiveEdit(!liveEdit)}
             title="Live sync: preview reloads as you type"
             className={cn(
-              "ml-auto inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[10.5px] transition",
+              "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[10.5px] transition",
               liveEdit
                 ? "border-[color:var(--color-iris)]/40 bg-[color:var(--color-iris)]/10 text-ink-900"
                 : "border-ink-200 text-ink-500 hover:text-ink-900",
@@ -169,14 +322,36 @@ export default function ProjectExplorer() {
             Save version
           </button>
         </div>
-        <textarea
-          value={value}
-          onChange={(e) => onEdit(e.target.value)}
-          spellCheck={false}
-          className="min-h-0 flex-1 resize-none bg-transparent p-3 font-mono text-[11.5px] leading-[1.6] text-ink-800 outline-none"
-        />
+
+        {editing ? (
+          <textarea
+            value={value}
+            onChange={(e) => onEdit(e.target.value)}
+            spellCheck={false}
+            aria-label={`Edit ${current}`}
+            className="min-h-0 flex-1 resize-none bg-transparent p-3 font-mono text-[11.5px] leading-[1.6] text-ink-800 outline-none"
+          />
+        ) : (
+          <div className="min-h-0 flex-1 overflow-auto">
+            <SyntaxHighlighter
+              language={langFor(current)}
+              style={oneLight}
+              showLineNumbers
+              wrapLongLines={false}
+              customStyle={{
+                margin: 0,
+                background: "transparent",
+                padding: "12px",
+                fontSize: "11.5px",
+                lineHeight: 1.6,
+              }}
+              lineNumberStyle={{ opacity: 0.35, fontSize: "10px" }}
+            >
+              {value}
+            </SyntaxHighlighter>
+          </div>
+        )}
       </div>
     </div>
   );
 }
-

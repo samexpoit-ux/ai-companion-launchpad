@@ -37,3 +37,27 @@ export const TIER_CHAINS = {
 
 /** Small code question — no need to pay Sonnet prices. */
 export const LIGHT_CODE_CHAIN = [CHEAP_CHAT, CODING_PRIMARY, FREE_CODE, FREE_OSS];
+
+/** Models that cost real money, grouped by how expensive they are. */
+export const PREMIUM_MODELS: readonly string[] = [CODING_PRIMARY, CODING_SECONDARY];
+export const CHEAP_MODELS: readonly string[] = [CHEAP_CHAT];
+
+/**
+ * Clamp a routing chain to what the selected plan is allowed to use.
+ *   "premium" — everything.
+ *   "cheap"   — no premium coding models (cheap + free only).
+ *   "free"    — free models only.
+ * The chain always keeps at least one entry so a request can still run.
+ */
+export function clampChainToCeiling(
+  chain: readonly string[],
+  ceiling: "free" | "cheap" | "premium",
+): string[] {
+  if (ceiling === "premium") return [...chain];
+  const blocked =
+    ceiling === "free" ? [...PREMIUM_MODELS, ...CHEAP_MODELS] : PREMIUM_MODELS;
+  const allowed = chain.filter((m) => !blocked.includes(m));
+  if (allowed.length > 0) return allowed;
+  return chain.filter((m) => m.endsWith(":free")).slice(0, 1).concat(FREE_OSS);
+}
+

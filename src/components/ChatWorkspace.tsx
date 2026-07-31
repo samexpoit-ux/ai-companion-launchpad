@@ -50,7 +50,18 @@ import {
 } from "@/lib/chat-api";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { CREDITS } from "@/lib/credits";
+import { actionForMode, formatCredits, ACTION_RULES } from "@/lib/credits";
+import { useCredits } from "@/hooks/useCredits";
+import { CreditMeter } from "@/components/CreditMeter";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
+import {
+  listThreads,
+  listMessages,
+  createThread as createDbThread,
+  deleteThread as deleteDbThread,
+  renameThread as renameDbThread,
+  saveMessage,
+} from "@/lib/chat-store";
 import nexuraLogo from "@/assets/nexura-logo.png";
 import { ThemePicker } from "@/components/ThemePicker";
 import { Link, useRouterState } from "@tanstack/react-router";
@@ -66,85 +77,12 @@ import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from "reac
 
 
 const uid = () => Math.random().toString(36).slice(2, 10);
-const STORAGE_KEY = "nexusx.chat.v1";
-
-type Persisted = { threads: ChatThread[]; activeId: string; modelId: string };
-
 const createFreshThread = (): ChatThread => ({
   id: uid(),
   title: "Untitled dossier",
   messages: [],
   updatedAt: Date.now(),
 });
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function finiteNumber(value: unknown, fallback: number) {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
-}
-
-function normalizeMessage(value: unknown): ChatMessage | null {
-  if (!isRecord(value)) return null;
-  const role = value.role === "user" || value.role === "assistant" ? value.role : null;
-  const content = typeof value.content === "string" ? value.content : null;
-  if (!role || content === null) return null;
-  return {
-    id: typeof value.id === "string" && value.id ? value.id : uid(),
-    role,
-    content,
-    createdAt: finiteNumber(value.createdAt, Date.now()),
-    model: typeof value.model === "string" ? value.model : undefined,
-    tokens: typeof value.tokens === "number" && Number.isFinite(value.tokens) ? value.tokens : undefined,
-    latencyMs: typeof value.latencyMs === "number" && Number.isFinite(value.latencyMs) ? value.latencyMs : undefined,
-  };
-}
-
-function normalizeThread(value: unknown): ChatThread | null {
-  if (!isRecord(value)) return null;
-  const messages = Array.isArray(value.messages)
-    ? value.messages.map(normalizeMessage).filter((m): m is ChatMessage => Boolean(m))
-    : [];
-  const fallbackTitle = messages.find((m) => m.role === "user")?.content.slice(0, 48) || "Untitled dossier";
-  const latestMessageAt = messages.reduce((latest, m) => Math.max(latest, m.createdAt), 0);
-  return {
-    id: typeof value.id === "string" && value.id ? value.id : uid(),
-    title: typeof value.title === "string" && value.title.trim() ? value.title.trim() : fallbackTitle,
-    messages,
-    updatedAt: finiteNumber(value.updatedAt, latestMessageAt || Date.now()),
-    model: typeof value.model === "string" ? value.model : undefined,
-  };
-}
-
-function normalizePersisted(value: unknown): Persisted | null {
-  if (!isRecord(value)) return null;
-  const threads = Array.isArray(value.threads)
-    ? value.threads.map(normalizeThread).filter((t): t is ChatThread => Boolean(t))
-    : [];
-  const safeThreads = threads.length > 0 ? threads : [createFreshThread()];
-  const activeId =
-    typeof value.activeId === "string" && safeThreads.some((t) => t.id === value.activeId)
-      ? value.activeId
-      : safeThreads[0].id;
-  const modelId =
-    typeof value.modelId === "string" && AI_MODELS.some((m) => m.id === value.modelId)
-      ? value.modelId
-      : AI_MODELS[0].id;
-  return { threads: safeThreads, activeId, modelId };
-}
-
-function loadPersisted(): Persisted | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return normalizePersisted(JSON.parse(raw));
-  } catch {
-    window.localStorage.removeItem(STORAGE_KEY);
-    return null;
-  }
-}
 
 const tierIcon = (tier: AIModel["tier"]) =>
   tier === "Signature" ? Crown : tier === "Reserve" ? Diamond : Sparkle;
@@ -162,6 +100,9 @@ function ChatWorkspaceInner() {
   const [threads, setThreads] = useState<ChatThread[]>([]);
   const [activeId, setActiveId] = useState<string>("");
   const [modelId, setModelId] = useState<string>(AI_MODELS[0].id);
+  const [mode, setMode] = useState<"Build" | "Chat" | "Plan">("Build");
+  const [loadedThreads, setLoadedThreads] = useState<Set<string>>(() => new Set());
+  const credits = useCredits();
   
   const { isOpen: previewOpen, toggleWorkspace } = usePreview();
   const isMobile = useIsMobile();
@@ -199,25 +140,64 @@ function ChatWorkspaceInner() {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
+  // Load conversations from the database (single source of truth).
   useEffect(() => {
-    const persisted = loadPersisted();
-    if (persisted && persisted.threads.length > 0) {
-      setThreads(persisted.threads);
-      setActiveId(
-        requestedThreadId && persisted.threads.some((t) => t.id === requestedThreadId)
+    let cancelled = false;
+    (async () => {
+      const rows = await listThreads();
+      if (cancelled) return;
+
+      let mapped: ChatThread[] = rows.map((r) => ({
+        id: r.id,
+        title: r.title,
+        messages: [],
+        updatedAt: new Date(r.lastMessageAt).getTime(),
+      }));
+
+      if (mapped.length === 0) {
+        const created = await createDbThread({ title: "Untitled dossier", mode: "build" });
+        if (cancelled) return;
+        mapped = created
+          ? [{ id: created.id, title: created.title, messages: [], updatedAt: Date.now() }]
+          : [createFreshThread()];
+      }
+
+      const openId =
+        requestedThreadId && mapped.some((t) => t.id === requestedThreadId)
           ? requestedThreadId
-          : persisted.activeId,
+          : mapped[0].id;
+
+      const messages = await listMessages(openId);
+      if (cancelled) return;
+      setThreads(
+        mapped.map((t) =>
+          t.id === openId
+            ? {
+                ...t,
+                messages: messages.map((m) => ({
+                  id: m.clientId ?? m.id,
+                  role: m.role === "assistant" ? "assistant" : "user",
+                  content: m.content,
+                  createdAt: new Date(m.createdAt).getTime(),
+                  model: m.model ?? undefined,
+                  tokens: m.tokens ?? undefined,
+                  latencyMs: m.latencyMs ?? undefined,
+                })),
+              }
+            : t,
+        ),
       );
-      setModelId(persisted.modelId);
-    } else {
-      const first = createFreshThread();
-      setThreads([first]);
-      setActiveId(first.id);
-    }
-    setHydrated(true);
-    // Only run once on mount; the deep link is read from the initial URL.
+      setActiveId(openId);
+      setLoadedThreads(new Set([openId]));
+      setHydrated(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Runs once; the deep link comes from the initial URL.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -230,15 +210,10 @@ function ChatWorkspaceInner() {
     });
   }, [hydrated, requestedThreadId]);
 
-  useEffect(() => {
-    if (!hydrated) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ threads, activeId, modelId }));
-    } catch {
-      /* ignore */
-    }
-  }, [threads, activeId, modelId, hydrated]);
 
+
+  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+  useFocusTrap(sidebarRef, isMobile && sidebarOpen, closeSidebar);
 
   const active = useMemo(
     () => threads.find((t) => t.id === activeId) ?? threads[0],
@@ -267,18 +242,24 @@ function ChatWorkspaceInner() {
     ta.style.height = Math.min(ta.scrollHeight, 200) + "px";
   }, [input]);
 
-  const newChat = () => {
+  const newChat = async () => {
     if (active && active.messages.length === 0) {
       setInput("");
       return;
     }
-    const t: ChatThread = { id: uid(), title: "Untitled dossier", messages: [], updatedAt: Date.now() };
+    const created = await createDbThread({ title: "Untitled dossier", mode: mode.toLowerCase() });
+    const t: ChatThread = created
+      ? { id: created.id, title: created.title, messages: [], updatedAt: Date.now() }
+      : createFreshThread();
     setThreads((prev) => [t, ...prev]);
     setActiveId(t.id);
+    setLoadedThreads((prev) => new Set(prev).add(t.id));
     setInput("");
+    void navigate({ to: "/workspace", search: { thread: t.id }, replace: true });
   };
 
   const deleteThread = (id: string) => {
+    void deleteDbThread(id);
     setThreads((prev) => {
       const next = prev.filter((t) => t.id !== id);
       if (next.length === 0) {
@@ -300,6 +281,7 @@ function ChatWorkspaceInner() {
     const title = renameDraft.trim();
     if (id && title) {
       setThreads((prev) => prev.map((t) => (t.id === id ? { ...t, title } : t)));
+      void renameDbThread(id, title);
     }
     setRenamingId(null);
     setRenameDraft("");
@@ -319,8 +301,31 @@ function ChatWorkspaceInner() {
       setActiveId(id);
       if (isMobile) setSidebarOpen(false);
       void navigate({ to: "/workspace", search: { thread: id }, replace: true });
+      if (loadedThreads.has(id)) return;
+      void (async () => {
+        const rows = await listMessages(id);
+        setThreads((prev) =>
+          prev.map((t) =>
+            t.id === id
+              ? {
+                  ...t,
+                  messages: rows.map((m) => ({
+                    id: m.clientId ?? m.id,
+                    role: m.role === "assistant" ? ("assistant" as const) : ("user" as const),
+                    content: m.content,
+                    createdAt: new Date(m.createdAt).getTime(),
+                    model: m.model ?? undefined,
+                    tokens: m.tokens ?? undefined,
+                    latencyMs: m.latencyMs ?? undefined,
+                  })),
+                }
+              : t,
+          ),
+        );
+        setLoadedThreads((prev) => new Set(prev).add(id));
+      })();
     },
-    [isMobile, navigate],
+    [isMobile, navigate, loadedThreads],
   );
 
 
@@ -328,6 +333,26 @@ function ChatWorkspaceInner() {
     async (text: string, thread: ChatThread) => {
       const value = text.trim();
       if (!value) return;
+      const action = actionForMode(mode);
+      if (!credits.canAfford(action, value.length)) {
+        updateThread(thread.id, (t) => ({
+          ...t,
+          messages: [
+            ...t.messages,
+            {
+              id: uid(),
+              role: "assistant",
+              content: `**Out of credits**\n\nThis ${ACTION_RULES[action].label.toLowerCase()} needs ${formatCredits(
+                credits.quote(action, value.length),
+              )} credits but only ${formatCredits(credits.remaining)} remain. Upgrade your plan from the dashboard to continue.`,
+              createdAt: Date.now(),
+            },
+          ],
+          updatedAt: Date.now(),
+        }));
+        return;
+      }
+
       const userMsg: ChatMessage = { id: uid(), role: "user", content: value, createdAt: Date.now() };
       const isFirst = thread.messages.length === 0;
       updateThread(thread.id, (t) => ({
@@ -337,8 +362,18 @@ function ChatWorkspaceInner() {
         updatedAt: Date.now(),
       }));
       setIsSending(true);
+      if (isFirst) void renameDbThread(thread.id, value.slice(0, 48));
+      void saveMessage({
+        threadId: thread.id,
+        clientId: userMsg.id,
+        role: "user",
+        content: value,
+      });
       try {
-        const reply = await sendChatMessage([...(thread.messages ?? []), userMsg], modelId);
+        const reply = await sendChatMessage([...(thread.messages ?? []), userMsg], modelId, {
+          plan: credits.plan,
+          mode,
+        });
         const asstMsg: ChatMessage = {
           id: uid(),
           role: "assistant",
@@ -353,6 +388,20 @@ function ChatWorkspaceInner() {
           messages: [...t.messages, asstMsg],
           updatedAt: Date.now(),
         }));
+        void saveMessage({
+          threadId: thread.id,
+          clientId: asstMsg.id,
+          role: "assistant",
+          content: asstMsg.content,
+          model: asstMsg.model ?? null,
+          tokens: asstMsg.tokens ?? null,
+          latencyMs: asstMsg.latencyMs ?? null,
+        });
+        void credits.charge(action, {
+          inputChars: value.length,
+          model: reply.model,
+          threadId: thread.id,
+        });
       } catch (error) {
         const apiErr = parseApiError(error, "chat");
         const steps = apiErr.steps.map((s, i) => `${i + 1}. ${s}`).join("\n");
@@ -372,7 +421,7 @@ function ChatWorkspaceInner() {
         setIsSending(false);
       }
     },
-    [modelId, updateThread],
+    [modelId, updateThread, mode, credits],
   );
 
   const handleSend = async () => {
@@ -390,6 +439,9 @@ function ChatWorkspaceInner() {
     handoffDone.current = true;
     const pending = takePendingPrompt();
     if (!pending) return;
+    if (pending.mode === "Build" || pending.mode === "Chat" || pending.mode === "Plan") {
+      setMode(pending.mode);
+    }
 
     const current = threads.find((t) => t.id === activeId);
     if (current && current.messages.length === 0) {
@@ -397,16 +449,20 @@ function ChatWorkspaceInner() {
       void sendText(pending.prompt, current);
       return;
     }
-    const fresh: ChatThread = {
-      id: uid(),
-      title: pending.prompt.slice(0, 48),
-      messages: [],
-      updatedAt: Date.now(),
-    };
-    setThreads((prev) => [fresh, ...prev]);
-    setActiveId(fresh.id);
-    setInput("");
-    void sendText(pending.prompt, fresh);
+    void (async () => {
+      const created = await createDbThread({
+        title: pending.prompt.slice(0, 48),
+        mode: pending.mode.toLowerCase(),
+      });
+      const fresh: ChatThread = created
+        ? { id: created.id, title: created.title, messages: [], updatedAt: Date.now() }
+        : createFreshThread();
+      setThreads((prev) => [fresh, ...prev]);
+      setActiveId(fresh.id);
+      setLoadedThreads((prev) => new Set(prev).add(fresh.id));
+      setInput("");
+      await sendText(pending.prompt, fresh);
+    })();
   }, [hydrated, threads, activeId, sendText]);
 
 
@@ -435,6 +491,13 @@ function ChatWorkspaceInner() {
 
       {/* Sidebar */}
       <aside
+        ref={sidebarRef}
+        id="workspace-sidebar"
+        role={isMobile ? "dialog" : undefined}
+        aria-modal={isMobile && sidebarOpen ? true : undefined}
+        aria-label="Chat history and account"
+        aria-hidden={!sidebarOpen && isMobile ? true : undefined}
+        tabIndex={-1}
         className={cn(
           "flex h-full w-[86vw] max-w-[300px] shrink-0 flex-col border-r border-ink-200 bg-ink-100 transition-transform duration-300 md:w-64 md:max-w-none",
           "fixed inset-y-0 left-0 z-40 md:relative md:translate-x-0",
@@ -458,17 +521,17 @@ function ChatWorkspaceInner() {
           </div>
           <div className="min-w-0">
             <div className="font-display text-[15px] font-bold leading-tight tracking-tight text-ink-900">
-              Nexus <span className="text-[color:var(--color-iris)]">X AI</span>
+              Nexura <span className="text-[color:var(--color-iris)]">AI</span>
             </div>
             <div className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-ink-500">
-              Free Intelligence Network
+              Build · Preview · Ship
             </div>
           </div>
         </div>
 
         {/* New chat + search */}
         <div className="flex flex-col gap-3 border-b border-ink-200 p-4">
-          <Button onClick={newChat} className="w-full rounded-xl font-display font-semibold active:scale-[0.99]">
+          <Button onClick={() => void newChat()} className="w-full rounded-xl font-display font-semibold active:scale-[0.99]">
             <Plus className="h-4 w-4" strokeWidth={2.5} />
             New Workspace
           </Button>
@@ -557,6 +620,11 @@ function ChatWorkspaceInner() {
           )}
         </div>
 
+
+        {/* Credits */}
+        <div className="px-3 pb-1">
+          <CreditMeter plan={credits.plan} remaining={credits.remaining} total={credits.total} />
+        </div>
 
         {/* User */}
         <div className="border-t border-ink-200 p-3">
@@ -677,8 +745,10 @@ function ChatWorkspaceInner() {
               title="Credits included in your workspace plan"
             >
               <Coins className="h-3.5 w-3.5 text-[color:var(--color-iris)]" />
-              {CREDITS.left}
-              <span className="hidden text-ink-400 sm:inline">/ {CREDITS.total} credits</span>
+              {formatCredits(credits.remaining)}
+              <span className="hidden text-ink-400 sm:inline">
+                / {formatCredits(credits.total)} credits
+              </span>
             </span>
 
             <ThemePicker />
@@ -716,8 +786,31 @@ function ChatWorkspaceInner() {
                   placeholder="Ask Nexura to build something…"
                   className="max-h-52 w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-[14px] leading-relaxed text-ink-900 placeholder:text-ink-400 focus:outline-none"
                 />
-                <div className="flex items-center justify-between px-1.5 pb-1 pt-1.5">
+                <div className="flex items-center justify-between gap-2 px-1.5 pb-1 pt-1.5">
                   <div className="flex items-center gap-0.5">
+                    <div
+                      role="group"
+                      aria-label="Response mode"
+                      className="mr-1 flex items-center rounded-lg border border-ink-200 bg-ink-100 p-0.5"
+                    >
+                      {(["Build", "Chat", "Plan"] as const).map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setMode(m)}
+                          aria-pressed={mode === m}
+                          title={`${ACTION_RULES[actionForMode(m)].label} · ${ACTION_RULES[actionForMode(m)].note}`}
+                          className={cn(
+                            "rounded-md px-2 py-1 text-[11px] font-medium transition",
+                            mode === m
+                              ? "bg-white text-ink-900 shadow-sm"
+                              : "text-ink-500 hover:text-ink-900",
+                          )}
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
                     <ComposerBtn label="Attach"><Paperclip className="h-4 w-4" /></ComposerBtn>
                     <ComposerBtn label="Image"><ImageIcon className="h-4 w-4" /></ComposerBtn>
                     <ComposerBtn label="Voice"><Mic className="h-4 w-4" /></ComposerBtn>
@@ -737,8 +830,24 @@ function ChatWorkspaceInner() {
               </div>
             </div>
 
-            <div className="mt-2.5 text-center text-[10.5px] text-ink-400">
-              Powered by <span className="font-medium text-ink-600">{model.name}</span> · Verify critical outputs.
+            <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[10.5px] text-ink-400">
+              <span>
+                Smart routing · {ACTION_RULES[actionForMode(mode)].label} costs{" "}
+                <span className="font-medium text-ink-600">
+                  {formatCredits(credits.quote(actionForMode(mode), input.length))}
+                </span>{" "}
+                credits
+              </span>
+              <span className="text-ink-300">·</span>
+              <span>
+                <span className="font-medium text-ink-600">{formatCredits(credits.remaining)}</span>{" "}
+                left after this you have{" "}
+                <span className="font-medium text-ink-600">
+                  {formatCredits(
+                    Math.max(0, credits.remaining - credits.quote(actionForMode(mode), input.length)),
+                  )}
+                </span>
+              </span>
             </div>
 
           </div>
