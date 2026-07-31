@@ -1,12 +1,29 @@
-# VPS Deploy — nexuraai.dev (169.58.105.190)
+# Nexura AI — VPS deploy (nexuraai.dev · 169.58.105.190)
 
-## 0) DNS (already done)
+Everything runs on your own VPS: the app plus self-hosted Supabase
+(Postgres, Auth, Storage, Studio). No external backend.
+
+## 0) DNS
 | Type | Name | Value |
 |---|---|---|
 | A | @ | 169.58.105.190 |
 | A | www | 169.58.105.190 |
+| A | db | 169.58.105.190 |
+
+`db.nexuraai.dev` serves the self-hosted Supabase API + Studio.
 
 Check: `dig +short nexuraai.dev` → `169.58.105.190`
+
+## 0b) Self-hosted Supabase (run this first)
+```bash
+ssh root@169.58.105.190
+bash /var/www/nexuraai/deploy/supabase-selfhost.sh   # docker stack + TLS + keys
+bash /var/www/nexuraai/deploy/supabase-schema.sh     # profiles, roles, signup trigger
+```
+The first script prints the exact `.env` block (URL, anon key, service role key)
+to paste into `/var/www/nexuraai/.env`. `VITE_*` values are inlined at build
+time, so rerun `deploy/deploy.sh` after changing them.
+
 
 ## 1) One-time server setup
 ```bash
