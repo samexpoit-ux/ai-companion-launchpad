@@ -4,7 +4,7 @@ import { ArrowRight, Boxes, Gauge, ShieldCheck, Sparkles, Wand2 } from "lucide-r
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import nexuraLogo from "@/assets/nexura-mark.png";
+import { BrandMark, BrandWordmark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
@@ -71,15 +71,8 @@ function LandingPage() {
     >
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5">
         <div className="flex items-center gap-2.5">
-          <span className="relative inline-flex">
-            <img src={nexuraLogo} alt="Nexura AI logo" className="h-12 w-12 object-contain" />
-            <span className="absolute -bottom-0.5 -right-1 rounded-[4px] bg-[color:var(--color-iris)] px-1 py-[1px] text-[7px] font-bold leading-none tracking-[0.08em] text-white">
-              AI
-            </span>
-          </span>
-          <span className="font-display text-[17px] font-semibold tracking-tight text-ink-900">
-            Nexura <span className="text-[color:var(--color-iris)]">AI</span>
-          </span>
+          <BrandMark size="md" />
+          <BrandWordmark className="text-[15px] sm:text-[17px]" />
         </div>
         <nav className="flex items-center gap-2">
           <Button asChild size="sm">
