@@ -38,6 +38,7 @@ if ! command -v bun >/dev/null 2>&1; then
 fi
 
 echo "==> 5/8 Clone / update code"
+git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
 if [ -d "$APP_DIR/.git" ]; then
   git -C "$APP_DIR" pull --ff-only
 else
