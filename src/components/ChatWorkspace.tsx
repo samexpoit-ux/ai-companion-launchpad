@@ -937,7 +937,7 @@ function ChatWorkspaceInner() {
               </div>
             </div>
 
-            <p className="mt-2.5 text-center text-2xs leading-relaxed text-ink-400">
+            <p className="mt-3 text-center text-2xs leading-relaxed text-ink-400">
               Smart routing · {formatCredits(credits.remaining)} of {formatCredits(credits.total)} credits left
             </p>
           </div>
