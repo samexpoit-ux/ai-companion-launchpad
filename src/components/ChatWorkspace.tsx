@@ -923,7 +923,7 @@ function ChatWorkspaceInner() {
                   <button
                     type="button"
                     aria-label="Voice input"
-                    className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-500 transition-all duration-150 hover:bg-ink-100 hover:text-ink-900 active:scale-95 xs:inline-flex sm:inline-flex"
+                    className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-500 transition-all duration-150 hover:bg-ink-100 hover:text-ink-900 active:scale-95 sm:inline-flex"
                   >
                     <Mic className="h-4 w-4" />
                   </button>
