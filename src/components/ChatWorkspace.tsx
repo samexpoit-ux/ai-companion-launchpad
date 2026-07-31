@@ -978,10 +978,10 @@ function SendButton({ onClick, disabled, loading }: { onClick: () => void; disab
       disabled={disabled}
       aria-label={loading ? "Sending" : "Send message"}
       className={cn(
-        "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition duration-150 active:scale-95",
+        "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-95",
         ready
-          ? "text-white shadow-[0_6px_16px_-8px_color-mix(in_oklab,var(--color-iris-deep)_80%,transparent)]"
-          : "cursor-not-allowed bg-ink-200 text-ink-400",
+          ? "nx-pop scale-100 text-white shadow-[0_6px_16px_-8px_color-mix(in_oklab,var(--color-iris-deep)_80%,transparent)] hover:scale-105"
+          : "scale-95 cursor-not-allowed bg-ink-200 text-ink-400",
       )}
       style={ready ? { background: "var(--iris-gradient)" } : undefined}
     >
