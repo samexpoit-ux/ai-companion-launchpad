@@ -1,6 +1,7 @@
 import { apiErrorResponse, codeFromUpstream } from "@/lib/api-error";
 import { createFileRoute } from "@tanstack/react-router";
 import { resolveRoute, runWithFallback } from "@/lib/ai-gateway.server";
+import { isPlanId } from "@/lib/plans";
 
 interface IncomingMessage {
   role: "user" | "assistant" | "system";
@@ -10,6 +11,10 @@ interface IncomingMessage {
 interface ChatBody {
   messages?: IncomingMessage[];
   modelId?: string;
+  /** Selected pricing plan — caps which model tiers the router may use. */
+  plan?: string;
+  /** Composer mode, used to bias task detection ("build" | "chat" | "plan"). */
+  mode?: string;
 }
 
 const SYSTEM_PROMPT = `You are Nexura AI — a premium, precise coding and product intelligence assistant.
@@ -70,7 +75,14 @@ export const Route = createFileRoute("/api/chat")({
           }));
 
         const lastUser = [...normalizedMessages].reverse().find((m) => m.role === "user");
-        const route = resolveRoute(body.modelId, { prompt: lastUser?.content ?? "" });
+        const mode = (body.mode ?? "").toLowerCase();
+        const forcedTask =
+          mode === "plan" ? ("reason" as const) : mode === "chat" ? ("chat" as const) : undefined;
+        const route = resolveRoute(body.modelId, {
+          prompt: lastUser?.content ?? "",
+          task: forcedTask,
+          plan: isPlanId(body.plan) ? body.plan : undefined,
+        });
         if ("error" in route) {
           return apiErrorResponse("no_provider", "chat", route.error);
         }
