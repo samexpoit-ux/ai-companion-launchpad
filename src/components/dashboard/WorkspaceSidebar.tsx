@@ -18,6 +18,7 @@ import {
   Zap,
   Coins,
   ShieldCheck,
+  UserCircle,
 } from "lucide-react";
 
 
