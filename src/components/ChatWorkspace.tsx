@@ -851,10 +851,10 @@ function ChatWorkspaceInner() {
                 onKeyDown={onKeyDown}
                 rows={1}
                 placeholder="Ask Nexura to build something…"
-                className="block max-h-56 w-full resize-none bg-transparent px-4 pb-1.5 pt-3.5 text-[15px] leading-6 text-ink-900 placeholder:text-ink-400 focus:outline-none sm:px-4.5 sm:pt-4"
+                className="block max-h-56 w-full resize-none bg-transparent px-4 pb-2 pt-4 text-[15px] leading-6 text-ink-900 transition-[height] duration-150 ease-out placeholder:text-ink-400 focus:outline-none sm:px-5 sm:pt-4.5"
               />
 
-              <div className="flex items-center gap-1.5 px-2.5 pb-2.5 pt-0.5 sm:px-3">
+              <div className="flex items-center gap-1.5 px-3 pb-3 pt-0.5 sm:px-3.5">
                 {/* + menu, exactly one entry point for attachments like Lovable */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
