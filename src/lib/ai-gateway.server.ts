@@ -12,6 +12,18 @@
 //
 // All model ids live in `model-tiers.ts` — edit that file, not this one.
 
+import {
+  CHEAP_CHAT,
+  CODING_PRIMARY,
+  CODING_SECONDARY,
+  FREE_CODE,
+  FREE_FAST,
+  FREE_OSS,
+  FREE_SMART,
+  LIGHT_CODE_CHAIN,
+  TIER_CHAINS,
+} from "./model-tiers";
+
 
 export type TaskKind = "chat" | "code" | "reason" | "fix" | "fast";
 
