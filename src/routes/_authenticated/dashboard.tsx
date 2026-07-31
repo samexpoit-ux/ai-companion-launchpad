@@ -20,7 +20,10 @@ import {
 
 import { cn } from "@/lib/utils";
 import { useAuth, useProfile, displayNameOf } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { queuePendingPrompt } from "@/lib/pending-prompt";
 import { WorkspaceSidebar, type RecentProject } from "@/components/dashboard/WorkspaceSidebar";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
@@ -108,8 +111,11 @@ function DashboardPage() {
   const [recents, setRecents] = useState<RecentProject[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const isMobile = useIsMobile();
 
+  useEffect(() => setSidebarOpen(!isMobile), [isMobile]);
   useEffect(() => setRecents(readRecents()), []);
+
 
   useEffect(() => {
     const el = textareaRef.current;
@@ -138,12 +144,22 @@ function DashboardPage() {
   const launch = (text: string) => {
     const value = text.trim();
     if (!value) return;
-    window.sessionStorage.setItem(PENDING_PROMPT_KEY, value);
-    void navigate({ to: "/workspace" });
+    const token = queuePendingPrompt(value, mode);
+    if (!token) return;
+    setPrompt("");
+    void navigate({ to: "/workspace", search: {} });
   };
 
   return (
     <div className="flex h-dvh overflow-hidden bg-ink-100">
+      {isMobile && sidebarOpen && (
+        <div
+          aria-hidden
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-ink-900/30 backdrop-blur-sm"
+        />
+      )}
+
       {sidebarOpen && (
         <WorkspaceSidebar
           recents={recents}
@@ -151,11 +167,27 @@ function DashboardPage() {
           userLabel={displayNameOf(profile, user)}
           credits={{ left: 304, total: 400 }}
           onCollapse={() => setSidebarOpen(false)}
+          className={cn(isMobile && "fixed inset-y-0 left-0 z-50 w-[86vw] max-w-[300px] shadow-ds-lg")}
         />
       )}
 
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
-        {!sidebarOpen && (
+        {/* Mobile top bar */}
+        <div className="sticky top-0 z-30 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 border-b border-ink-200 bg-ink-50/90 px-3 py-2 backdrop-blur md:hidden">
+          <button
+            type="button"
+            aria-label="Open sidebar"
+            onClick={() => setSidebarOpen(true)}
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-ink-200 bg-ink-50 text-ink-500"
+          >
+            <PanelLeft className="h-4 w-4" />
+          </button>
+          <span className="truncate font-display text-[13.5px] font-semibold text-ink-900">
+            {workspaceName}
+          </span>
+        </div>
+
+        {!sidebarOpen && !isMobile && (
           <button
             type="button"
             aria-label="Open sidebar"
@@ -166,8 +198,9 @@ function DashboardPage() {
           </button>
         )}
 
+
         {/* Aurora hero */}
-        <section className="relative isolate flex min-h-[520px] flex-col items-center justify-center overflow-hidden px-5 py-16 lg:rounded-bl-[28px]">
+        <section className="relative isolate flex min-h-[420px] flex-col items-center justify-center overflow-hidden px-4 py-12 sm:min-h-[520px] sm:px-5 sm:py-16 lg:rounded-bl-[28px]">
           <div className="aurora-canvas absolute inset-0 -z-10" />
 
           <Link
@@ -294,7 +327,7 @@ function DashboardPage() {
         </section>
 
         {/* Projects panel */}
-        <section className="relative -mt-6 min-h-[420px] rounded-t-[28px] border border-ink-200 bg-ink-50 px-5 py-5 shadow-ds-lg">
+        <section className="relative -mt-6 min-h-[420px] rounded-t-[28px] border border-ink-200 bg-ink-50 px-3 py-5 shadow-ds-lg sm:px-5">
           <div className="mx-auto w-full max-w-5xl">
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex min-w-0 items-center gap-2 rounded-full border border-ink-200 bg-ink-100/70 px-3 py-1.5">
@@ -339,6 +372,8 @@ function DashboardPage() {
                   <Link
                     key={project.id}
                     to="/workspace"
+                    search={{ thread: project.id }}
+
                     className="group rounded-2xl border border-ink-200 bg-ink-50 p-4 shadow-ds-xs transition hover:-translate-y-0.5 hover:shadow-ds-md"
                   >
                     <div className="h-24 rounded-xl bg-gradient-to-br from-[color:var(--color-iris-soft)] via-ink-100 to-white" />

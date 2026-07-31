@@ -3,6 +3,12 @@ import { useEffect, useState, type ComponentType } from "react";
 
 export const Route = createFileRoute("/_authenticated/workspace")({
   component: WorkspacePage,
+  validateSearch: (search: Record<string, unknown>): { thread?: string } => ({
+    ...(typeof search["thread"] === "string" && search["thread"]
+      ? { thread: search["thread"] }
+      : {}),
+  }),
+
   head: () => ({
     meta: [
       { title: "Workspace — Nexus X AI" },

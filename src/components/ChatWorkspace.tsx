@@ -37,6 +37,8 @@ import {
   Image as ImageIcon,
   ChevronRight,
   Crown,
+  History as HistoryIcon,
+
 } from "lucide-react";
 import {
   sendChatMessage,
@@ -49,7 +51,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import nexusLogo from "@/assets/nexus-x-logo.png";
 import { ThemePicker } from "@/components/ThemePicker";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { takePendingPrompt } from "@/lib/pending-prompt";
+
 import { PreviewProvider, usePreview, isPreviewable } from "@/components/preview-context";
 import { PreviewPanel } from "@/components/PreviewPanel";
 import { PlayCircle, GripVertical, FolderTree, PanelRight } from "lucide-react";
@@ -160,6 +164,16 @@ function ChatWorkspaceInner() {
   const { isOpen: previewOpen, toggleWorkspace } = usePreview();
   const isMobile = useIsMobile();
 
+  // Deep link: /workspace?thread=<id> opens that conversation.
+  const requestedThreadId = useRouterState({
+    select: (state) => {
+      const search = state.location.search as Record<string, unknown> | undefined;
+      const value = search?.["thread"];
+      return typeof value === "string" && value ? value : null;
+    },
+  });
+
+
   const { user } = useAuth();
   const profile = useProfile(user?.id);
   const accountName = displayNameOf(profile, user);
@@ -189,7 +203,11 @@ function ChatWorkspaceInner() {
     const persisted = loadPersisted();
     if (persisted && persisted.threads.length > 0) {
       setThreads(persisted.threads);
-      setActiveId(persisted.activeId);
+      setActiveId(
+        requestedThreadId && persisted.threads.some((t) => t.id === requestedThreadId)
+          ? requestedThreadId
+          : persisted.activeId,
+      );
       setModelId(persisted.modelId);
     } else {
       const first = createFreshThread();
@@ -197,23 +215,18 @@ function ChatWorkspaceInner() {
       setActiveId(first.id);
     }
     setHydrated(true);
+    // Only run once on mount; the deep link is read from the initial URL.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Prompt handed off from the dashboard hero input.
+  // Follow ?thread= deep links after the initial hydration too.
   useEffect(() => {
-    if (!hydrated) return;
-    try {
-      const pending = window.sessionStorage.getItem("nexusx.pendingPrompt");
-      if (pending) {
-        window.sessionStorage.removeItem("nexusx.pendingPrompt");
-        setInput(pending);
-        taRef.current?.focus();
-      }
-    } catch {
-      /* ignore */
-    }
-  }, [hydrated]);
-
+    if (!hydrated || !requestedThreadId) return;
+    setThreads((prev) => {
+      if (prev.some((t) => t.id === requestedThreadId)) setActiveId(requestedThreadId);
+      return prev;
+    });
+  }, [hydrated, requestedThreadId]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -223,6 +236,7 @@ function ChatWorkspaceInner() {
       /* ignore */
     }
   }, [threads, activeId, modelId, hydrated]);
+
 
   const active = useMemo(
     () => threads.find((t) => t.id === activeId) ?? threads[0],
@@ -297,54 +311,102 @@ function ChatWorkspaceInner() {
     setThreads((prev) => prev.map((t) => (t.id === id ? updater(t) : t)));
   }, []);
 
+  /** Open a conversation from the history panel and keep the URL in sync. */
+  const selectThread = useCallback(
+    (id: string) => {
+      setActiveId(id);
+      if (isMobile) setSidebarOpen(false);
+      void navigate({ to: "/workspace", search: { thread: id }, replace: true });
+    },
+    [isMobile, navigate],
+  );
+
+
+  const sendText = useCallback(
+    async (text: string, thread: ChatThread) => {
+      const value = text.trim();
+      if (!value) return;
+      const userMsg: ChatMessage = { id: uid(), role: "user", content: value, createdAt: Date.now() };
+      const isFirst = thread.messages.length === 0;
+      updateThread(thread.id, (t) => ({
+        ...t,
+        title: isFirst ? value.slice(0, 48) : t.title,
+        messages: [...t.messages, userMsg],
+        updatedAt: Date.now(),
+      }));
+      setIsSending(true);
+      try {
+        const reply = await sendChatMessage([...(thread.messages ?? []), userMsg], modelId);
+        const asstMsg: ChatMessage = {
+          id: uid(),
+          role: "assistant",
+          content: reply.content,
+          model: reply.model,
+          tokens: reply.tokens,
+          latencyMs: reply.latencyMs,
+          createdAt: Date.now(),
+        };
+        updateThread(thread.id, (t) => ({
+          ...t,
+          messages: [...t.messages, asstMsg],
+          updatedAt: Date.now(),
+        }));
+      } catch (error) {
+        const apiErr = parseApiError(error, "chat");
+        const steps = apiErr.steps.map((s, i) => `${i + 1}. ${s}`).join("\n");
+        const asstMsg: ChatMessage = {
+          id: uid(),
+          role: "assistant",
+          content: `**${apiErr.hint}**\n\n\`${apiErr.code}\` — ${apiErr.message}\n\n**What to do next**\n\n${steps}`,
+          model: modelId,
+          createdAt: Date.now(),
+        };
+        updateThread(thread.id, (t) => ({
+          ...t,
+          messages: [...t.messages, asstMsg],
+          updatedAt: Date.now(),
+        }));
+      } finally {
+        setIsSending(false);
+      }
+    },
+    [modelId, updateThread],
+  );
+
   const handleSend = async () => {
     const text = input.trim();
     if (!text || isSending || !active) return;
-    const userMsg: ChatMessage = { id: uid(), role: "user", content: text, createdAt: Date.now() };
-    const isFirst = active.messages.length === 0;
-    updateThread(active.id, (t) => ({
-      ...t,
-      title: isFirst ? text.slice(0, 48) : t.title,
-      messages: [...t.messages, userMsg],
-      updatedAt: Date.now(),
-    }));
     setInput("");
-    setIsSending(true);
-    try {
-      const reply = await sendChatMessage([...(active.messages ?? []), userMsg], modelId);
-      const asstMsg: ChatMessage = {
-        id: uid(),
-        role: "assistant",
-        content: reply.content,
-        model: reply.model,
-        tokens: reply.tokens,
-        latencyMs: reply.latencyMs,
-        createdAt: Date.now(),
-      };
-      updateThread(active.id, (t) => ({
-        ...t,
-        messages: [...t.messages, asstMsg],
-        updatedAt: Date.now(),
-      }));
-    } catch (error) {
-      const apiErr = parseApiError(error, "chat");
-      const steps = apiErr.steps.map((s, i) => `${i + 1}. ${s}`).join("\n");
-      const asstMsg: ChatMessage = {
-        id: uid(),
-        role: "assistant",
-        content: `**${apiErr.hint}**\n\n\`${apiErr.code}\` — ${apiErr.message}\n\n**What to do next**\n\n${steps}`,
-        model: modelId,
-        createdAt: Date.now(),
-      };
-      updateThread(active.id, (t) => ({
-        ...t,
-        messages: [...t.messages, asstMsg],
-        updatedAt: Date.now(),
-      }));
-    } finally {
-      setIsSending(false);
-    }
+    await sendText(text, active);
   };
+
+  // Prompt handed off from the dashboard hero: consumed exactly once, and always
+  // delivered into an empty thread so it never lands mid-conversation.
+  const handoffDone = useRef(false);
+  useEffect(() => {
+    if (!hydrated || handoffDone.current) return;
+    handoffDone.current = true;
+    const pending = takePendingPrompt();
+    if (!pending) return;
+
+    const current = threads.find((t) => t.id === activeId);
+    if (current && current.messages.length === 0) {
+      setInput("");
+      void sendText(pending.prompt, current);
+      return;
+    }
+    const fresh: ChatThread = {
+      id: uid(),
+      title: pending.prompt.slice(0, 48),
+      messages: [],
+      updatedAt: Date.now(),
+    };
+    setThreads((prev) => [fresh, ...prev]);
+    setActiveId(fresh.id);
+    setInput("");
+    void sendText(pending.prompt, fresh);
+  }, [hydrated, threads, activeId, sendText]);
+
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -372,11 +434,14 @@ function ChatWorkspaceInner() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "flex h-full w-64 shrink-0 flex-col border-r border-ink-200 bg-ink-100 transition-transform duration-300",
+          "flex h-full w-[86vw] max-w-[300px] shrink-0 flex-col border-r border-ink-200 bg-ink-100 transition-transform duration-300 md:w-64 md:max-w-none",
           "fixed inset-y-0 left-0 z-40 md:relative md:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full md:w-0 md:-translate-x-0 md:overflow-hidden md:border-0",
+          sidebarOpen
+            ? "translate-x-0 shadow-2xl md:shadow-none"
+            : "-translate-x-full md:w-0 md:-translate-x-0 md:overflow-hidden md:border-0",
         )}
       >
+
 
         {/* Brand */}
         <div className="flex items-center gap-2.5 border-b border-ink-200 px-4 py-4">
@@ -418,9 +483,10 @@ function ChatWorkspaceInner() {
         </div>
 
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
-          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink-400">Recent sessions</span>
-          <span className="text-[10px] text-ink-400">{filtered.length}</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink-400">Chat history</span>
+          <span className="rounded-full bg-ink-200 px-1.5 text-[10px] text-ink-500">{filtered.length}</span>
         </div>
+
 
 
         <div className="flex-1 overflow-y-auto px-2 pb-2">
@@ -457,13 +523,11 @@ function ChatWorkspaceInner() {
                 ) : (
                   <>
                     <button
-                      onClick={() => {
-                        setActiveId(t.id);
-                        if (isMobile) setSidebarOpen(false);
-                      }}
+                      onClick={() => selectThread(t.id)}
                       onDoubleClick={() => startRename(t)}
                       className="min-w-0 flex-1 text-left"
                     >
+
                       <div className="truncate">{t.title}</div>
                       <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-ink-500">
                         <span>{new Date(t.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
@@ -484,7 +548,13 @@ function ChatWorkspaceInner() {
               </div>
             );
           })}
+          {filtered.length === 0 && (
+            <p className="px-3 py-6 text-center text-[12px] text-ink-400">
+              {query.trim() ? "No conversation matches that search." : "No conversations yet."}
+            </p>
+          )}
         </div>
+
 
         {/* User */}
         <div className="border-t border-ink-200 p-3">
@@ -553,6 +623,19 @@ function ChatWorkspaceInner() {
           >
             {isMobile ? <Menu className="h-4 w-4" /> : sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
           </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSidebarOpen(true)}
+            className="hidden shrink-0 gap-1.5 text-ink-600 sm:inline-flex"
+            aria-label="Show chat history"
+          >
+            <HistoryIcon className="h-3.5 w-3.5" />
+            History
+          </Button>
+
+
 
           {/* Smart auto-router — no model picker, Lovable style */}
           <div
