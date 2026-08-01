@@ -223,3 +223,15 @@ export async function rollbackCharge(entry: LedgerEntry, reason: string): Promis
   return { ok: true, refunded: entry.credits };
 
 }
+
+/** Real provider spend (USD) across the given ledger rows. */
+export function totalCostUsd(entries: LedgerEntry[]): number {
+  return Math.round(entries.reduce((sum, e) => sum + (e.costUsd || 0), 0) * 1e6) / 1e6;
+}
+
+/** Compact USD label for tiny per-request amounts. */
+export function formatUsd(value: number): string {
+  if (!value) return "$0";
+  if (value < 0.01) return `$${value.toFixed(4)}`;
+  return `$${value.toFixed(2)}`;
+}
