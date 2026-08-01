@@ -108,3 +108,11 @@ if [ "$REPAIR" = "1" ]; then
 else
   echo "-- migrations: $applied applied, $skipped already up to date, $baselined baselined${changed:+, $changed modified after apply}"
 fi
+
+# Never restart the app with an incomplete, incorrectly baselined credit
+# schema. This signature matches the RPC call used by chat and autofix.
+if ! psql_q "select to_regprocedure('public.spend_credits(text,text,numeric,text,uuid,text,uuid)') is not null;" | grep -qx 't'; then
+  echo "!! critical function public.spend_credits is missing after migration" >&2
+  echo "   Pull and apply the latest migrations before restarting Nexura AI." >&2
+  exit 1
+fi
