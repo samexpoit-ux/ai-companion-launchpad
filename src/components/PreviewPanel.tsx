@@ -1,6 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
-import { spendAction } from "@/lib/api-fetch";
-import { X, Code2, Eye, Terminal, RefreshCw, Monitor, Tablet, Smartphone, Wand2, Loader2, ShieldCheck, AlertTriangle, History, GitCompare, Play, Lock, MoreHorizontal } from "lucide-react";
+import { X, Code2, Eye, Terminal, RefreshCw, Monitor, Tablet, Smartphone, Wand2, Loader2, ShieldCheck, AlertTriangle, History, GitCompare, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useCredits } from "@/hooks/useCredits";
 import { CreditMeter } from "@/components/CreditMeter";
-import { estimateCost, formatCredits } from "@/lib/credits";
+import { formatCredits } from "@/lib/credits";
 import { usePreview, MAX_FIX_ATTEMPTS, type PreviewPayload, type PreviewDevice } from "./preview-context";
 
 // Sandpack touches window at import; keep it out of the SSR graph.
@@ -251,54 +250,6 @@ export function PreviewPanel() {
   );
 }
 
-/** Explicit, sandboxed run gate with the cost shown before execution. */
-function RunGate({
-  cost,
-  remaining,
-  affordable,
-  error,
-  fileCount,
-  onRun,
-}: {
-  cost: number;
-  remaining: number;
-  affordable: boolean;
-  error: string | null;
-  fileCount: number;
-  onRun: () => void;
-}) {
-  return (
-    <div className="flex h-full items-center justify-center p-6">
-      <div className="max-w-sm rounded-2xl border border-ink-200 bg-white p-5 text-center shadow-[0_18px_50px_-30px_rgba(15,23,42,0.35)]">
-        <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl border border-ink-200 bg-ink-100">
-          <Lock className="h-4 w-4 text-ink-500" />
-        </span>
-        <h3 className="mt-3 text-sm font-semibold text-ink-900">Preview is ready to run</h3>
-        <p className="mt-1 text-xs leading-relaxed text-ink-500">
-          {fileCount} file{fileCount === 1 ? "" : "s"} will run in an isolated sandbox iframe — no network access to your
-          account, no code executed until you press run.
-        </p>
-        <div className="mt-3 rounded-lg border border-ink-200 bg-ink-100 px-3 py-2 text-xs text-ink-600">
-          Cost <span className="font-semibold text-ink-900">{formatCredits(cost)}</span> credits ·{" "}
-          <span className="font-semibold text-ink-900">{formatCredits(remaining)}</span> left now ·{" "}
-          <span className="font-semibold text-ink-900">{formatCredits(Math.max(0, remaining - cost))}</span> after
-        </div>
-        <button
-          onClick={onRun}
-          disabled={!affordable}
-          className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-ink-900 px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-45"
-        >
-          <Play className="h-3.5 w-3.5" />
-          Run preview
-        </button>
-        {!affordable && (
-          <p className="mt-2 text-2xs text-red-500">Not enough credits — upgrade your plan to keep building.</p>
-        )}
-        {error && <p className="mt-2 text-2xs text-red-500">{error}</p>}
-      </div>
-    </div>
-  );
-}
 
 function AutoFixBar({
   status,
