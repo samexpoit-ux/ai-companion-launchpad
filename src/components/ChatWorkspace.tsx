@@ -1349,14 +1349,10 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
       {/* Credit / trust note — same rhythm as the composer footnote */}
       <div className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1.5 text-2xs text-ink-500">
         <span className="inline-flex items-center gap-1.5">
-          <Shield className="h-3 w-3 text-[color:var(--color-iris)]" />
-          E2E encrypted
-        </span>
-        <span className="text-ink-300">·</span>
-        <span className="inline-flex items-center gap-1.5">
           <Zap className="h-3 w-3 text-[color:var(--color-iris)]" />
           Smart routing
         </span>
+
         <span className="text-ink-300">·</span>
         <span className="font-medium text-ink-600">{model.name}</span>
       </div>
