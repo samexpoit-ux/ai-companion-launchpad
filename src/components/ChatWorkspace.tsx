@@ -71,7 +71,7 @@ import {
   subscribeToChat,
 } from "@/lib/chat-store";
 
-import { BrandMark, BrandWordmark } from "@/components/BrandMark";
+import { BrandMark, BrandWordmark, BrandGlyph } from "@/components/BrandMark";
 import { ThemePicker } from "@/components/ThemePicker";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { takePendingPrompt } from "@/lib/pending-prompt";
