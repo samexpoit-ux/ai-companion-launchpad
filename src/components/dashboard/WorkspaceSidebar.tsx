@@ -32,16 +32,16 @@ export type RecentProject = { id: string; title: string; updatedAt: number };
 
 const NAV = [
   { label: "Dashboard", to: "/dashboard", icon: Home, hint: "" },
-  { label: "Search", to: "/dashboard", icon: Search, hint: "Ctrl K" },
-  { label: "Resources", to: "/dashboard", icon: Compass, hint: "" },
-  { label: "Connectors", to: "/dashboard", icon: Plug, hint: "" },
+  { label: "Search", to: "/search", icon: Search, hint: "Ctrl K" },
+  { label: "Resources", to: "/resources", icon: Compass, hint: "" },
+  { label: "Connectors", to: "/connectors", icon: Plug, hint: "" },
 ] as const;
 
 const PROJECT_NAV = [
-  { label: "All projects", icon: LayoutGrid },
-  { label: "Starred", icon: Star },
-  { label: "Owned by me", icon: Users },
-  { label: "Shared with me", icon: Boxes },
+  { label: "All projects", icon: LayoutGrid, filter: "all" },
+  { label: "Starred", icon: Star, filter: "starred" },
+  { label: "Owned by me", icon: Users, filter: "owned" },
+  { label: "Shared with me", icon: Boxes, filter: "shared" },
 ] as const;
 
 export function WorkspaceSidebar({
@@ -197,7 +197,7 @@ export function WorkspaceSidebar({
 
       <nav className="mt-3 px-3">
         {NAV.map((item) => {
-          const active = pathname === item.to && item.label === "Dashboard";
+            const active = pathname === item.to;
           return (
             <Link
               key={item.label}
@@ -224,14 +224,15 @@ export function WorkspaceSidebar({
       <div className="mt-5 px-3">
         <p className="px-2 pb-1 text-xs font-medium text-ink-400">Projects</p>
         {PROJECT_NAV.map((item) => (
-          <button
+          <Link
             key={item.label}
-            type="button"
+            to="/projects"
+            search={{ filter: item.filter }}
             className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm text-ink-600 transition hover:bg-ink-200/60 hover:text-ink-900"
           >
             <item.icon className="h-4 w-4 shrink-0" />
             <span className="min-w-0 flex-1 truncate">{item.label}</span>
-          </button>
+          </Link>
         ))}
         <Link
           to="/account"

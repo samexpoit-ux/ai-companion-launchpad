@@ -109,6 +109,9 @@ interface PreviewContextValue {
   runtimeErrors: string[];
   reportRuntimeError: (message: string) => void;
   clearRuntimeErrors: () => void;
+  consoleEntries: Array<{ id: number; level: "log" | "info" | "warn" | "error"; message: string }>;
+  reportConsole: (level: "log" | "info" | "warn" | "error", message: string) => void;
+  clearConsole: () => void;
   autoFixEnabled: boolean;
   setAutoFixEnabled: (v: boolean) => void;
   reviewBeforeApply: boolean;
@@ -193,6 +196,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
 
 
   const [runtimeErrors, setRuntimeErrors] = useState<string[]>([]);
+  const [consoleEntries, setConsoleEntries] = useState<Array<{ id: number; level: "log" | "info" | "warn" | "error"; message: string }>>([]);
   const [autoFixEnabled, setAutoFixEnabled] = useState(true);
   const [reviewBeforeApply, setReviewBeforeApply] = useState(true);
   const [fixStatus, setFixStatus] = useState<FixStatus>("idle");
@@ -333,6 +337,13 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
     setRuntimeErrors((prev) => (prev.includes(clean) ? prev : [...prev, clean].slice(-8)));
     setFixStatus((s) => (s === "fixing" || s === "review" ? s : "detected"));
   }, []);
+
+  const reportConsole = useCallback((level: "log" | "info" | "warn" | "error", message: string) => {
+    const clean = String(message ?? "").trim().slice(0, 4000);
+    if (!clean) return;
+    setConsoleEntries((prev) => [...prev, { id: Date.now() + prev.length, level, message: clean }].slice(-200));
+  }, []);
+  const clearConsole = useCallback(() => setConsoleEntries([]), []);
 
   const commitPatch = useCallback(
     (patch: PendingPatch) => {
@@ -518,6 +529,9 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
         runtimeErrors,
         reportRuntimeError,
         clearRuntimeErrors,
+        consoleEntries,
+        reportConsole,
+        clearConsole,
         autoFixEnabled,
         setAutoFixEnabled,
         reviewBeforeApply,
