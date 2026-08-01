@@ -120,6 +120,8 @@ export async function sendChatMessage(
     content: string;
     model: string;
     tokens: number;
+    inputTokens: number;
+    outputTokens: number;
     latencyMs: number;
     credits?: { charged: number; remaining: number; total: number; used: number; plan: string };
   };
