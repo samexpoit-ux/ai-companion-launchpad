@@ -286,6 +286,15 @@ function ChatWorkspaceInner() {
     [modelId],
   );
 
+  // Lovable behaviour: opening a conversation that already has turns reveals
+  // the right-hand workspace automatically on desktop.
+  useEffect(() => {
+    if (isMobile) return;
+    if ((active?.messages.length ?? 0) > 0) openWorkspace();
+  }, [active?.id, active?.messages.length, isMobile, openWorkspace]);
+
+
+
   const filtered = useMemo(() => {
     if (!query.trim()) return threads;
     const q = query.toLowerCase();
