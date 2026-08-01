@@ -380,6 +380,10 @@ export type Database = {
           id: string
           monthly_credit_cents: number
           plan: string
+          status: string
+          suspended_at: string | null
+          suspended_by: string | null
+          suspended_reason: string | null
           updated_at: string
         }
         Insert: {
@@ -390,6 +394,10 @@ export type Database = {
           id: string
           monthly_credit_cents?: number
           plan?: string
+          status?: string
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspended_reason?: string | null
           updated_at?: string
         }
         Update: {
@@ -400,6 +408,10 @@ export type Database = {
           id?: string
           monthly_credit_cents?: number
           plan?: string
+          status?: string
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspended_reason?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -484,6 +496,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_grant_credits: {
+        Args: { _credits: number; _note?: string; _user_id: string }
+        Returns: number
+      }
+      admin_set_user_status: {
+        Args: { _reason?: string; _status: string; _user_id: string }
+        Returns: undefined
+      }
+      assert_account_active: { Args: { _user_id: string }; Returns: undefined }
       credit_balance: { Args: { _user_id?: string }; Returns: Json }
       downgrade_to_free: { Args: never; Returns: Json }
       finalize_request_usage: {
