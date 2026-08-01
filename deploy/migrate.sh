@@ -44,11 +44,32 @@ baselined=0
 # Use once when the schema was already created by deploy/supabase-schema.sh.
 BASELINE="${BASELINE:-0}"
 
+# REPAIR=1 re-runs every migration file even if the ledger says it is applied.
+# Each file runs in its own transaction and a failure is reported but does NOT
+# stop the run — use it when a BASELINE=1 run skipped SQL (missing functions).
+REPAIR="${REPAIR:-0}"
+repaired=0
+failed=0
+
 shopt -s nullglob
 for file in $(ls -1 "$MIG_DIR"/*.sql | sort); do
   version="$(basename "$file" .sql)"
   checksum="$(md5sum "$file" | awk '{print $1}')"
   recorded="$(psql_q "select checksum from public.schema_migrations where version = '$version';" | tr -d '[:space:]')"
+
+  if [ "$REPAIR" = "1" ]; then
+    printf '   ~ %s ' "$version"
+    if { echo "begin;"; cat "$file"; echo ";"; echo "commit;"; } | psql_f >/dev/null 2>&1; then
+      echo "ok"
+      repaired=$((repaired + 1))
+    else
+      echo "skipped (already present or not replayable)"
+      failed=$((failed + 1))
+    fi
+    psql_q "insert into public.schema_migrations (version, checksum) values ('$version', '$checksum')
+            on conflict (version) do update set checksum = excluded.checksum;" >/dev/null
+    continue
+  fi
 
   if [ -n "$recorded" ]; then
     if [ "$recorded" != "$checksum" ]; then
