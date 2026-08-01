@@ -62,8 +62,9 @@ export function ActivityCard({
         <span
           className={cn(
             "min-w-0 flex-1 truncate text-sm font-medium text-ink-900",
-            busy && "shimmer-text",
+            busy && "animate-pulse",
           )}
+
         >
           {title}
         </span>
