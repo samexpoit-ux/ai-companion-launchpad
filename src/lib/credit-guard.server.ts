@@ -66,6 +66,15 @@ export async function chargeRequest(
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
 
+  // A suspended account can never spend credits, even with a valid session.
+  const account = await supabase.from("profiles").select("status").maybeSingle();
+  if ((account.data as { status?: string } | null)?.status === "suspended") {
+    throw new CreditError(
+      "unauthenticated",
+      "This account is suspended. Contact support to restore access.",
+    );
+  }
+
   const cost = usageReservationCost(action, opts.inputChars ?? 0);
   const { data, error } = await supabase.rpc("spend_credits", {
     _action: action,

@@ -79,6 +79,24 @@
   --ink-800: #1E293B;
   --ink-900: #0B1220;
 
+  /* Admin console accents (status + metric colour coding) */
+  --color-mint:   #059669;   /* healthy / active */
+  --color-mint-soft: #ECFDF5;
+  --color-sun:    #B45309;   /* pending / attention */
+  --color-sun-soft: #FFFBEB;
+  --color-flare:  #BE123C;   /* danger / suspended */
+  --color-flare-soft: #FFF1F2;
+  --color-orchid: #7C3AED;   /* premium */
+  --color-orchid-soft: #F5F3FF;
+
+  --admin-gradient: linear-gradient(
+    150deg,
+    var(--ink-900) 0%,
+    #14225A 45%,
+    var(--color-iris-ink) 100%
+  );
+  --premium-gradient: linear-gradient(120deg, var(--color-orchid), var(--color-iris-deep));
+
 
   /* Back-compat: existing --color-gold* usages render as blue accent */
   --color-gold: var(--color-iris-deep);

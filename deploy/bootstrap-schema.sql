@@ -305,3 +305,11 @@ CREATE POLICY "admin_audit_insert" ON public.admin_audit_log FOR INSERT TO authe
   WITH CHECK (true);
 
 NOTIFY pgrst, 'reload schema';
+
+-- account status (suspend / reactivate) --------------------------------------
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'active',
+  ADD COLUMN IF NOT EXISTS suspended_at timestamptz,
+  ADD COLUMN IF NOT EXISTS suspended_reason text,
+  ADD COLUMN IF NOT EXISTS suspended_by uuid;
+CREATE INDEX IF NOT EXISTS profiles_status_idx ON public.profiles(status);

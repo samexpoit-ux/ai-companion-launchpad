@@ -34,6 +34,9 @@ export interface AdminUserRow {
   creditsUsed: number;
   isAdmin: boolean;
   createdAt: string | null;
+  status: "active" | "suspended";
+  suspendedReason: string | null;
+  suspendedAt: string | null;
 }
 
 export interface PaymentRow {
@@ -150,7 +153,7 @@ const round = (n: number) => Math.round(n * 100) / 100;
 export async function listUsers(search = ""): Promise<AdminUserRow[]> {
   let q = supabase
     .from("profiles")
-    .select("id,email,display_name,plan,created_at")
+    .select("id,email,display_name,plan,created_at,status,suspended_reason,suspended_at")
     .order("created_at", { ascending: false })
     .limit(500);
   if (search.trim()) {
@@ -190,6 +193,9 @@ export async function listUsers(search = ""): Promise<AdminUserRow[]> {
       creditsUsed: round(usedBy.get(p.id) ?? 0),
       isAdmin: adminIds.has(p.id),
       createdAt: p.created_at,
+      status: (p as { status?: string }).status === "suspended" ? "suspended" : "active",
+      suspendedReason: (p as { suspended_reason?: string | null }).suspended_reason ?? null,
+      suspendedAt: (p as { suspended_at?: string | null }).suspended_at ?? null,
     };
   });
 }
@@ -209,6 +215,32 @@ export async function setUserCreditLimit(userId: string, creditsTotal: number) {
     .upsert({ user_id: userId, credits_total: creditsTotal }, { onConflict: "user_id" });
   if (error) throw new Error(error.message);
   await logAdmin("user.credit_limit_changed", "user_settings", userId, { creditsTotal });
+}
+
+/** Suspends or reactivates an account (admin-only database routine). */
+export async function setUserStatus(userId: string, status: "active" | "suspended", reason?: string) {
+  const { error } = await supabase.rpc("admin_set_user_status", {
+    _user_id: userId,
+    _status: status,
+    _reason: reason ?? undefined,
+  });
+  if (error) throw new Error(error.message);
+}
+
+/** Adds (or with a negative amount removes) credits from an account balance. */
+export async function grantCredits(userId: string, credits: number, note?: string) {
+  const { error } = await supabase.rpc("admin_grant_credits", {
+    _user_id: userId,
+    _credits: credits,
+    _note: note ?? undefined,
+  });
+  if (error) throw new Error(error.message);
+}
+
+/** Permanently deletes an account — routed through a privileged server function. */
+export async function deleteUser(userId: string) {
+  const { deleteUserAccount } = await import("@/lib/admin-users.functions");
+  await deleteUserAccount({ data: { userId } });
 }
 
 export async function setUserAdmin(userId: string, makeAdmin: boolean) {
