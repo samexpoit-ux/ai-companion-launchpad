@@ -13,12 +13,21 @@
  *   fix    — runtime error auto-fix     → best coding model
  */
 
-/** Paid tier — coding quality. */
-export const CODING_PRIMARY = "anthropic/claude-3.7-sonnet";
-export const CODING_SECONDARY = "anthropic/claude-3.5-sonnet";
+/**
+ * CHEAP-FIRST POLICY (chosen strategy):
+ * DeepSeek / Qwen / GLM open-weight coders give Sonnet-class code quality at
+ * ~20-40x lower price, so they are the default. Nothing pricier is used.
+ */
+
+/** Coding tier — cheap but strong. */
+export const CODING_PRIMARY = "deepseek/deepseek-v3.2";
+export const CODING_SECONDARY = "z-ai/glm-4.7";
+export const CODING_TERTIARY = "qwen/qwen3-coder-next";
 
 /** Cheap tier — chat, plan, titles. */
-export const CHEAP_CHAT = "anthropic/claude-3.5-haiku";
+export const CHEAP_CHAT = "deepseek/deepseek-v4-flash";
+/** Ultra-cheap tier — greetings, titles, one-liners. */
+export const NANO_CHAT = "qwen/qwen3.7-flash";
 
 /** Free safety net so the product keeps working when credit runs out. */
 export const FREE_CODE = "cohere/north-mini-code:free";
@@ -28,19 +37,23 @@ export const FREE_OSS = "openai/gpt-oss-20b:free";
 
 /** Ordered chains: [primary, ...fallbacks]. */
 export const TIER_CHAINS = {
-  code: [CODING_PRIMARY, CODING_SECONDARY, CHEAP_CHAT, FREE_CODE, FREE_OSS],
-  fix: [CODING_PRIMARY, CODING_SECONDARY, CHEAP_CHAT, FREE_CODE, FREE_OSS],
+  code: [CODING_PRIMARY, CODING_SECONDARY, CODING_TERTIARY, FREE_CODE, FREE_OSS],
+  fix: [CODING_PRIMARY, CODING_SECONDARY, CODING_TERTIARY, FREE_CODE, FREE_OSS],
   reason: [CODING_PRIMARY, CHEAP_CHAT, FREE_SMART, FREE_OSS],
-  chat: [CHEAP_CHAT, FREE_SMART, FREE_OSS],
-  fast: [FREE_FAST, CHEAP_CHAT, FREE_OSS],
+  chat: [CHEAP_CHAT, NANO_CHAT, FREE_SMART, FREE_OSS],
+  fast: [NANO_CHAT, FREE_FAST, FREE_OSS],
 } as const;
 
-/** Small code question — no need to pay Sonnet prices. */
+/** Small code question — no need to pay coder prices. */
 export const LIGHT_CODE_CHAIN = [CHEAP_CHAT, CODING_PRIMARY, FREE_CODE, FREE_OSS];
 
 /** Models that cost real money, grouped by how expensive they are. */
-export const PREMIUM_MODELS: readonly string[] = [CODING_PRIMARY, CODING_SECONDARY];
-export const CHEAP_MODELS: readonly string[] = [CHEAP_CHAT];
+export const PREMIUM_MODELS: readonly string[] = [
+  CODING_PRIMARY,
+  CODING_SECONDARY,
+  CODING_TERTIARY,
+];
+export const CHEAP_MODELS: readonly string[] = [CHEAP_CHAT, NANO_CHAT];
 
 /**
  * Clamp a routing chain to what the selected plan is allowed to use.
