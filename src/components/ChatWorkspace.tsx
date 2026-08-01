@@ -1169,7 +1169,7 @@ function CodeBlock({ language, value: rawValue }: { language: string; value: str
   );
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({ message, userInitial = "Y" }: { message: ChatMessage; userInitial?: string }) {
   const isUser = message.role === "user";
   const time = new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   return (
@@ -1184,10 +1184,10 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         style={!isUser ? { background: "var(--iris-gradient)" } : undefined}
       >
         {isUser ? (
-          <span className="text-xs font-medium text-ink-900">A</span>
+          <span className="text-xs font-medium text-ink-900">{userInitial}</span>
         ) : (
-          <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-white">
-            <span className="font-display text-sm leading-none font-semibold text-[color:var(--color-iris)]">C</span>
+          <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-white p-1">
+            <BrandGlyph />
           </div>
         )}
       </div>
