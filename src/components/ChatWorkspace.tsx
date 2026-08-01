@@ -494,7 +494,7 @@ function ChatWorkspaceInner() {
         setIsSending(false);
       }
     },
-    [modelId, updateThread, mode, credits],
+    [modelId, updateThread, mode, credits, isMobile, openWorkspace, openProject],
   );
 
   const handleSend = async () => {
