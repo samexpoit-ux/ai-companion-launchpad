@@ -47,7 +47,7 @@ export const deleteUserAccount = createServerFn({ method: "POST" })
       action: "user.deleted",
       target_table: "auth.users",
       target_id: data.userId,
-      target_user_id: data.userId,
+      
       details: {},
     });
 
