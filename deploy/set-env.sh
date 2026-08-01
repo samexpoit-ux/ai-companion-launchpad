@@ -23,9 +23,11 @@ read_var() { # read_var FILE NAME
   sed -n "s/^[[:space:]]*$2=//p" "$1" | tail -n 1 | tr -d '"'"'"'\r'
 }
 
-# 1) OpenRouter key: CLI arg > env var > current .env value
+# 1) OpenRouter key: CLI arg > env var > /etc/nexuraai.env > app .env
 OPENROUTER_KEY="${1:-${OPENROUTER_API_KEY:-}}"
 [ -n "$OPENROUTER_KEY" ] || OPENROUTER_KEY="$(read_var "$ENV_FILE" OPENROUTER_API_KEY)"
+[ -n "$OPENROUTER_KEY" ] || OPENROUTER_KEY="$(read_var "$APP_DIR/.env" OPENROUTER_API_KEY)"
+
 
 # 2) Supabase keys from the self-hosted stack, falling back to current .env
 ANON_KEY="$(read_var "$SUPABASE_DIR/.env" ANON_KEY)"
