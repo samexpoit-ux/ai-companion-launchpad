@@ -5,6 +5,7 @@ import { PageBar, PageHeader, PageShell } from "@/components/page-shell";
 
 import { OverviewTab } from "@/components/admin/OverviewTab";
 import { UsersTab } from "@/components/admin/UsersTab";
+import { UsageTab } from "@/components/admin/UsageTab";
 import { PaymentsTab } from "@/components/admin/PaymentsTab";
 import { PlansTab } from "@/components/admin/PlansTab";
 import { SettingsTab } from "@/components/admin/SettingsTab";
@@ -35,6 +36,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const TABS = [
   { id: "overview", label: "Overview" },
   { id: "users", label: "Users" },
+  { id: "usage", label: "Usage & cost" },
   { id: "payments", label: "Payments" },
   { id: "plans", label: "Plans" },
   { id: "settings", label: "Settings" },
@@ -122,6 +124,7 @@ function AdminPage() {
       >
         {tab === "overview" && <OverviewTab />}
         {tab === "users" && <UsersTab />}
+        {tab === "usage" && <UsageTab />}
         {tab === "payments" && <PaymentsTab />}
         {tab === "plans" && <PlansTab />}
         {tab === "settings" && <SettingsTab />}
