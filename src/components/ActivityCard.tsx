@@ -137,6 +137,8 @@ export function stepsForMessage(opts: {
   modelName?: string;
   latencyMs?: number;
   tokens?: number;
+  inputTokens?: number;
+  outputTokens?: number;
   credits?: number;
   fileCount?: number;
 }): ActivityStep[] {
@@ -148,12 +150,15 @@ export function stepsForMessage(opts: {
     label: "Generated the response",
     detail: [
       opts.latencyMs ? `${(opts.latencyMs / 1000).toFixed(2)}s` : null,
-      opts.tokens ? `${opts.tokens} tokens` : null,
+      opts.tokens ? `${opts.tokens} total tokens` : null,
     ]
       .filter(Boolean)
       .join(" · ") || undefined,
     done: true,
   });
+  if (opts.inputTokens != null || opts.outputTokens != null) {
+    steps.push({ label: "Measured delivery", detail: `${opts.inputTokens ?? 0} input · ${opts.outputTokens ?? 0} output tokens`, done: true });
+  }
   if (opts.fileCount) {
     steps.push({ label: "Wrote project files", detail: `${opts.fileCount} files`, done: true });
   }

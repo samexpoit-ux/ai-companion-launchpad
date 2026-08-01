@@ -25,6 +25,7 @@ REQUIRED=(
   "public.credit_balance(uuid)|credit balance"
   "public.has_role(uuid,app_role)|role check"
   "public.record_request_cost(uuid,numeric,integer,text)|cost tracking"
+  "public.finalize_request_usage(uuid,numeric,numeric,integer,integer,text)|usage reconciliation"
 )
 
 check_all() {

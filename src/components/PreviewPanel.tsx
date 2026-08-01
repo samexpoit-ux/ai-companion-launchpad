@@ -54,6 +54,8 @@ export function PreviewPanel() {
     pendingPatch,
     versions,
     buildError,
+    consoleEntries,
+    clearConsole,
   } = usePreview();
 
   const [reloadKey, setReloadKey] = useState(0);
@@ -219,6 +221,8 @@ export function PreviewPanel() {
               device={device}
               reloadKey={reloadKey}
             />
+          ) : tab === "console" ? (
+            <PreviewConsole entries={consoleEntries} onClear={clearConsole} />
           ) : tab === "code" && payload.files ? (
             <ProjectExplorer key={`explorer-${revision}`} />
           ) : (
@@ -247,6 +251,27 @@ export function PreviewPanel() {
 
 
     </aside>
+  );
+}
+
+function PreviewConsole({ entries, onClear }: {
+  entries: Array<{ id: number; level: "log" | "info" | "warn" | "error"; message: string }>;
+  onClear: () => void;
+}) {
+  return (
+    <div className="flex h-full flex-col bg-ink-900 text-ink-100">
+      <div className="flex h-10 shrink-0 items-center border-b border-ink-700 px-3">
+        <span className="font-mono text-2xs uppercase text-ink-400">Browser console</span>
+        <button type="button" onClick={onClear} className="ml-auto rounded px-2 py-1 text-2xs text-ink-300 hover:bg-ink-800">Clear</button>
+      </div>
+      <div className="min-h-0 flex-1 overflow-auto p-3 font-mono text-xs">
+        {entries.length === 0 ? <p className="text-ink-500">No output yet. Preview logs and errors appear here.</p> : entries.map((entry) => (
+          <div key={entry.id} className={cn("border-b border-ink-800 py-1.5", entry.level === "error" ? "text-red-300" : entry.level === "warn" ? "text-amber-300" : "text-ink-200")}>
+            <span className="mr-2 text-ink-500">[{entry.level}]</span>{entry.message}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

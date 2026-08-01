@@ -1,0 +1,9 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowLeft, BookOpen, Code2, CreditCard, ShieldCheck } from "lucide-react";
+
+export const Route = createFileRoute("/_authenticated/resources")({ component: ResourcesPage, head: () => ({ meta: [
+  { title: "Resources — Nexura AI" }, { name: "description", content: "Guides for building, previewing and managing Nexura AI projects." },
+  { property: "og:title", content: "Resources — Nexura AI" }, { property: "og:description", content: "Nexura AI workspace guides and resources." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+] }) });
+const guides = [{ icon: Code2, title: "Build and preview", text: "Generate multi-file projects, inspect code, run previews and review console output." }, { icon: CreditCard, title: "Credits and plans", text: "Understand usage-based charges and manage your workspace plan." }, { icon: ShieldCheck, title: "Secure workflows", text: "Requests, project data and credit limits are enforced by the server." }];
+function ResourcesPage() { return <main className="min-h-dvh bg-ink-100 px-4 py-6 sm:px-8"><div className="mx-auto max-w-4xl"><Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-ink-500 hover:text-ink-900"><ArrowLeft className="h-4 w-4" />Dashboard</Link><div className="mt-8 flex items-center gap-3"><BookOpen className="h-7 w-7 text-[color:var(--color-iris)]" /><h1 className="text-3xl font-semibold text-ink-900">Resources</h1></div><div className="mt-7 grid gap-4 md:grid-cols-3">{guides.map(({ icon: Icon, title, text }) => <article key={title} className="rounded-lg border border-ink-200 bg-white p-5 shadow-ds-xs"><Icon className="h-5 w-5 text-[color:var(--color-iris)]" /><h2 className="mt-4 font-semibold text-ink-900">{title}</h2><p className="mt-2 text-sm leading-6 text-ink-500">{text}</p></article>)}</div></div></main>; }

@@ -11,6 +11,8 @@ export interface ChatMessage {
   createdAt: number;
   model?: string;
   tokens?: number;
+  inputTokens?: number;
+  outputTokens?: number;
   latencyMs?: number;
   /** Credits charged for the prompt that produced this reply. */
   credits?: number;
@@ -90,6 +92,8 @@ export async function sendChatMessage(
   content: string;
   model: string;
   tokens: number;
+  inputTokens: number;
+  outputTokens: number;
   latencyMs: number;
   credits?: { charged: number; remaining: number; total: number; used: number; plan: string };
 }> {
@@ -116,6 +120,8 @@ export async function sendChatMessage(
     content: string;
     model: string;
     tokens: number;
+    inputTokens: number;
+    outputTokens: number;
     latencyMs: number;
     credits?: { charged: number; remaining: number; total: number; used: number; plan: string };
   };

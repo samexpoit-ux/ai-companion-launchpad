@@ -1,6 +1,6 @@
 import { apiErrorResponse, codeFromUpstream } from "@/lib/api-error";
 import { createFileRoute } from "@tanstack/react-router";
-import { CreditError, chargeRequest, creditErrorCode, recordRequestCost } from "@/lib/credit-guard.server";
+import { CreditError, chargeRequest, creditErrorCode, finalizeRequestCost } from "@/lib/credit-guard.server";
 import { resolveRoute, runWithFallback } from "@/lib/ai-gateway.server";
 
 interface AutofixBody {
@@ -144,11 +144,13 @@ export const Route = createFileRoute("/api/autofix")({
         const started = Date.now();
         try {
           const result = await runWithFallback(route, messages);
-          await recordRequestCost(request, charge.id, {
+          const finalCharge = await finalizeRequestCost(request, charge.id, "autofix", {
             costUsd: result.costUsd,
-            tokens: result.tokens,
+            inputTokens: result.inputTokens,
+            outputTokens: result.outputTokens,
             upstream: result.upstream,
           });
+          const balance = finalCharge ?? charge;
 
           if (isProject) {
             const patched = extractFiles(result.content);
@@ -170,7 +172,7 @@ export const Route = createFileRoute("/api/autofix")({
                   tokens: result.tokens,
                   costUsd: result.costUsd,
                   latencyMs: Date.now() - started,
-                  credits: { charged: charge.charged, remaining: charge.remaining },
+                  credits: { charged: balance.charged, remaining: balance.remaining },
                 });
               }
               return apiErrorResponse("bad_model_output", "autofix", "The model did not return a usable patch.");
@@ -184,7 +186,7 @@ export const Route = createFileRoute("/api/autofix")({
               tokens: result.tokens,
               costUsd: result.costUsd,
               latencyMs: Date.now() - started,
-              credits: { charged: charge.charged, remaining: charge.remaining },
+              credits: { charged: balance.charged, remaining: balance.remaining },
             });
           }
 
@@ -201,9 +203,10 @@ export const Route = createFileRoute("/api/autofix")({
             tokens: result.tokens,
             costUsd: result.costUsd,
             latencyMs: Date.now() - started,
-            credits: { charged: charge.charged, remaining: charge.remaining },
+            credits: { charged: balance.charged, remaining: balance.remaining },
           });
         } catch (err) {
+          await finalizeRequestCost(request, charge.id, "autofix", { failed: true });
           const e = err as Error & { status?: number };
           return apiErrorResponse(codeFromUpstream(e.status), "autofix", e.message);
         }

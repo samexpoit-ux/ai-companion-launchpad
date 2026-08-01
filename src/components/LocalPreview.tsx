@@ -153,7 +153,7 @@ interface Props {
 export default function LocalPreview({ payload, device, reloadKey }: Props) {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const rootRef = useRef<ReactDOMClient.Root | null>(null);
-  const { reportRuntimeError, setBuildError } = usePreview();
+  const { reportRuntimeError, reportConsole, setBuildError } = usePreview();
   const [compileError, setCompileError] = useState<string | null>(null);
 
 
@@ -197,11 +197,21 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
 
       // Pipe sandbox errors into the auto-fix loop.
       const frameConsole = (win as unknown as { console: Console }).console;
-      const nativeError = frameConsole.error.bind(frameConsole);
-      frameConsole.error = (...args: unknown[]) => {
-        reportRuntimeError(args.map((a) => (a instanceof Error ? a.message : String(a))).join(" "));
-        nativeError(...args);
-      };
+      for (const level of ["log", "info", "warn", "error"] as const) {
+        const native = frameConsole[level].bind(frameConsole);
+        frameConsole[level] = (...args: unknown[]) => {
+          const message = args.map((a) => {
+            if (a instanceof Error) return a.message;
+            if (a && typeof a === "object") {
+              try { return JSON.stringify(a); } catch { return String(a); }
+            }
+            return String(a);
+          }).join(" ");
+          reportConsole(level, message);
+          if (level === "error") reportRuntimeError(message);
+          native(...args);
+        };
+      }
       win.addEventListener("error", (e) => reportRuntimeError(String((e as ErrorEvent).message)));
       win.addEventListener("unhandledrejection", (e) =>
         reportRuntimeError(String((e as PromiseRejectionEvent).reason)),
@@ -262,7 +272,7 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
       rootRef.current = null;
       if (root) setTimeout(() => root.unmount(), 0);
     };
-  }, [payload.code, payload.lang, payload.files, payload.entry, isReact, reloadKey, reportRuntimeError, setBuildError]);
+  }, [payload.code, payload.lang, payload.files, payload.entry, isReact, reloadKey, reportConsole, reportRuntimeError, setBuildError]);
 
   const width = DEVICE_WIDTH[device];
 

@@ -11,7 +11,7 @@
  * imported from a component.
  */
 import { createClient } from "@supabase/supabase-js";
-import { ACTION_RULES, estimateCost, type CreditAction } from "@/lib/credits";
+import { ACTION_RULES, actualUsageCost, usageReservationCost, type CreditAction } from "@/lib/credits";
 
 export interface ChargeResult {
   id: string;
@@ -66,7 +66,7 @@ export async function chargeRequest(
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
 
-  const cost = estimateCost(action, opts.inputChars ?? 0);
+  const cost = usageReservationCost(action, opts.inputChars ?? 0);
   const { data, error } = await supabase.rpc("spend_credits", {
     _action: action,
     _tier: ACTION_RULES[action].tier,
@@ -116,30 +116,44 @@ export function creditErrorCode(err: CreditError) {
  * Best-effort: a failure here must never fail an otherwise-successful request,
  * and the database routine only lets the owner stamp their own row, once.
  */
-export async function recordRequestCost(
+export async function finalizeRequestCost(
   request: Request,
   ledgerId: string,
-  info: { costUsd?: number; tokens?: number; upstream?: string | null },
-): Promise<void> {
-  if (!ledgerId) return;
+  action: CreditAction,
+  info: { costUsd?: number; inputTokens?: number; outputTokens?: number; upstream?: string | null; failed?: boolean },
+): Promise<ChargeResult | null> {
+  if (!ledgerId) return null;
   const token = bearer(request);
   const url = process.env["SUPABASE_URL"];
   const key = process.env["SUPABASE_PUBLISHABLE_KEY"] ?? process.env["SUPABASE_ANON_KEY"];
-  if (!token || !url || !key) return;
+  if (!token || !url || !key) return null;
 
   try {
     const supabase = createClient(url, key, {
       auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
       global: { headers: { Authorization: `Bearer ${token}` } },
     });
-    const { error } = await supabase.rpc("record_request_cost", {
+    const finalCredits = info.failed ? 0 : actualUsageCost(action, info);
+    const { data, error } = await supabase.rpc("finalize_request_usage", {
       _ledger_id: ledgerId,
+      _final_credits: finalCredits,
       _cost_usd: Number(info.costUsd ?? 0),
-      _tokens: Math.round(Number(info.tokens ?? 0)),
+      _input_tokens: Math.round(Number(info.inputTokens ?? 0)),
+      _output_tokens: Math.round(Number(info.outputTokens ?? 0)),
       _upstream: info.upstream ?? null,
     });
-    if (error) console.error("[credits] cost stamp failed", error.message);
+    if (error) {
+      console.error("[credits] usage finalization failed", error.message);
+      return null;
+    }
+    const row = (data ?? {}) as Partial<ChargeResult>;
+    return {
+      id: String(row.id ?? ledgerId), charged: Number(row.charged ?? finalCredits),
+      plan: String(row.plan ?? "free"), total: Number(row.total ?? 0),
+      used: Number(row.used ?? 0), remaining: Number(row.remaining ?? 0),
+    };
   } catch (err) {
-    console.error("[credits] cost stamp failed", err);
+    console.error("[credits] usage finalization failed", err);
+    return null;
   }
 }

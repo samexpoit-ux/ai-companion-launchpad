@@ -186,7 +186,9 @@ export type Database = {
           created_at: string
           credits: number
           id: string
+          input_tokens: number
           model: string | null
+          output_tokens: number
           reason: string | null
           reversal_of: string | null
           reversed_at: string | null
@@ -203,7 +205,9 @@ export type Database = {
           created_at?: string
           credits?: number
           id?: string
+          input_tokens?: number
           model?: string | null
+          output_tokens?: number
           reason?: string | null
           reversal_of?: string | null
           reversed_at?: string | null
@@ -220,7 +224,9 @@ export type Database = {
           created_at?: string
           credits?: number
           id?: string
+          input_tokens?: number
           model?: string | null
+          output_tokens?: number
           reason?: string | null
           reversal_of?: string | null
           reversed_at?: string | null
@@ -480,6 +486,17 @@ export type Database = {
     Functions: {
       credit_balance: { Args: { _user_id?: string }; Returns: Json }
       downgrade_to_free: { Args: never; Returns: Json }
+      finalize_request_usage: {
+        Args: {
+          _cost_usd: number
+          _final_credits: number
+          _input_tokens: number
+          _ledger_id: string
+          _output_tokens: number
+          _upstream?: string
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
