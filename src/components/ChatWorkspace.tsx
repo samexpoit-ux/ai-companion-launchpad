@@ -461,8 +461,13 @@ function ChatWorkspaceInner() {
           tokens: asstMsg.tokens ?? null,
           latencyMs: asstMsg.latencyMs ?? null,
         });
+        // Lovable behaviour: a generated project loads straight into the
+        // right-hand live workspace, no extra click.
+        const generated = parseArtifacts(reply.content)[0];
+        if (generated) openProject(generated);
         if (reply.credits) credits.applyServerBalance(reply.credits);
         else void credits.refresh();
+
       } catch (error) {
         const apiErr = parseApiError(error, "chat");
         // Server rejected the charge — pull the authoritative balance back in.
