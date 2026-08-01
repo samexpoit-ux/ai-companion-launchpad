@@ -30,6 +30,11 @@ export NITRO_PRESET=node-server
 bun install
 bun run build
 bash "$APP_DIR/deploy/migrate.sh"
+
+# Gate the restart on the runtime RPCs actually existing (self-heals with
+# REPAIR=1 when an old BASELINE run skipped the SQL).
+bash "$APP_DIR/deploy/verify-schema.sh"
+
 chown -R nexuraai:nexuraai "$APP_DIR"
 
 systemctl restart nexuraai
