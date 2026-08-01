@@ -38,6 +38,8 @@ git fetch origin "$BRANCH"
 git reset --hard "origin/$BRANCH"
 git clean -fd -e .env -e .env.* -e node_modules -e .output -e dist
 echo "now on: $(git rev-parse --short HEAD)"
+bash "$APP_DIR/deploy/restore-env.sh"
+
 
 # migration ledger খালি থাকলে schema আগেই তৈরি ধরে নিয়ে একবার baseline করি,
 # তাই "already exists" এররে deploy আটকে যায় না। পরের বার নিজেই skip হবে।
