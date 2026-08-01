@@ -717,15 +717,8 @@ function ChatWorkspaceInner() {
 
         </div>
 
-        {/* Developer credit */}
-        <div className="border-t border-ink-200 px-4 py-3 text-center">
-          <div className="text-2xs font-semibold uppercase tracking-[0.2em] text-ink-400">
-            Crafted with care
-          </div>
-          <div className="mt-1 text-xs font-medium text-ink-700">
-            Developed by <span className="font-semibold text-[color:var(--color-iris)]">Sam</span>
-          </div>
-        </div>
+
+
 
       </aside>
 
