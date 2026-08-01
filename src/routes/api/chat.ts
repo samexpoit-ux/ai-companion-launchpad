@@ -115,7 +115,8 @@ export const Route = createFileRoute("/api/chat")({
         ];
 
         try {
-          const { content, tokens, upstream } = await runWithFallback(route, cleanMessages);
+          const { content, tokens, costUsd, upstream } = await runWithFallback(route, cleanMessages);
+          await recordRequestCost(request, charge.id, { costUsd, tokens, upstream });
           return Response.json({
             content,
             model: route.friendlyId,
@@ -123,6 +124,7 @@ export const Route = createFileRoute("/api/chat")({
             upstream,
             task: route.task,
             tokens,
+            costUsd,
             latencyMs: Date.now() - started,
             credits: {
               charged: charge.charged,
