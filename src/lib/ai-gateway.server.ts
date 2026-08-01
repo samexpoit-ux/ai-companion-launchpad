@@ -160,7 +160,7 @@ export function resolveRoute(
   if (!config) {
     return {
       error:
-        "OpenRouter is not configured. Add an OPENROUTER_API_KEY secret to enable Nexura AI.",
+        "The AI provider is not configured on this server. Set OPENROUTER_API_KEY in the server environment (/var/www/nexuraai/.env) and restart the service.",
     };
   }
 
