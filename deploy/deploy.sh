@@ -11,7 +11,11 @@ git fetch origin "$BRANCH"
 git reset --hard "origin/$BRANCH"
 git clean -fd -e .env -e .env.* -e node_modules -e .output -e dist
 
+# `.env` is tracked, so the reset above just clobbered the real keys.
+bash "$APP_DIR/deploy/restore-env.sh"
+
 set -a; . "$APP_DIR/.env"; set +a
+
 
 # Preflight: the AI gateway needs a real OpenRouter key in /var/www/nexuraai/.env
 if [ -z "${OPENROUTER_API_KEY:-}" ]; then
