@@ -819,7 +819,7 @@ function ChatWorkspaceInner() {
           ) : (
             <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8 sm:px-6 lg:py-10">
               {active?.messages.map((m) => (
-                <MessageBubble key={m.id} message={m} />
+                <MessageBubble key={m.id} message={m} userInitial={accountName.charAt(0).toUpperCase()} />
               ))}
               {isSending && <TypingIndicator model={model} />}
             </div>
