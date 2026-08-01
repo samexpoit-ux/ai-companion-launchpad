@@ -748,16 +748,8 @@ function ChatWorkspaceInner() {
             {isMobile ? <Menu className="h-4 w-4" /> : sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
           </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSidebarOpen(true)}
-            className="hidden shrink-0 gap-1.5 text-ink-600 sm:inline-flex"
-            aria-label="Show chat history"
-          >
-            <HistoryIcon className="h-3.5 w-3.5" />
-            History
-          </Button>
+
+
 
 
 
