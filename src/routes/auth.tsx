@@ -10,6 +10,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/auth")({
+  ssr: false,
   component: AuthPage,
   head: () => ({
     meta: [
