@@ -91,7 +91,7 @@
 
   --admin-gradient: linear-gradient(
     150deg,
-    var(--color-ink-900) 0%,
+    var(--ink-900) 0%,
     #14225A 45%,
     var(--color-iris-ink) 100%
   );
