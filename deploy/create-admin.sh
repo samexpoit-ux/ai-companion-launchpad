@@ -1,64 +1,89 @@
 #!/usr/bin/env bash
-# Create (or repair) an admin account on the self-hosted Supabase stack.
+# Create (or repair) an admin account against whatever Supabase the app uses.
 #
 #   bash deploy/create-admin.sh samexpoit@gmail.com 'Shovon@5448'
 #
-# - creates the auth user with email already confirmed (no mail verification)
-# - gives it the `admin` role in public.user_roles
-# - also turns on ENABLE_EMAIL_AUTOCONFIRM so normal signups need no email
+# Works in two modes:
+#   1. docker mode  — a self-hosted Supabase stack is found on this machine
+#                     (also flips ENABLE_EMAIL_AUTOCONFIRM=true)
+#   2. http mode    — no local stack; uses SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
+#                     from /etc/nexuraai.env (or ./.env) and the admin REST API
 set -euo pipefail
 
 EMAIL="${1:-}"
 PASSWORD="${2:-}"
-SUPA_DIR="${SUPA_DIR:-/opt/supabase/docker}"
+APP_DIR="${APP_DIR:-/var/www/nexuraai}"
 
 if [ -z "$EMAIL" ] || [ -z "$PASSWORD" ]; then
   echo "usage: bash deploy/create-admin.sh <email> <password>" >&2
   exit 1
 fi
-[ -f "$SUPA_DIR/.env" ] || { echo "!! $SUPA_DIR/.env not found — run deploy/supabase-selfhost.sh first" >&2; exit 1; }
 
-cd "$SUPA_DIR"
-SERVICE_KEY="$(grep -E '^SERVICE_ROLE_KEY=' .env | cut -d= -f2- | tr -d '"')"
-API_URL="$(grep -E '^API_EXTERNAL_URL=' .env | cut -d= -f2- | tr -d '"')"
-API_URL="${API_URL:-http://127.0.0.1:8000}"
+read_var() { [ -f "$1" ] && grep -E "^$2=" "$1" | tail -n1 | cut -d= -f2- | tr -d '"' || true; }
 
-echo "==> [1/3] enable email autoconfirm"
-if grep -q '^ENABLE_EMAIL_AUTOCONFIRM=' .env; then
-  sed -i 's|^ENABLE_EMAIL_AUTOCONFIRM=.*|ENABLE_EMAIL_AUTOCONFIRM=true|' .env
+# ---------- locate a self-hosted stack (optional) ----------
+SUPA_DIR=""
+for d in ${SUPA_DIR_HINT:-} /opt/supabase/docker /opt/supabase/supabase/docker /root/supabase/docker /opt/supabase; do
+  [ -n "$d" ] && [ -f "$d/.env" ] && [ -f "$d/docker-compose.yml" ] && { SUPA_DIR="$d"; break; }
+done
+
+if [ -n "$SUPA_DIR" ]; then
+  echo "==> docker mode ($SUPA_DIR)"
+  cd "$SUPA_DIR"
+  SERVICE_KEY="$(read_var .env SERVICE_ROLE_KEY)"
+  API_URL="$(read_var .env API_EXTERNAL_URL)"
+  API_URL="${API_URL:-http://127.0.0.1:8000}"
+
+  echo "==> [1/3] enable email autoconfirm"
+  if grep -q '^ENABLE_EMAIL_AUTOCONFIRM=' .env; then
+    sed -i 's|^ENABLE_EMAIL_AUTOCONFIRM=.*|ENABLE_EMAIL_AUTOCONFIRM=true|' .env
+  else
+    echo 'ENABLE_EMAIL_AUTOCONFIRM=true' >> .env
+  fi
+  docker compose up -d auth >/dev/null
+  sleep 8
 else
-  echo 'ENABLE_EMAIL_AUTOCONFIRM=true' >> .env
+  echo "==> http mode (no local Supabase stack found)"
+  ENV_FILE=/etc/nexuraai.env
+  [ -f "$ENV_FILE" ] || ENV_FILE="$APP_DIR/.env"
+  API_URL="$(read_var "$ENV_FILE" SUPABASE_URL)"
+  [ -n "$API_URL" ] || API_URL="$(read_var "$ENV_FILE" VITE_SUPABASE_URL)"
+  SERVICE_KEY="$(read_var "$ENV_FILE" SUPABASE_SERVICE_ROLE_KEY)"
+  if [ -z "$API_URL" ] || [ -z "$SERVICE_KEY" ]; then
+    echo "!! need SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY in $ENV_FILE" >&2
+    echo "   either run: bash deploy/supabase-selfhost.sh   (installs the local stack)" >&2
+    echo "   or add the service role key:  nano $ENV_FILE" >&2
+    exit 1
+  fi
+  API_URL="${API_URL%/}"
 fi
-docker compose up -d auth >/dev/null
-sleep 8
+
+api() { # api <method> <path> [json]
+  curl -sS -X "$1" "$API_URL$2" \
+    -H "apikey: $SERVICE_KEY" -H "Authorization: Bearer $SERVICE_KEY" \
+    -H 'Content-Type: application/json' ${3:+-d "$3"}
+}
 
 echo "==> [2/3] create user $EMAIL (email_confirm=true)"
-RESP="$(curl -sS -X POST "$API_URL/auth/v1/admin/users" \
-  -H "apikey: $SERVICE_KEY" -H "Authorization: Bearer $SERVICE_KEY" \
-  -H 'Content-Type: application/json' \
-  -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\",\"email_confirm\":true}")"
+RESP="$(api POST /auth/v1/admin/users "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\",\"email_confirm\":true}")"
 echo "$RESP" | head -c 300; echo
 
-if echo "$RESP" | grep -q 'already been registered'; then
-  echo "   user exists — resetting password + confirming email in the database"
-  docker compose exec -T db psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<SQL
-update auth.users
-   set encrypted_password = crypt('$PASSWORD', gen_salt('bf')),
-       email_confirmed_at = coalesce(email_confirmed_at, now()),
-       confirmed_at       = coalesce(confirmed_at, now()),
-       updated_at         = now()
- where email = '$EMAIL';
-SQL
+USER_ID="$(printf '%s' "$RESP" | sed -n 's/.*"id":"\([0-9a-f-]\{36\}\)".*/\1/p' | head -n1)"
+
+if [ -z "$USER_ID" ]; then
+  echo "   user exists — looking it up and resetting the password"
+  LIST="$(api GET "/auth/v1/admin/users?page=1&per_page=200")"
+  USER_ID="$(printf '%s' "$LIST" | tr '{' '\n' | grep -F "\"email\":\"$EMAIL\"" | sed -n 's/.*"id":"\([0-9a-f-]\{36\}\)".*/\1/p' | head -n1)"
+  if [ -z "$USER_ID" ]; then
+    echo "!! could not find user $EMAIL" >&2; exit 1
+  fi
+  api PUT "/auth/v1/admin/users/$USER_ID" \
+    "{\"password\":\"$PASSWORD\",\"email_confirm\":true}" | head -c 200; echo
 fi
+echo "   user_id = $USER_ID"
 
 echo "==> [3/3] grant admin role"
-docker compose exec -T db psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<SQL
-insert into public.user_roles (user_id, role)
-select id, 'admin'::app_role from auth.users where email = '$EMAIL'
-on conflict (user_id, role) do nothing;
-select u.email, r.role from auth.users u
-  join public.user_roles r on r.user_id = u.id
- where u.email = '$EMAIL';
-SQL
+api POST "/rest/v1/user_roles" "{\"user_id\":\"$USER_ID\",\"role\":\"admin\"}" | head -c 300; echo
+api GET "/rest/v1/user_roles?user_id=eq.$USER_ID&select=role" | head -c 300; echo
 
 echo "done — sign in at https://nexuraai.dev/auth then open /admin"
