@@ -103,4 +103,8 @@ for file in $(ls -1 "$MIG_DIR"/*.sql | sort); do
   applied=$((applied + 1))
 done
 
-echo "-- migrations: $applied applied, $skipped already up to date, $baselined baselined${changed:+, $changed modified after apply}"
+if [ "$REPAIR" = "1" ]; then
+  echo "-- repair: $repaired files replayed, $failed skipped"
+else
+  echo "-- migrations: $applied applied, $skipped already up to date, $baselined baselined${changed:+, $changed modified after apply}"
+fi
