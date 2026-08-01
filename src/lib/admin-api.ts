@@ -419,3 +419,124 @@ export async function logAdmin(
 
 export const formatMoney = (cents: number, currency = "USD") =>
   new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
+
+/* ------------------------------------------------------------------ usage */
+
+export interface UsageUserRow {
+  userId: string;
+  email: string | null;
+  displayName: string | null;
+  plan: string;
+  requests: number;
+  credits: number;
+  refunded: number;
+  tokens: number;
+  costUsd: number;
+  lastUsedAt: string | null;
+}
+
+export interface UsageRequestRow {
+  id: string;
+  userId: string;
+  email: string | null;
+  action: string;
+  tier: string;
+  credits: number;
+  tokens: number;
+  costUsd: number;
+  model: string | null;
+  upstreamModel: string | null;
+  threadId: string | null;
+  reason: string | null;
+  reversedAt: string | null;
+  createdAt: string;
+}
+
+export interface UsageReport {
+  users: UsageUserRow[];
+  requests: UsageRequestRow[];
+  totals: { requests: number; credits: number; tokens: number; costUsd: number };
+}
+
+const money = (n: number) => Math.round(n * 1e6) / 1e6;
+
+/**
+ * Per-user usage + the full per-request breakdown (tokens, provider cost in USD
+ * and the upstream model that answered). Admin-only through RLS.
+ */
+export async function fetchUsageReport(days = 30, limit = 500): Promise<UsageReport> {
+  const since = daysAgo(days);
+  const [ledger, profiles, settings] = await Promise.all([
+    supabase
+      .from("credit_ledger")
+      .select(
+        "id,user_id,action,tier,credits,model,upstream_model,tokens,cost_usd,thread_id,reason,reversed_at,created_at",
+      )
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(limit),
+    supabase.from("profiles").select("id,email,display_name,plan").limit(1000),
+    supabase.from("user_settings").select("user_id,plan").limit(1000),
+  ]);
+
+  if (ledger.error) console.error("[admin] usage read failed", ledger.error.message);
+
+  const profileBy = new Map((profiles.data ?? []).map((p) => [p.id, p]));
+  const planBy = new Map((settings.data ?? []).map((s) => [s.user_id, s.plan]));
+
+  const requests: UsageRequestRow[] = (ledger.data ?? []).map((r) => ({
+    id: r.id,
+    userId: r.user_id,
+    email: profileBy.get(r.user_id)?.email ?? null,
+    action: r.action,
+    tier: r.tier,
+    credits: Number(r.credits ?? 0),
+    tokens: Number(r.tokens ?? 0),
+    costUsd: Number(r.cost_usd ?? 0),
+    model: r.model,
+    upstreamModel: r.upstream_model ?? null,
+    threadId: r.thread_id,
+    reason: r.reason ?? null,
+    reversedAt: r.reversed_at ?? null,
+    createdAt: r.created_at,
+  }));
+
+  const byUser = new Map<string, UsageUserRow>();
+  for (const row of requests) {
+    const profile = profileBy.get(row.userId);
+    const agg =
+      byUser.get(row.userId) ??
+      ({
+        userId: row.userId,
+        email: profile?.email ?? null,
+        displayName: profile?.display_name ?? null,
+        plan: planBy.get(row.userId) ?? profile?.plan ?? "free",
+        requests: 0,
+        credits: 0,
+        refunded: 0,
+        tokens: 0,
+        costUsd: 0,
+        lastUsedAt: null,
+      } satisfies UsageUserRow);
+
+    if (row.credits < 0) agg.refunded = round(agg.refunded + Math.abs(row.credits));
+    else {
+      agg.requests += 1;
+      agg.credits = round(agg.credits + row.credits);
+    }
+    agg.tokens += row.tokens;
+    agg.costUsd = money(agg.costUsd + row.costUsd);
+    if (!agg.lastUsedAt || row.createdAt > agg.lastUsedAt) agg.lastUsedAt = row.createdAt;
+    byUser.set(row.userId, agg);
+  }
+
+  const users = [...byUser.values()].sort((a, b) => b.credits - a.credits);
+  const totals = {
+    requests: requests.filter((r) => r.credits >= 0).length,
+    credits: round(requests.reduce((s, r) => s + r.credits, 0)),
+    tokens: requests.reduce((s, r) => s + r.tokens, 0),
+    costUsd: money(requests.reduce((s, r) => s + r.costUsd, 0)),
+  };
+
+  return { users, requests, totals };
+}
