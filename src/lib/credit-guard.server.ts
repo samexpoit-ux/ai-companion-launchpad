@@ -11,7 +11,7 @@
  * imported from a component.
  */
 import { createClient } from "@supabase/supabase-js";
-import { ACTION_RULES, actualUsageCost, estimateCost, type CreditAction } from "@/lib/credits";
+import { ACTION_RULES, actualUsageCost, usageReservationCost, type CreditAction } from "@/lib/credits";
 
 export interface ChargeResult {
   id: string;
@@ -66,7 +66,7 @@ export async function chargeRequest(
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
 
-  const cost = estimateCost(action, opts.inputChars ?? 0);
+  const cost = usageReservationCost(action, opts.inputChars ?? 0);
   const { data, error } = await supabase.rpc("spend_credits", {
     _action: action,
     _tier: ACTION_RULES[action].tier,
