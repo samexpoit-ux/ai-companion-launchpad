@@ -10,9 +10,13 @@ set -euo pipefail
 
 APP_DIR="${APP_DIR:-/var/www/nexuraai}"
 SUPABASE_DIR="${SUPABASE_DIR:-/opt/supabase}"
-ENV_FILE="$APP_DIR/.env"
+# Source of truth lives OUTSIDE the git checkout: `.env` is tracked, so
+# `git reset --hard` would wipe the real keys on every deploy.
+SECRET_ENV="${SECRET_ENV:-/etc/nexuraai.env}"
+ENV_FILE="$SECRET_ENV"
 SUPABASE_PUBLIC_URL="${SUPABASE_PUBLIC_URL:-https://supabase.nexuraai.dev}"
 PROJECT_ID="${PROJECT_ID:-nexura}"
+
 
 read_var() { # read_var FILE NAME
   [ -f "$1" ] || return 0
