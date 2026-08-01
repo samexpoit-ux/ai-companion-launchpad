@@ -222,7 +222,7 @@ export async function setUserStatus(userId: string, status: "active" | "suspende
   const { error } = await supabase.rpc("admin_set_user_status", {
     _user_id: userId,
     _status: status,
-    _reason: reason ?? null,
+    _reason: reason ?? undefined,
   });
   if (error) throw new Error(error.message);
 }
@@ -232,7 +232,7 @@ export async function grantCredits(userId: string, credits: number, note?: strin
   const { error } = await supabase.rpc("admin_grant_credits", {
     _user_id: userId,
     _credits: credits,
-    _note: note ?? null,
+    _note: note ?? undefined,
   });
   if (error) throw new Error(error.message);
 }
