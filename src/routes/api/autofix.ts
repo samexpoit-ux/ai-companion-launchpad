@@ -147,7 +147,6 @@ export const Route = createFileRoute("/api/autofix")({
           await recordRequestCost(request, charge.id, {
             costUsd: result.costUsd,
             tokens: result.tokens,
-            costUsd: result.costUsd,
             upstream: result.upstream,
           });
 
@@ -169,8 +168,6 @@ export const Route = createFileRoute("/api/autofix")({
                   changed: true,
                   model: route.friendlyId,
                   tokens: result.tokens,
-            costUsd: result.costUsd,
-              costUsd: result.costUsd,
                   costUsd: result.costUsd,
                   latencyMs: Date.now() - started,
                   credits: { charged: charge.charged, remaining: charge.remaining },
@@ -185,7 +182,6 @@ export const Route = createFileRoute("/api/autofix")({
               changed: true,
               model: route.friendlyId,
               tokens: result.tokens,
-            costUsd: result.costUsd,
               costUsd: result.costUsd,
               latencyMs: Date.now() - started,
               credits: { charged: charge.charged, remaining: charge.remaining },
