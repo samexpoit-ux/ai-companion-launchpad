@@ -36,7 +36,6 @@ import {
   ChevronDown,
   Command,
   Zap,
-  Shield,
   Sparkle,
   Diamond,
   Mic,
@@ -44,7 +43,6 @@ import {
   Image as ImageIcon,
   ChevronRight,
   Crown,
-  History as HistoryIcon,
   Coins,
 
 } from "lucide-react";
@@ -537,7 +535,6 @@ function ChatWorkspaceInner() {
     }
   };
 
-  const totalTokens = active?.messages.reduce((s, m) => s + (m.tokens ?? Math.round(m.content.length / 3.6)), 0) ?? 0;
 
   return (
     <div className="relative flex h-screen w-full overflow-hidden bg-white text-ink-900">

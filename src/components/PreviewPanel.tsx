@@ -66,27 +66,17 @@ export function PreviewPanel() {
   // arms this revision. A new AI patch (new revision) re-locks the preview.
   const [armedRevision, setArmedRevision] = useState<number | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
-  const armed = armedRevision === revision;
-  const runCost = estimateCost("preview_run");
 
   useEffect(() => {
     setRunError(null);
   }, [revision]);
 
-  const runPreview = useCallback(async () => {
-    if (!credits.canAfford("preview_run")) {
-      setRunError("Not enough credits to run the preview.");
-      return;
-    }
-    try {
-      const balance = await spendAction("preview_run");
-      credits.applyServerBalance(balance);
-      setArmedRevision(revision);
-      setReloadKey((k) => k + 1);
-    } catch (err) {
-      setRunError(err instanceof Error ? err.message : "Could not start the preview. Try again.");
-    }
-  }, [credits, revision]);
+  // The preview compiles and runs entirely in the browser sandbox — it costs no
+  // credits and never touches the server, so arm every revision automatically.
+  useEffect(() => {
+    setArmedRevision(revision);
+    setReloadKey((k) => k + 1);
+  }, [revision]);
 
   const chargedAutoFix = useCallback(async () => {
     if (!credits.canAfford("autofix")) {
@@ -224,23 +214,12 @@ export function PreviewPanel() {
         <div data-testid="workspace-stage" className="relative h-full w-full overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_24px_60px_-38px_rgba(16,24,40,0.35)]">
         <Suspense fallback={<LoadingSkeleton />}>
           {tab === "preview" ? (
-            armed ? (
-              <LocalPreview
-                key={`local-${payload.lang}-${revision}`}
-                payload={payload}
-                device={device}
-                reloadKey={reloadKey}
-              />
-            ) : (
-              <RunGate
-                cost={runCost}
-                remaining={credits.remaining}
-                affordable={credits.canAfford("preview_run")}
-                error={runError}
-                fileCount={payload.files ? Object.keys(payload.files).length : 1}
-                onRun={() => void runPreview()}
-              />
-            )
+            <LocalPreview
+              key={`local-${payload.lang}-${revision}`}
+              payload={payload}
+              device={device}
+              reloadKey={reloadKey}
+            />
           ) : tab === "code" && payload.files ? (
             <ProjectExplorer key={`explorer-${revision}`} />
           ) : (
