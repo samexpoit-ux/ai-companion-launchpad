@@ -424,6 +424,9 @@ function ChatWorkspaceInner() {
         updatedAt: Date.now(),
       }));
       setIsSending(true);
+      // Right-hand workspace opens itself as soon as work starts (desktop).
+      if (!isMobile) openWorkspace();
+
       if (isFirst) void renameDbThread(thread.id, value.slice(0, 48));
       void saveMessage({
         threadId: thread.id,
