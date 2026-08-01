@@ -16,6 +16,8 @@ import {
   CHEAP_CHAT,
   CODING_PRIMARY,
   CODING_SECONDARY,
+  CODING_TERTIARY,
+  NANO_CHAT,
   FREE_CODE,
   FREE_FAST,
   FREE_OSS,
@@ -82,7 +84,9 @@ const TASK_MODELS: Record<TaskKind, string[]> = {
 const FRIENDLY_BY_UPSTREAM: Record<string, string> = {
   [CODING_PRIMARY]: "nx-builder",
   [CODING_SECONDARY]: "nx-vision",
+  [CODING_TERTIARY]: "nx-builder",
   [CHEAP_CHAT]: "nx-flash",
+  [NANO_CHAT]: "nx-flash",
   [FREE_CODE]: "nx-builder",
   [FREE_SMART]: "nx-auto",
   [FREE_FAST]: "nx-flash",
@@ -197,7 +201,7 @@ export async function callChatCompletion(
   upstreamModel: string,
   messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
   task: TaskKind = "chat",
-): Promise<{ content: string; tokens: number }> {
+): Promise<{ content: string; tokens: number; costUsd: number }> {
   const res = await fetch(`${config.baseURL}/chat/completions`, {
     method: "POST",
     headers: {
@@ -211,6 +215,11 @@ export async function callChatCompletion(
       temperature: task === "code" || task === "fix" ? 0.2 : 0.7,
       max_tokens: maxTokensFor(upstreamModel, task),
       stream: false,
+      // Real token + dollar cost of the call comes back in `usage`.
+      usage: { include: true },
+      // OpenRouter provider routing: cheapest healthy provider, but never
+      // silently drop to a provider that can't serve the full context.
+      provider: { sort: "price", allow_fallbacks: true, data_collection: "deny" },
     }),
   });
 
@@ -223,7 +232,7 @@ export async function callChatCompletion(
 
   const data = (await res.json()) as {
     choices?: Array<{ message?: { content?: string } }>;
-    usage?: { total_tokens?: number };
+    usage?: { total_tokens?: number; cost?: number };
     error?: { message?: string };
   };
   if (data.error?.message) {
@@ -231,14 +240,15 @@ export async function callChatCompletion(
   }
   const content = data.choices?.[0]?.message?.content ?? "";
   const tokens = data.usage?.total_tokens ?? Math.round(content.length / 3.6);
-  return { content, tokens };
+  const costUsd = typeof data.usage?.cost === "number" ? data.usage.cost : 0;
+  return { content, tokens, costUsd };
 }
 
 /** Run the primary model, then walk the fallback chain on failure. */
 export async function runWithFallback(
   route: ResolvedRoute,
   messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
-): Promise<{ content: string; tokens: number; upstream: string }> {
+): Promise<{ content: string; tokens: number; costUsd: number; upstream: string }> {
   const chain = [route.upstream, ...route.fallbacks];
   let lastError: unknown;
   for (const model of chain) {
