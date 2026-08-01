@@ -35,6 +35,23 @@ grant all on public.schema_migrations to service_role;
 alter table public.schema_migrations enable row level security;
 " >/dev/null
 
+# Core schema bootstrap (idempotent). Guarantees the base tables/types exist
+# before any numbered migration runs, so a database that was BASELINE-ed
+# (migrations recorded but never executed) self-heals instead of failing with
+# `type "public.user_settings" does not exist`.
+BOOTSTRAP="$APP_DIR/deploy/bootstrap-schema.sql"
+if [ -f "$BOOTSTRAP" ]; then
+  echo "-- bootstrapping core schema (idempotent)"
+  if { echo "begin;"; cat "$BOOTSTRAP"; echo "commit;"; } | psql_f >/dev/null; then
+    echo "   ok  core tables, types, grants and policies present"
+  else
+    echo "!! core schema bootstrap failed — see the SQL error above" >&2
+    exit 1
+  fi
+fi
+
+
+
 applied=0
 skipped=0
 changed=0
