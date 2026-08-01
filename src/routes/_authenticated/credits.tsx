@@ -20,8 +20,10 @@ import {
   isAdmin as checkAdmin,
   listAudit,
   listLedger,
+  formatUsd,
   netCredits,
   rollbackCharge,
+  totalCostUsd,
   type AuditEntry,
   type LedgerEntry,
 } from "@/lib/credit-ledger";
@@ -79,6 +81,7 @@ function CreditsPage() {
 
   const breakdown = useMemo(() => breakdownByAction(entries), [entries]);
   const net = useMemo(() => netCredits(entries), [entries]);
+  const spendUsd = useMemo(() => totalCostUsd(entries), [entries]);
 
   const rollback = async (entry: LedgerEntry) => {
     setBusyId(entry.id);
@@ -119,6 +122,7 @@ function CreditsPage() {
           <PageStat label="Remaining" value={formatCredits(credits.remaining)} />
           <PageStat label="Charged this period" value={formatCredits(net)} />
           <PageStat label="Ledger entries" value={String(entries.length)} />
+          <PageStat label="Provider cost" value={formatUsd(spendUsd)} />
         </PageStatGrid>
 
         {notice && (
@@ -143,7 +147,8 @@ function CreditsPage() {
                     <th scope="col" className="py-2 pr-3">Charges</th>
                     <th scope="col" className="py-2 pr-3">Charged</th>
                     <th scope="col" className="py-2 pr-3">Refunded</th>
-                    <th scope="col" className="py-2">Net</th>
+                    <th scope="col" className="py-2 pr-3">Net</th>
+                    <th scope="col" className="py-2">Provider cost</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -153,7 +158,8 @@ function CreditsPage() {
                       <td className="py-2.5 pr-3 text-ink-600">{row.charges}</td>
                       <td className="py-2.5 pr-3 text-ink-600">{formatCredits(row.credits)}</td>
                       <td className="py-2.5 pr-3 text-ink-600">{formatCredits(row.refunded)}</td>
-                      <td className="py-2.5 font-semibold text-ink-900">{formatCredits(row.net)}</td>
+                      <td className="py-2.5 pr-3 font-semibold text-ink-900">{formatCredits(row.net)}</td>
+                      <td className="py-2.5 text-ink-600">{formatUsd(row.costUsd)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -181,6 +187,15 @@ function CreditsPage() {
                     {formatCredits(Math.abs(entry.credits))}
                   </span>
                   {entry.model && <span className="min-w-0 truncate text-ink-500">{entry.model}</span>}
+                  {entry.upstreamModel && (
+                    <span className="min-w-0 truncate text-ink-400">{entry.upstreamModel}</span>
+                  )}
+                  {entry.costUsd > 0 && (
+                    <span className="rounded-full border border-ink-200 px-2 py-0.5 text-2xs font-medium text-ink-600">
+                      {formatUsd(entry.costUsd)}
+                      {entry.tokens > 0 ? ` · ${entry.tokens} tok` : ""}
+                    </span>
+                  )}
                   {entry.reason && <span className="text-ink-500">“{entry.reason}”</span>}
                   <span className="text-ink-400">{fmtWhen(entry.createdAt)}</span>
                   <span className="ml-auto">

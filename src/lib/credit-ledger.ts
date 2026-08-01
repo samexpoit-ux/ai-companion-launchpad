@@ -22,6 +22,12 @@ export interface LedgerEntry {
   reversalOf: string | null;
   reversedAt: string | null;
   createdAt: string;
+  /** Real provider cost of the request in USD (0 until the call reports it). */
+  costUsd: number;
+  /** Real token count reported by the provider. */
+  tokens: number;
+  /** The upstream model that actually answered. */
+  upstreamModel: string | null;
 }
 
 export interface AuditEntry {
@@ -43,10 +49,12 @@ export interface ActionBreakdown {
   credits: number;
   refunded: number;
   net: number;
+  /** Real provider spend for this action, in USD. */
+  costUsd: number;
 }
 
 const LEDGER_COLUMNS =
-  "id,user_id,action,tier,credits,model,thread_id,reason,reversal_of,reversed_at,created_at";
+  "id,user_id,action,tier,credits,model,thread_id,reason,reversal_of,reversed_at,created_at,cost_usd,tokens,upstream_model";
 
 type LedgerRow = {
   id: string;
@@ -60,6 +68,9 @@ type LedgerRow = {
   reversal_of?: string | null;
   reversed_at?: string | null;
   created_at: string;
+  cost_usd?: number | null;
+  tokens?: number | null;
+  upstream_model?: string | null;
 };
 
 function ledgerFromRow(row: LedgerRow): LedgerEntry {
@@ -74,6 +85,9 @@ function ledgerFromRow(row: LedgerRow): LedgerEntry {
     reason: row.reason ?? null,
     reversalOf: row.reversal_of ?? null,
     reversedAt: row.reversed_at ?? null,
+    costUsd: Number(row.cost_usd ?? 0),
+    tokens: Number(row.tokens ?? 0),
+    upstreamModel: row.upstream_model ?? null,
     createdAt: row.created_at,
   };
 }
@@ -156,7 +170,9 @@ export function breakdownByAction(entries: LedgerEntry[]): ActionBreakdown[] {
   for (const entry of entries) {
     const key = entry.action;
     const label = ACTION_RULES[key as CreditAction]?.label ?? key;
-    const row = map.get(key) ?? { action: key, label, charges: 0, credits: 0, refunded: 0, net: 0 };
+    const row =
+      map.get(key) ?? { action: key, label, charges: 0, credits: 0, refunded: 0, net: 0, costUsd: 0 };
+    row.costUsd = Math.round((row.costUsd + (entry.costUsd || 0)) * 1e6) / 1e6;
     if (entry.credits < 0) row.refunded += Math.abs(entry.credits);
     else {
       row.charges += 1;
@@ -206,4 +222,16 @@ export async function rollbackCharge(entry: LedgerEntry, reason: string): Promis
 
   return { ok: true, refunded: entry.credits };
 
+}
+
+/** Real provider spend (USD) across the given ledger rows. */
+export function totalCostUsd(entries: LedgerEntry[]): number {
+  return Math.round(entries.reduce((sum, e) => sum + (e.costUsd || 0), 0) * 1e6) / 1e6;
+}
+
+/** Compact USD label for tiny per-request amounts. */
+export function formatUsd(value: number): string {
+  if (!value) return "$0";
+  if (value < 0.01) return `$${value.toFixed(4)}`;
+  return `$${value.toFixed(2)}`;
 }

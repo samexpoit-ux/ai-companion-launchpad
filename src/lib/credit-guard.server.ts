@@ -109,3 +109,37 @@ export function creditErrorCode(err: CreditError) {
   if (err.kind === "insufficient_credits") return "insufficient_credits" as const;
   return "unknown" as const;
 }
+
+/**
+ * Stamps the real provider cost (USD), token count and the upstream model that
+ * actually answered onto the ledger row created by `chargeRequest`.
+ * Best-effort: a failure here must never fail an otherwise-successful request,
+ * and the database routine only lets the owner stamp their own row, once.
+ */
+export async function recordRequestCost(
+  request: Request,
+  ledgerId: string,
+  info: { costUsd?: number; tokens?: number; upstream?: string | null },
+): Promise<void> {
+  if (!ledgerId) return;
+  const token = bearer(request);
+  const url = process.env["SUPABASE_URL"];
+  const key = process.env["SUPABASE_PUBLISHABLE_KEY"] ?? process.env["SUPABASE_ANON_KEY"];
+  if (!token || !url || !key) return;
+
+  try {
+    const supabase = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { error } = await supabase.rpc("record_request_cost", {
+      _ledger_id: ledgerId,
+      _cost_usd: Number(info.costUsd ?? 0),
+      _tokens: Math.round(Number(info.tokens ?? 0)),
+      _upstream: info.upstream ?? null,
+    });
+    if (error) console.error("[credits] cost stamp failed", error.message);
+  } catch (err) {
+    console.error("[credits] cost stamp failed", err);
+  }
+}
