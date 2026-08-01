@@ -1147,6 +1147,10 @@ function CodeBlock({ language, value: rawValue }: { language: string; value: str
 function MessageBubble({ message, userInitial = "Y" }: { message: ChatMessage; userInitial?: string }) {
   const isUser = message.role === "user";
   const time = new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const project = !isUser ? parseArtifacts(message.content)[0] ?? null : null;
+  const modelName = message.model
+    ? AI_MODELS.find((m) => m.id === message.model)?.name ?? message.model
+    : undefined;
   return (
     <div className={cn("flex gap-3 sm:gap-4", isUser ? "flex-row-reverse" : "flex-row")}>
       <div
@@ -1173,13 +1177,26 @@ function MessageBubble({ message, userInitial = "Y" }: { message: ChatMessage; u
             <>
               <span className="text-ink-300">·</span>
               <span className="normal-case tracking-normal font-mono text-[color:var(--color-iris-cyan)]/90">
-                {AI_MODELS.find((m) => m.id === message.model)?.name ?? message.model}
+                {modelName}
               </span>
             </>
           )}
           <span className="text-ink-300">·</span>
           <span className="normal-case font-mono">{time}</span>
         </div>
+        {!isUser && (
+          <ActivityCard
+            title={project ? `Built ${project.title || "your project"}` : "Responded to your prompt"}
+            project={project}
+            steps={stepsForMessage({
+              modelName,
+              latencyMs: message.latencyMs,
+              tokens: message.tokens,
+              credits: message.credits,
+              fileCount: project?.order.length,
+            })}
+          />
+        )}
         <div
           className={cn(
             "relative rounded-2xl px-4 py-3 text-base leading-relaxed",
@@ -1204,13 +1221,11 @@ function MessageBubble({ message, userInitial = "Y" }: { message: ChatMessage; u
               <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                 {hasArtifact(message.content) ? stripArtifacts(message.content) : message.content}
               </ReactMarkdown>
-              {parseArtifacts(message.content).map((project) => (
-                <ArtifactCard key={project.id} project={project} />
-              ))}
             </div>
           )}
 
         </div>
+
         {!isUser && (message.tokens || message.latencyMs || message.credits != null) && (
           <div className="mt-1.5 flex items-center gap-2 font-mono text-2xs text-ink-500">
             {message.latencyMs && <span>{(message.latencyMs / 1000).toFixed(2)}s</span>}
