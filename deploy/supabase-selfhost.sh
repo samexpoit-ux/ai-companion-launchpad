@@ -79,7 +79,8 @@ PY
   set_env SUPABASE_PUBLIC_URL "https://${DB_HOST}"
   set_env ADDITIONAL_REDIRECT_URLS "https://${DOMAIN}/**,https://www.${DOMAIN}/**"
   set_env DISABLE_SIGNUP "false"
-  set_env ENABLE_EMAIL_AUTOCONFIRM "false"
+  # No SMTP on this box — confirm signups instantly instead of emailing links.
+  set_env ENABLE_EMAIL_AUTOCONFIRM "true"
   echo "# NEXURA_GENERATED" >> .env
 fi
 
