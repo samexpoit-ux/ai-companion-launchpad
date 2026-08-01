@@ -32,8 +32,16 @@ SERVICE_KEY="$(read_var "$SUPABASE_DIR/.env" SERVICE_ROLE_KEY)"
 fail=0
 [ -n "$ANON_KEY" ]    || { echo "!! ANON_KEY not found in $SUPABASE_DIR/.env"; fail=1; }
 [ -n "$SERVICE_KEY" ] || { echo "!! SERVICE_ROLE_KEY not found in $SUPABASE_DIR/.env"; fail=1; }
-[ -n "$OPENROUTER_KEY" ] || { echo "!! OpenRouter key missing: pass it as the first argument"; fail=1; }
+if [ -z "$OPENROUTER_KEY" ]; then
+  echo "!! OpenRouter key missing: bash deploy/set-env.sh sk-or-v1-<real key>"; fail=1
+elif [ "${#OPENROUTER_KEY}" -lt 40 ] || printf '%s' "$OPENROUTER_KEY" | grep -qiE 'YOUR|PLACEHOLDER|XXX|<'; then
+  echo "!! OpenRouter key looks like a placeholder ('$OPENROUTER_KEY')."
+  echo "   Get the real key at https://openrouter.ai/keys, then run:"
+  echo "     bash $APP_DIR/deploy/set-env.sh sk-or-v1-<real key>"
+  fail=1
+fi
 [ "$fail" = 0 ] || exit 1
+
 
 mkdir -p "$APP_DIR"
 [ -f "$ENV_FILE" ] && cp "$ENV_FILE" "$ENV_FILE.bak.$(date +%s)"
