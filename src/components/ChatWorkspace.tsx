@@ -113,8 +113,9 @@ function ChatWorkspaceInner() {
   const [loadedThreads, setLoadedThreads] = useState<Set<string>>(() => new Set());
   const credits = useCredits();
   
-  const { isOpen: previewOpen, toggleWorkspace } = usePreview();
+  const { isOpen: previewOpen, toggleWorkspace, openWorkspace, openProject } = usePreview();
   const isMobile = useIsMobile();
+
 
   // Deep link: /workspace?thread=<id> opens that conversation.
   const requestedThreadId = useRouterState({
