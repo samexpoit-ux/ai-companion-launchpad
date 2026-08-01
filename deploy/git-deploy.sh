@@ -75,8 +75,9 @@ git fetch origin "$BRANCH"
 git reset --hard "origin/$BRANCH"
 git clean -fd -e .env -e .env.* -e node_modules -e .output -e dist
 
-[ -f "$APP_DIR/.env" ] || { echo "missing $APP_DIR/.env — see deploy/README.md"; exit 1; }
+bash "$APP_DIR/deploy/restore-env.sh"
 set -a; . "$APP_DIR/.env"; set +a
+
 
 bun install
 NITRO_PRESET=node-server bun run build
