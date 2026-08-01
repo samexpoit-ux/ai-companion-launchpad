@@ -73,8 +73,13 @@ EOF
 chown nexuraai:nexuraai "$ENV_FILE" 2>/dev/null || true
 chmod 600 "$ENV_FILE"
 
-echo "wrote $ENV_FILE"
+# The build reads VITE_* from the checkout, so mirror it into the app dir too.
+install -m 600 "$ENV_FILE" "$APP_DIR/.env"
+chown nexuraai:nexuraai "$APP_DIR/.env" 2>/dev/null || true
+
+echo "wrote $ENV_FILE (mirrored to $APP_DIR/.env)"
 awk -F= '{ if (length($2) > 12) printf "  %s=%s…%s (%d chars)\n", $1, substr($2,1,8), substr($2,length($2)-3), length($2); else if ($0 ~ /=/) print "  " $0 }' "$ENV_FILE"
+
 
 if systemctl list-unit-files | grep -q '^nexuraai.service'; then
   systemctl restart nexuraai
