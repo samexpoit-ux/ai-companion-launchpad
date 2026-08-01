@@ -61,3 +61,16 @@ export function BrandWordmark({ className }: { className?: string }) {
     </span>
   );
 }
+
+/** Logo mark only (no "AI" badge) — for avatars and other tight spots. */
+export function BrandGlyph({ className }: { className?: string }) {
+  return (
+    <img
+      src={nexuraLogo}
+      alt="Nexura AI"
+      width={32}
+      height={32}
+      className={cn("h-full w-full object-contain", className)}
+    />
+  );
+}

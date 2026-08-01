@@ -36,7 +36,6 @@ import {
   ChevronDown,
   Command,
   Zap,
-  Shield,
   Sparkle,
   Diamond,
   Mic,
@@ -44,7 +43,6 @@ import {
   Image as ImageIcon,
   ChevronRight,
   Crown,
-  History as HistoryIcon,
   Coins,
 
 } from "lucide-react";
@@ -71,7 +69,7 @@ import {
   subscribeToChat,
 } from "@/lib/chat-store";
 
-import { BrandMark, BrandWordmark } from "@/components/BrandMark";
+import { BrandMark, BrandWordmark, BrandGlyph } from "@/components/BrandMark";
 import { ThemePicker } from "@/components/ThemePicker";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { takePendingPrompt } from "@/lib/pending-prompt";
@@ -537,7 +535,6 @@ function ChatWorkspaceInner() {
     }
   };
 
-  const totalTokens = active?.messages.reduce((s, m) => s + (m.tokens ?? Math.round(m.content.length / 3.6)), 0) ?? 0;
 
   return (
     <div className="relative flex h-screen w-full overflow-hidden bg-white text-ink-900">
@@ -717,15 +714,8 @@ function ChatWorkspaceInner() {
 
         </div>
 
-        {/* Developer credit */}
-        <div className="border-t border-ink-200 px-4 py-3 text-center">
-          <div className="text-2xs font-semibold uppercase tracking-[0.2em] text-ink-400">
-            Crafted with care
-          </div>
-          <div className="mt-1 text-xs font-medium text-ink-700">
-            Developed by <span className="font-semibold text-[color:var(--color-iris)]">Sam</span>
-          </div>
-        </div>
+
+
 
       </aside>
 
@@ -748,16 +738,8 @@ function ChatWorkspaceInner() {
             {isMobile ? <Menu className="h-4 w-4" /> : sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
           </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSidebarOpen(true)}
-            className="hidden shrink-0 gap-1.5 text-ink-600 sm:inline-flex"
-            aria-label="Show chat history"
-          >
-            <HistoryIcon className="h-3.5 w-3.5" />
-            History
-          </Button>
+
+
 
 
 
@@ -773,14 +755,7 @@ function ChatWorkspaceInner() {
 
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-ink-700 sm:gap-2">
-            <span className="hidden items-center gap-1 rounded-md border border-ink-200 bg-white/70 px-2 py-1 lg:flex">
-              <Shield className="h-3 w-3 text-[color:var(--color-iris-cyan)]" />
-              <span>End-to-end encrypted</span>
-            </span>
-            <span className="hidden items-center gap-1 rounded-md border border-ink-200 bg-white/70 px-2 py-1 font-mono md:flex">
-              <Zap className="h-3 w-3 text-[color:var(--color-iris-warm)]" />
-              <span>{totalTokens.toLocaleString()} tok</span>
-            </span>
+
             <button
               onClick={toggleWorkspace}
               data-testid="workspace-toggle"
@@ -819,7 +794,7 @@ function ChatWorkspaceInner() {
           ) : (
             <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8 sm:px-6 lg:py-10">
               {active?.messages.map((m) => (
-                <MessageBubble key={m.id} message={m} />
+                <MessageBubble key={m.id} message={m} userInitial={accountName.charAt(0).toUpperCase()} />
               ))}
               {isSending && <TypingIndicator model={model} />}
             </div>
@@ -1169,7 +1144,7 @@ function CodeBlock({ language, value: rawValue }: { language: string; value: str
   );
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({ message, userInitial = "Y" }: { message: ChatMessage; userInitial?: string }) {
   const isUser = message.role === "user";
   const time = new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   return (
@@ -1184,10 +1159,10 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         style={!isUser ? { background: "var(--iris-gradient)" } : undefined}
       >
         {isUser ? (
-          <span className="text-xs font-medium text-ink-900">A</span>
+          <span className="text-xs font-medium text-ink-900">{userInitial}</span>
         ) : (
-          <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-white">
-            <span className="font-display text-sm leading-none font-semibold text-[color:var(--color-iris)]">C</span>
+          <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-white p-1">
+            <BrandGlyph />
           </div>
         )}
       </div>
@@ -1371,14 +1346,10 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
       {/* Credit / trust note — same rhythm as the composer footnote */}
       <div className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1.5 text-2xs text-ink-500">
         <span className="inline-flex items-center gap-1.5">
-          <Shield className="h-3 w-3 text-[color:var(--color-iris)]" />
-          E2E encrypted
-        </span>
-        <span className="text-ink-300">·</span>
-        <span className="inline-flex items-center gap-1.5">
           <Zap className="h-3 w-3 text-[color:var(--color-iris)]" />
           Smart routing
         </span>
+
         <span className="text-ink-300">·</span>
         <span className="font-medium text-ink-600">{model.name}</span>
       </div>
