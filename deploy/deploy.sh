@@ -12,6 +12,16 @@ git reset --hard "origin/$BRANCH"
 git clean -fd -e .env -e .env.* -e node_modules -e .output -e dist
 
 set -a; . "$APP_DIR/.env"; set +a
+
+# Preflight: the AI gateway needs a real OpenRouter key in /var/www/nexuraai/.env
+if [ -z "${OPENROUTER_API_KEY:-}" ]; then
+  echo "!! OPENROUTER_API_KEY is empty in $APP_DIR/.env"
+  echo "   Chat/autofix will fail with 'OpenRouter is not configured'."
+  echo "   Fix:  nano $APP_DIR/.env   ->   OPENROUTER_API_KEY=sk-or-v1-..."
+  echo "   Then: systemctl restart nexuraai"
+  exit 1
+fi
+
 export NITRO_PRESET=node-server
 bun install
 bun run build
