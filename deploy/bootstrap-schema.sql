@@ -144,7 +144,9 @@ ALTER TABLE public.credit_ledger
   ADD COLUMN IF NOT EXISTS reversed_at timestamptz,
   ADD COLUMN IF NOT EXISTS cost_usd numeric(12,6) NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS tokens integer NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS upstream_model text;
+  ADD COLUMN IF NOT EXISTS upstream_model text,
+  ADD COLUMN IF NOT EXISTS input_tokens integer NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS output_tokens integer NOT NULL DEFAULT 0;
 GRANT SELECT, INSERT ON public.credit_ledger TO authenticated;
 GRANT ALL ON public.credit_ledger TO service_role;
 ALTER TABLE public.credit_ledger ENABLE ROW LEVEL SECURITY;

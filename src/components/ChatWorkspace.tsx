@@ -455,6 +455,8 @@ function ChatWorkspaceInner() {
           content: reply.content,
           model: reply.model,
           tokens: reply.tokens,
+          inputTokens: reply.inputTokens,
+          outputTokens: reply.outputTokens,
           latencyMs: reply.latencyMs,
           credits: reply.credits?.charged,
           createdAt: Date.now(),
@@ -1212,6 +1214,8 @@ function MessageBubble({ message, userInitial = "Y" }: { message: ChatMessage; u
               modelName,
               latencyMs: message.latencyMs,
               tokens: message.tokens,
+              inputTokens: message.inputTokens,
+              outputTokens: message.outputTokens,
               credits: message.credits,
               fileCount: project?.order.length,
             })}

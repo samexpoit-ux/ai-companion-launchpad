@@ -203,7 +203,7 @@ export async function callChatCompletion(
   upstreamModel: string,
   messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
   task: TaskKind = "chat",
-): Promise<{ content: string; tokens: number; costUsd: number }> {
+): Promise<{ content: string; tokens: number; inputTokens: number; outputTokens: number; costUsd: number }> {
   const res = await fetch(`${config.baseURL}/chat/completions`, {
     method: "POST",
     headers: {
@@ -234,7 +234,7 @@ export async function callChatCompletion(
 
   const data = (await res.json()) as {
     choices?: Array<{ message?: { content?: string } }>;
-    usage?: { total_tokens?: number; cost?: number };
+    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cost?: number };
     error?: { message?: string };
   };
   if (data.error?.message) {
@@ -243,14 +243,20 @@ export async function callChatCompletion(
   const content = data.choices?.[0]?.message?.content ?? "";
   const tokens = data.usage?.total_tokens ?? Math.round(content.length / 3.6);
   const costUsd = typeof data.usage?.cost === "number" ? data.usage.cost : 0;
-  return { content, tokens, costUsd };
+  return {
+    content,
+    tokens,
+    inputTokens: data.usage?.prompt_tokens ?? 0,
+    outputTokens: data.usage?.completion_tokens ?? Math.round(content.length / 3.6),
+    costUsd,
+  };
 }
 
 /** Run the primary model, then walk the fallback chain on failure. */
 export async function runWithFallback(
   route: ResolvedRoute,
   messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
-): Promise<{ content: string; tokens: number; costUsd: number; upstream: string }> {
+): Promise<{ content: string; tokens: number; inputTokens: number; outputTokens: number; costUsd: number; upstream: string }> {
   const chain = [route.upstream, ...route.fallbacks];
   let lastError: unknown;
   for (const model of chain) {

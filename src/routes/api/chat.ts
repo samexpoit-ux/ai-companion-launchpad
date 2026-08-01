@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { resolveRoute, runWithFallback } from "@/lib/ai-gateway.server";
 import { isPlanId } from "@/lib/plans";
 import { actionForMode } from "@/lib/credits";
-import { CreditError, chargeRequest, creditErrorCode, recordRequestCost } from "@/lib/credit-guard.server";
+import { CreditError, chargeRequest, creditErrorCode, finalizeRequestCost } from "@/lib/credit-guard.server";
 
 interface IncomingMessage {
   role: "user" | "assistant" | "system";
@@ -115,8 +115,9 @@ export const Route = createFileRoute("/api/chat")({
         ];
 
         try {
-          const { content, tokens, costUsd, upstream } = await runWithFallback(route, cleanMessages);
-          await recordRequestCost(request, charge.id, { costUsd, tokens, upstream });
+          const { content, tokens, inputTokens, outputTokens, costUsd, upstream } = await runWithFallback(route, cleanMessages);
+          const finalCharge = await finalizeRequestCost(request, charge.id, actionForMode(mode), { costUsd, inputTokens, outputTokens, upstream });
+          const balance = finalCharge ?? charge;
           return Response.json({
             content,
             model: route.friendlyId,
@@ -124,17 +125,20 @@ export const Route = createFileRoute("/api/chat")({
             upstream,
             task: route.task,
             tokens,
+            inputTokens,
+            outputTokens,
             costUsd,
             latencyMs: Date.now() - started,
             credits: {
-              charged: charge.charged,
-              remaining: charge.remaining,
-              total: charge.total,
-              used: charge.used,
-              plan: charge.plan,
+              charged: balance.charged,
+              remaining: balance.remaining,
+              total: balance.total,
+              used: balance.used,
+              plan: balance.plan,
             },
           });
         } catch (err) {
+          await finalizeRequestCost(request, charge.id, actionForMode(mode), { failed: true });
           const e = err as Error & { status?: number };
           return apiErrorResponse(codeFromUpstream(e.status), "chat", e.message, {
             model: route.friendlyId,

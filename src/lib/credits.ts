@@ -47,6 +47,18 @@ export function estimateCost(action: CreditAction, inputChars = 0): number {
   return round(rule.base + (rule.perKChars * inputChars) / 1000);
 }
 
+export function actualUsageCost(
+  action: CreditAction,
+  usage: { inputTokens?: number; outputTokens?: number },
+): number {
+  const rule = ACTION_RULES[action];
+  const inputTokens = Math.max(0, usage.inputTokens ?? 0);
+  const outputTokens = Math.max(0, usage.outputTokens ?? 0);
+  const inputRate = rule.perKChars * 0.75;
+  const outputRate = action === "code" || action === "autofix" ? 0.42 : action === "plan" ? 0.28 : 0.16;
+  return Math.max(0.1, round(rule.base + (inputTokens / 1000) * inputRate + (outputTokens / 1000) * outputRate));
+}
+
 /** Map a chat composer mode ("Build" | "Chat" | "Plan") to a billable action. */
 export function actionForMode(mode: string): CreditAction {
   const m = mode.toLowerCase();
