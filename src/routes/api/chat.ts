@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { resolveRoute, runWithFallback } from "@/lib/ai-gateway.server";
 import { isPlanId } from "@/lib/plans";
 import { actionForMode } from "@/lib/credits";
-import { CreditError, chargeRequest, creditErrorCode } from "@/lib/credit-guard.server";
+import { CreditError, chargeRequest, creditErrorCode, recordRequestCost } from "@/lib/credit-guard.server";
 
 interface IncomingMessage {
   role: "user" | "assistant" | "system";

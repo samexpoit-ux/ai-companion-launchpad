@@ -1,6 +1,6 @@
 import { apiErrorResponse, codeFromUpstream } from "@/lib/api-error";
 import { createFileRoute } from "@tanstack/react-router";
-import { CreditError, chargeRequest, creditErrorCode } from "@/lib/credit-guard.server";
+import { CreditError, chargeRequest, creditErrorCode, recordRequestCost } from "@/lib/credit-guard.server";
 import { resolveRoute, runWithFallback } from "@/lib/ai-gateway.server";
 
 interface AutofixBody {
@@ -144,6 +144,12 @@ export const Route = createFileRoute("/api/autofix")({
         const started = Date.now();
         try {
           const result = await runWithFallback(route, messages);
+          await recordRequestCost(request, charge.id, {
+            costUsd: result.costUsd,
+            tokens: result.tokens,
+            costUsd: result.costUsd,
+            upstream: result.upstream,
+          });
 
           if (isProject) {
             const patched = extractFiles(result.content);
@@ -163,6 +169,9 @@ export const Route = createFileRoute("/api/autofix")({
                   changed: true,
                   model: route.friendlyId,
                   tokens: result.tokens,
+            costUsd: result.costUsd,
+              costUsd: result.costUsd,
+                  costUsd: result.costUsd,
                   latencyMs: Date.now() - started,
                   credits: { charged: charge.charged, remaining: charge.remaining },
                 });
@@ -176,6 +185,8 @@ export const Route = createFileRoute("/api/autofix")({
               changed: true,
               model: route.friendlyId,
               tokens: result.tokens,
+            costUsd: result.costUsd,
+              costUsd: result.costUsd,
               latencyMs: Date.now() - started,
               credits: { charged: charge.charged, remaining: charge.remaining },
             });
@@ -192,6 +203,7 @@ export const Route = createFileRoute("/api/autofix")({
             changed: fixed.trim() !== code.trim(),
             model: route.friendlyId,
             tokens: result.tokens,
+            costUsd: result.costUsd,
             latencyMs: Date.now() - started,
             credits: { charged: charge.charged, remaining: charge.remaining },
           });
