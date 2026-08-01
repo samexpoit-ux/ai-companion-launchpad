@@ -78,6 +78,8 @@ import { PreviewProvider, usePreview, isPreviewable } from "@/components/preview
 import { PreviewPanel } from "@/components/PreviewPanel";
 import { PlayCircle, GripVertical, FolderTree, PanelRight } from "lucide-react";
 import { hasArtifact, parseArtifacts, stripArtifacts, type ArtifactProject } from "@/lib/artifact";
+import { ActivityCard, stepsForMessage } from "@/components/ActivityCard";
+
 
 import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from "react-resizable-panels";
 
@@ -111,8 +113,9 @@ function ChatWorkspaceInner() {
   const [loadedThreads, setLoadedThreads] = useState<Set<string>>(() => new Set());
   const credits = useCredits();
   
-  const { isOpen: previewOpen, toggleWorkspace } = usePreview();
+  const { isOpen: previewOpen, toggleWorkspace, openWorkspace, openProject } = usePreview();
   const isMobile = useIsMobile();
+
 
   // Deep link: /workspace?thread=<id> opens that conversation.
   const requestedThreadId = useRouterState({
@@ -283,6 +286,15 @@ function ChatWorkspaceInner() {
     [modelId],
   );
 
+  // Lovable behaviour: opening a conversation that already has turns reveals
+  // the right-hand workspace automatically on desktop.
+  useEffect(() => {
+    if (isMobile) return;
+    if ((active?.messages.length ?? 0) > 0) openWorkspace();
+  }, [active?.id, active?.messages.length, isMobile, openWorkspace]);
+
+
+
   const filtered = useMemo(() => {
     if (!query.trim()) return threads;
     const q = query.toLowerCase();
@@ -421,6 +433,9 @@ function ChatWorkspaceInner() {
         updatedAt: Date.now(),
       }));
       setIsSending(true);
+      // Right-hand workspace opens itself as soon as work starts (desktop).
+      if (!isMobile) openWorkspace();
+
       if (isFirst) void renameDbThread(thread.id, value.slice(0, 48));
       void saveMessage({
         threadId: thread.id,
@@ -458,8 +473,13 @@ function ChatWorkspaceInner() {
           tokens: asstMsg.tokens ?? null,
           latencyMs: asstMsg.latencyMs ?? null,
         });
+        // Lovable behaviour: a generated project loads straight into the
+        // right-hand live workspace, no extra click.
+        const generated = parseArtifacts(reply.content)[0];
+        if (generated) openProject(generated);
         if (reply.credits) credits.applyServerBalance(reply.credits);
         else void credits.refresh();
+
       } catch (error) {
         const apiErr = parseApiError(error, "chat");
         // Server rejected the charge — pull the authoritative balance back in.
@@ -483,7 +503,7 @@ function ChatWorkspaceInner() {
         setIsSending(false);
       }
     },
-    [modelId, updateThread, mode, credits],
+    [modelId, updateThread, mode, credits, isMobile, openWorkspace, openProject],
   );
 
   const handleSend = async () => {
@@ -1147,6 +1167,10 @@ function CodeBlock({ language, value: rawValue }: { language: string; value: str
 function MessageBubble({ message, userInitial = "Y" }: { message: ChatMessage; userInitial?: string }) {
   const isUser = message.role === "user";
   const time = new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const project = !isUser ? parseArtifacts(message.content)[0] ?? null : null;
+  const modelName = message.model
+    ? AI_MODELS.find((m) => m.id === message.model)?.name ?? message.model
+    : undefined;
   return (
     <div className={cn("flex gap-3 sm:gap-4", isUser ? "flex-row-reverse" : "flex-row")}>
       <div
@@ -1173,13 +1197,26 @@ function MessageBubble({ message, userInitial = "Y" }: { message: ChatMessage; u
             <>
               <span className="text-ink-300">·</span>
               <span className="normal-case tracking-normal font-mono text-[color:var(--color-iris-cyan)]/90">
-                {AI_MODELS.find((m) => m.id === message.model)?.name ?? message.model}
+                {modelName}
               </span>
             </>
           )}
           <span className="text-ink-300">·</span>
           <span className="normal-case font-mono">{time}</span>
         </div>
+        {!isUser && (
+          <ActivityCard
+            title={project ? `Built ${project.title || "your project"}` : "Responded to your prompt"}
+            project={project}
+            steps={stepsForMessage({
+              modelName,
+              latencyMs: message.latencyMs,
+              tokens: message.tokens,
+              credits: message.credits,
+              fileCount: project?.order.length,
+            })}
+          />
+        )}
         <div
           className={cn(
             "relative rounded-2xl px-4 py-3 text-base leading-relaxed",
@@ -1204,13 +1241,11 @@ function MessageBubble({ message, userInitial = "Y" }: { message: ChatMessage; u
               <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                 {hasArtifact(message.content) ? stripArtifacts(message.content) : message.content}
               </ReactMarkdown>
-              {parseArtifacts(message.content).map((project) => (
-                <ArtifactCard key={project.id} project={project} />
-              ))}
             </div>
           )}
 
         </div>
+
         {!isUser && (message.tokens || message.latencyMs || message.credits != null) && (
           <div className="mt-1.5 flex items-center gap-2 font-mono text-2xs text-ink-500">
             {message.latencyMs && <span>{(message.latencyMs / 1000).toFixed(2)}s</span>}
@@ -1236,28 +1271,28 @@ function TypingIndicator({ model }: { model: AIModel }) {
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl p-[1.5px]" style={{
         background: "var(--iris-gradient)",
       }}>
-        <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-white">
-          <span className="font-display text-sm font-semibold text-[color:var(--color-iris)]">C</span>
+        <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-white p-1">
+          <BrandGlyph />
         </div>
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1 max-w-[92%] sm:max-w-[85%]">
         <div className="mb-1.5 text-2xs uppercase tracking-[0.18em] text-ink-500">
           Nexura · <span className="normal-case tracking-normal font-mono text-[color:var(--color-iris-cyan)]/90">{model.name}</span>
         </div>
-        <div className="inline-flex items-center gap-2 rounded-2xl border border-ink-200 px-4 py-3" style={{
-          background: "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(244,246,249,0.88))",
-          boxShadow: "0 10px 30px -18px rgba(37,74,140,0.25), inset 0 1px 0 rgba(255,255,255,0.9)",
-        }}>
-          <div className="relative h-4 w-16 overflow-hidden rounded-full bg-ink-100">
-            <div className="absolute inset-0 shimmer-gold" />
-          </div>
-          <span className="text-xs text-ink-700">reasoning…</span>
-
-        </div>
+        <ActivityCard
+          busy
+          title="Working on it…"
+          steps={[
+            { label: "Analysed the prompt", detail: "smart cost router", done: true },
+            { label: "Routed to model", detail: model.name, done: true },
+            { label: "Thinking and writing the response", done: false },
+          ]}
+        />
       </div>
     </div>
   );
 }
+
 
 function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIModel }) {
   const starters = [
