@@ -182,6 +182,7 @@ export type Database = {
       credit_ledger: {
         Row: {
           action: string
+          cost_usd: number
           created_at: string
           credits: number
           id: string
@@ -191,11 +192,14 @@ export type Database = {
           reversed_at: string | null
           thread_id: string | null
           tier: string
+          tokens: number
           updated_at: string
+          upstream_model: string | null
           user_id: string
         }
         Insert: {
           action: string
+          cost_usd?: number
           created_at?: string
           credits?: number
           id?: string
@@ -205,11 +209,14 @@ export type Database = {
           reversed_at?: string | null
           thread_id?: string | null
           tier: string
+          tokens?: number
           updated_at?: string
+          upstream_model?: string | null
           user_id: string
         }
         Update: {
           action?: string
+          cost_usd?: number
           created_at?: string
           credits?: number
           id?: string
@@ -219,7 +226,9 @@ export type Database = {
           reversed_at?: string | null
           thread_id?: string | null
           tier?: string
+          tokens?: number
           updated_at?: string
+          upstream_model?: string | null
           user_id?: string
         }
         Relationships: [
@@ -479,6 +488,15 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id?: string }; Returns: boolean }
+      record_request_cost: {
+        Args: {
+          _cost_usd: number
+          _ledger_id: string
+          _tokens: number
+          _upstream?: string
+        }
+        Returns: undefined
+      }
       rollback_charge: {
         Args: { _ledger_id: string; _reason?: string }
         Returns: Json
