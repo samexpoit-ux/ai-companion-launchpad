@@ -92,6 +92,8 @@ export function clampChainToCeiling(
     ceiling === "free" ? [...PREMIUM_MODELS, ...CHEAP_MODELS] : PREMIUM_MODELS;
   const allowed = chain.filter((m) => !blocked.includes(m));
   if (allowed.length > 0) return allowed;
-  return chain.filter((m) => m.endsWith(":free")).slice(0, 1).concat(FREE_OSS);
+  // Nothing survived the clamp: fall back to the strongest free chat model so a
+  // free / out-of-credit account still gets a good answer instead of an error.
+  return [FREE_POWER, FREE_OSS];
 }
 
