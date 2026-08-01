@@ -1253,28 +1253,28 @@ function TypingIndicator({ model }: { model: AIModel }) {
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl p-[1.5px]" style={{
         background: "var(--iris-gradient)",
       }}>
-        <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-white">
-          <span className="font-display text-sm font-semibold text-[color:var(--color-iris)]">C</span>
+        <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-white p-1">
+          <BrandGlyph />
         </div>
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1 max-w-[92%] sm:max-w-[85%]">
         <div className="mb-1.5 text-2xs uppercase tracking-[0.18em] text-ink-500">
           Nexura · <span className="normal-case tracking-normal font-mono text-[color:var(--color-iris-cyan)]/90">{model.name}</span>
         </div>
-        <div className="inline-flex items-center gap-2 rounded-2xl border border-ink-200 px-4 py-3" style={{
-          background: "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(244,246,249,0.88))",
-          boxShadow: "0 10px 30px -18px rgba(37,74,140,0.25), inset 0 1px 0 rgba(255,255,255,0.9)",
-        }}>
-          <div className="relative h-4 w-16 overflow-hidden rounded-full bg-ink-100">
-            <div className="absolute inset-0 shimmer-gold" />
-          </div>
-          <span className="text-xs text-ink-700">reasoning…</span>
-
-        </div>
+        <ActivityCard
+          busy
+          title="Working on it…"
+          steps={[
+            { label: "Analysed the prompt", detail: "smart cost router", done: true },
+            { label: "Routed to model", detail: model.name, done: true },
+            { label: "Thinking and writing the response", done: false },
+          ]}
+        />
       </div>
     </div>
   );
 }
+
 
 function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIModel }) {
   const starters = [
