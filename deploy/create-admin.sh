@@ -31,8 +31,9 @@ if [ -n "$SUPA_DIR" ]; then
   echo "==> docker mode ($SUPA_DIR)"
   cd "$SUPA_DIR"
   SERVICE_KEY="$(read_var .env SERVICE_ROLE_KEY)"
-  API_URL="$(read_var .env API_EXTERNAL_URL)"
-  API_URL="${API_URL:-http://127.0.0.1:8000}"
+  # always talk to the local gateway — the public hostname may not resolve yet
+  KONG_PORT="$(read_var .env KONG_HTTP_PORT)"
+  API_URL="${ADMIN_API_URL:-http://127.0.0.1:${KONG_PORT:-8000}}"
 
   echo "==> [1/3] enable email autoconfirm"
   if grep -q '^ENABLE_EMAIL_AUTOCONFIRM=' .env; then
