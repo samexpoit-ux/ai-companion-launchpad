@@ -31,21 +31,42 @@ export const NANO_CHAT = "qwen/qwen3.7-flash";
 
 /** Free safety net so the product keeps working when credit runs out. */
 export const FREE_CODE = "cohere/north-mini-code:free";
+/**
+ * Strongest free chat model on OpenRouter (550B MoE, 1M context). Free plans
+ * get this as their main chat brain so the product still feels premium at $0.
+ */
+export const FREE_POWER = "nvidia/nemotron-3-ultra-550b-a55b:free";
 export const FREE_SMART = "nvidia/nemotron-3-super-120b-a12b:free";
 export const FREE_FAST = "nvidia/nemotron-nano-9b-v2:free";
 export const FREE_OSS = "openai/gpt-oss-20b:free";
 
 /** Ordered chains: [primary, ...fallbacks]. */
 export const TIER_CHAINS = {
-  code: [CODING_PRIMARY, CODING_SECONDARY, CODING_TERTIARY, CHEAP_CHAT, FREE_CODE, FREE_OSS],
-  fix: [CODING_PRIMARY, CODING_SECONDARY, CODING_TERTIARY, CHEAP_CHAT, FREE_CODE, FREE_OSS],
-  reason: [CODING_PRIMARY, CHEAP_CHAT, FREE_SMART, FREE_OSS],
-  chat: [CHEAP_CHAT, NANO_CHAT, FREE_SMART, FREE_OSS],
-  fast: [NANO_CHAT, FREE_FAST, FREE_OSS],
+  code: [
+    CODING_PRIMARY,
+    CODING_SECONDARY,
+    CODING_TERTIARY,
+    CHEAP_CHAT,
+    FREE_CODE,
+    FREE_POWER,
+    FREE_OSS,
+  ],
+  fix: [
+    CODING_PRIMARY,
+    CODING_SECONDARY,
+    CODING_TERTIARY,
+    CHEAP_CHAT,
+    FREE_CODE,
+    FREE_POWER,
+    FREE_OSS,
+  ],
+  reason: [CODING_PRIMARY, CHEAP_CHAT, FREE_POWER, FREE_SMART, FREE_OSS],
+  chat: [CHEAP_CHAT, NANO_CHAT, FREE_POWER, FREE_SMART, FREE_OSS],
+  fast: [NANO_CHAT, FREE_FAST, FREE_POWER, FREE_OSS],
 } as const;
 
 /** Small code question — no need to pay coder prices. */
-export const LIGHT_CODE_CHAIN = [CHEAP_CHAT, CODING_PRIMARY, FREE_CODE, FREE_OSS];
+export const LIGHT_CODE_CHAIN = [CHEAP_CHAT, CODING_PRIMARY, FREE_CODE, FREE_POWER, FREE_OSS];
 
 /** Models that cost real money, grouped by how expensive they are. */
 export const PREMIUM_MODELS: readonly string[] = [
