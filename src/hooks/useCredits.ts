@@ -63,9 +63,15 @@ export function useCredits(): UseCredits {
       return;
     }
 
-    const { data, error } = await supabase.rpc("credit_balance", {});
+    // A cold backend/network hiccup used to spam the console with
+    // "balance read failed"; retry once before giving up quietly.
+    let { data, error } = await supabase.rpc("credit_balance", {});
     if (error) {
-      console.error("[credits] balance read failed", error.message);
+      await new Promise((r) => setTimeout(r, 800));
+      ({ data, error } = await supabase.rpc("credit_balance", {}));
+    }
+    if (error) {
+      console.warn("[credits] balance unavailable", error.message);
       setState((s) => ({ ...s, loading: false }));
       return;
     }

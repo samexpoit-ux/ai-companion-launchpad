@@ -1,28 +1,289 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, FolderOpen } from "lucide-react";
-import { listThreads, type StoredThread } from "@/lib/chat-store";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ArrowLeft,
+  Layers,
+  MoreHorizontal,
+  Pencil,
+  Search,
+  Star,
+  Trash2,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { PageBar, PageBody, PageHeader, PageShell } from "@/components/page-shell";
+import { deleteThread, listThreads, renameThread, type StoredThread } from "@/lib/chat-store";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/projects")({
-  validateSearch: (search: Record<string, unknown>) => ({ filter: typeof search.filter === "string" ? search.filter : "all" }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    filter: typeof search.filter === "string" ? search.filter : "all",
+  }),
   component: ProjectsPage,
-  head: () => ({ meta: [
-    { title: "Projects — Nexura AI" }, { name: "description", content: "Browse and reopen Nexura AI workspace projects." },
-    { property: "og:title", content: "Projects — Nexura AI" }, { property: "og:description", content: "Browse projects in your workspace." },
-    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Projects — Nexura AI" },
+      { name: "description", content: "Browse, star, rename and reopen your Nexura AI projects." },
+      { property: "og:title", content: "Projects — Nexura AI" },
+      { property: "og:description", content: "Browse projects in your workspace." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
 });
+
+const STAR_KEY = "nexura.starred-projects";
+
+/** Stars are a local view preference — no schema change, no server round-trip. */
+function readStars(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(STAR_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+const FILTERS = [
+  { id: "all", label: "All projects" },
+  { id: "starred", label: "Starred" },
+  { id: "owned", label: "Owned by me" },
+  { id: "shared", label: "Shared with me" },
+] as const;
+
+/** Deterministic accent per project so the grid reads colourful, not grey. */
+const ACCENTS = [
+  "linear-gradient(135deg, #3B82F6, #93B4FA)",
+  "linear-gradient(135deg, #7C3AED, #C084FC)",
+  "linear-gradient(135deg, #059669, #5EEAD4)",
+  "linear-gradient(135deg, #F59E0B, #FCD34D)",
+  "linear-gradient(135deg, #E11D48, #FB7185)",
+  "linear-gradient(135deg, #0EA5E9, #67E8F9)",
+];
+
+function accentFor(id: string) {
+  let sum = 0;
+  for (let i = 0; i < id.length; i += 1) sum += id.charCodeAt(i);
+  return ACCENTS[sum % ACCENTS.length];
+}
 
 function ProjectsPage() {
   const { filter } = Route.useSearch();
+  const navigate = useNavigate();
   const [threads, setThreads] = useState<StoredThread[]>([]);
-  useEffect(() => { void listThreads().then(setThreads); }, []);
-  const title = useMemo(() => {
-    if (filter === "starred") return "Starred projects";
-    if (filter === "owned") return "Owned by me";
-    if (filter === "shared") return "Shared with me";
-    return "All projects";
-  }, [filter]);
-  const visible = filter === "all" || filter === "owned" ? threads : [];
-  return <main className="min-h-dvh bg-ink-100 px-4 py-6 sm:px-8"><div className="mx-auto max-w-5xl"><Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-ink-500 hover:text-ink-900"><ArrowLeft className="h-4 w-4" />Dashboard</Link><h1 className="mt-8 text-3xl font-semibold text-ink-900">{title}</h1><div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{visible.length ? visible.map((thread) => <Link key={thread.id} to="/workspace" search={{ thread: thread.id }} className="rounded-lg border border-ink-200 bg-white p-4 shadow-ds-xs transition hover:-translate-y-0.5"><FolderOpen className="h-5 w-5 text-[color:var(--color-iris)]" /><p className="mt-4 truncate text-sm font-semibold text-ink-900">{thread.title}</p><p className="mt-1 text-xs text-ink-500">Updated {new Date(thread.lastMessageAt).toLocaleDateString()}</p></Link>) : <p className="col-span-full rounded-lg border border-dashed border-ink-300 py-14 text-center text-sm text-ink-500">No {filter === "all" ? "projects" : filter + " projects"} yet.</p>}</div></div></main>;
+  const [stars, setStars] = useState<string[]>([]);
+  const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    void listThreads().then(setThreads);
+    setStars(readStars());
+  }, []);
+
+  const toggleStar = useCallback((id: string) => {
+    setStars((prev) => {
+      const next = prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id];
+      try {
+        window.localStorage.setItem(STAR_KEY, JSON.stringify(next));
+      } catch {
+        /* storage disabled — stars stay in-memory for this session */
+      }
+      return next;
+    });
+  }, []);
+
+  const rename = useCallback(async (thread: StoredThread) => {
+    const next = window.prompt("Rename project", thread.title)?.trim();
+    if (!next || next === thread.title) return;
+    await renameThread(thread.id, next);
+    setThreads((prev) => prev.map((t) => (t.id === thread.id ? { ...t, title: next } : t)));
+  }, []);
+
+  const remove = useCallback(async (thread: StoredThread) => {
+    if (!window.confirm(`Delete "${thread.title}"? This cannot be undone.`)) return;
+    await deleteThread(thread.id);
+    setThreads((prev) => prev.filter((t) => t.id !== thread.id));
+  }, []);
+
+  const counts = useMemo(
+    () => ({
+      all: threads.length,
+      starred: threads.filter((t) => stars.includes(t.id)).length,
+      owned: threads.length,
+      shared: 0,
+    }),
+    [threads, stars],
+  );
+
+  const visible = useMemo(() => {
+    const base =
+      filter === "starred"
+        ? threads.filter((t) => stars.includes(t.id))
+        : filter === "shared"
+          ? []
+          : threads;
+    const q = query.trim().toLowerCase();
+    return q ? base.filter((t) => t.title.toLowerCase().includes(q)) : base;
+  }, [filter, threads, stars, query]);
+
+  const title = FILTERS.find((f) => f.id === filter)?.label ?? "All projects";
+
+  return (
+    <PageShell width="xl">
+      <PageBar>
+        <Link
+          to="/dashboard"
+          className="inline-flex items-center gap-2 text-sm text-ink-500 transition hover:text-ink-900"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Dashboard
+        </Link>
+        <Button size="sm" className="ml-auto" onClick={() => void navigate({ to: "/workspace" })}>
+          New project
+        </Button>
+      </PageBar>
+
+      <PageHeader
+        title={title}
+        description="Every build lives in its own workspace with chat history, code and preview."
+      />
+
+      <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="flex flex-wrap items-center gap-1.5 rounded-full border border-ink-200 bg-white p-1">
+          {FILTERS.map((f) => (
+            <Link
+              key={f.id}
+              to="/projects"
+              search={{ filter: f.id }}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition",
+                filter === f.id
+                  ? "bg-[color:var(--color-iris)] text-white shadow-sm"
+                  : "text-ink-500 hover:bg-ink-100 hover:text-ink-900",
+              )}
+            >
+              {f.label}
+              <span
+                className={cn(
+                  "rounded-full px-1.5 font-mono text-2xs",
+                  filter === f.id ? "bg-white/25" : "bg-ink-100 text-ink-500",
+                )}
+              >
+                {counts[f.id]}
+              </span>
+            </Link>
+          ))}
+        </div>
+
+        <label className="relative lg:ml-auto lg:w-72">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-400"
+            aria-hidden="true"
+          />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search projects…"
+            aria-label="Search projects"
+            className="w-full rounded-full border border-ink-200 bg-white py-2 pl-9 pr-3 text-sm text-ink-900 outline-none transition placeholder:text-ink-400 focus:border-[color:var(--color-iris)] focus:ring-2 focus:ring-[color:var(--color-iris)]/20"
+          />
+        </label>
+      </div>
+
+      <PageBody className="mt-6">
+        {visible.length ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {visible.map((thread) => {
+              const starred = stars.includes(thread.id);
+              return (
+                <article
+                  key={thread.id}
+                  className="group relative overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-ds-xs transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-28px_rgba(16,24,40,0.45)]"
+                >
+                  <Link
+                    to="/workspace"
+                    search={{ thread: thread.id }}
+                    className="block focus-visible:outline-none"
+                  >
+                    <div
+                      className="relative grid h-28 place-items-center"
+                      style={{ background: accentFor(thread.id) }}
+                    >
+                      <Layers className="h-7 w-7 text-white opacity-90" aria-hidden="true" />
+                    </div>
+                    <div className="p-4">
+                      <p className="truncate text-sm font-semibold text-ink-900">{thread.title}</p>
+                      <p className="mt-1 text-xs text-ink-500">
+                        Updated {new Date(thread.lastMessageAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </Link>
+
+                  <div className="absolute right-2 top-2 flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => toggleStar(thread.id)}
+                      aria-label={starred ? "Remove star" : "Star project"}
+                      aria-pressed={starred}
+                      className="rounded-full bg-black/20 p-1.5 text-white backdrop-blur transition hover:bg-black/35"
+                    >
+                      <Star className={cn("h-3.5 w-3.5", starred && "fill-current")} />
+                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          aria-label="Project options"
+                          className="rounded-full bg-black/20 p-1.5 text-white backdrop-blur transition hover:bg-black/35"
+                        >
+                          <MoreHorizontal className="h-3.5 w-3.5" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuItem onSelect={() => void rename(thread)}>
+                          <Pencil className="mr-2 h-3.5 w-3.5" />
+                          Rename
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-[color:var(--color-rose,#E11D48)]"
+                          onSelect={() => void remove(thread)}
+                        >
+                          <Trash2 className="mr-2 h-3.5 w-3.5" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-ink-300 bg-white/60 py-16 text-center">
+            <p className="text-sm font-medium text-ink-900">
+              {filter === "shared"
+                ? "Sharing is coming soon"
+                : filter === "starred"
+                  ? "No starred projects yet"
+                  : "No projects yet"}
+            </p>
+            <p className="mx-auto mt-1.5 max-w-sm text-xs text-ink-500">
+              {filter === "starred"
+                ? "Star a project from its card to pin it here."
+                : "Describe what you want to build and Nexura ships a working project."}
+            </p>
+            <Button size="sm" className="mt-4" onClick={() => void navigate({ to: "/workspace" })}>
+              Start building
+            </Button>
+          </div>
+        )}
+      </PageBody>
+    </PageShell>
+  );
 }

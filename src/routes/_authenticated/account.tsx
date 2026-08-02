@@ -129,7 +129,7 @@ function AccountPage() {
       />
 
       <PageBody>
-        {needsUpgrade && (
+        {needsUpgrade && !credits.unlimited && (
           <div
             role="status"
             className="flex flex-wrap items-center gap-3 rounded-2xl border border-[color:var(--color-iris)]/30 bg-[color:var(--color-iris)]/8 p-4 sm:p-5"
@@ -150,8 +150,17 @@ function AccountPage() {
         )}
 
         <PageStatGrid>
-          <PageStat label="Plan" value={plan.name} hint={plan.tagline} />
-          <PageStat label="Credits left" value={formatCredits(credits.remaining)}>
+          {/* Admins are never metered, so the plan/balance cards must not show a
+              Free allowance next to an "Unlimited" meter. */}
+          <PageStat
+            label="Plan"
+            value={credits.unlimited ? "Admin" : plan.name}
+            hint={credits.unlimited ? "Unlimited builds, chat and auto-fix" : plan.tagline}
+          />
+          <PageStat
+            label="Credits left"
+            value={credits.unlimited ? "Unlimited" : formatCredits(credits.remaining)}
+          >
             <CreditMeter
               plan={credits.plan}
               remaining={credits.remaining}
