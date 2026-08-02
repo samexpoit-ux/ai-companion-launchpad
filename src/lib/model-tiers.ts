@@ -72,12 +72,8 @@ export const TIER_CHAINS = {
 export const LIGHT_CODE_CHAIN = [CODING_SECONDARY, CHEAP_CHAT, FREE_CODE, FREE_POWER, FREE_OSS];
 
 /** Models that cost real money, grouped by how expensive they are. */
-export const PREMIUM_MODELS: readonly string[] = [
-  CODING_PRIMARY,
-  CODING_SECONDARY,
-];
+export const PREMIUM_MODELS: readonly string[] = [CODING_PRIMARY, CODING_SECONDARY];
 export const CHEAP_MODELS: readonly string[] = [CHEAP_CHAT, NANO_CHAT, CODING_TERTIARY];
-
 
 /**
  * Clamp a routing chain to what the selected plan is allowed to use.
@@ -91,12 +87,10 @@ export function clampChainToCeiling(
   ceiling: "free" | "cheap" | "premium",
 ): string[] {
   if (ceiling === "premium") return [...chain];
-  const blocked =
-    ceiling === "free" ? [...PREMIUM_MODELS, ...CHEAP_MODELS] : PREMIUM_MODELS;
+  const blocked = ceiling === "free" ? [...PREMIUM_MODELS, ...CHEAP_MODELS] : PREMIUM_MODELS;
   const allowed = chain.filter((m) => !blocked.includes(m));
   if (allowed.length > 0) return allowed;
   // Nothing survived the clamp: fall back to the strongest free chat model so a
   // free / out-of-credit account still gets a good answer instead of an error.
   return [FREE_POWER, FREE_OSS];
 }
-
