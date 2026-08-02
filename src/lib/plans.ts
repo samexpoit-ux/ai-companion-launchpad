@@ -34,10 +34,10 @@ export const PLANS: Plan[] = [
     cadence: "forever",
     credits: 5,
     ceiling: "cheap",
-    tagline: "Unlimited chat on a powerful free model, plus 5 build credits.",
+    tagline: "Unlimited cheap-tier chat, plus 5 build credits.",
     perks: [
       "5 free build credits / month",
-      "Powerful free chat model (550B, 1M context)",
+      "Powerful free chat model (DeepSeek)",
       "Chat + plan modes",
       "Live preview, code view & console",
     ],
@@ -52,7 +52,7 @@ export const PLANS: Plan[] = [
     tagline: "Full coding tier with smart cost routing.",
     perks: [
       "200 credits / month",
-      "Premium coding models when needed",
+      "Claude Sonnet coding tier when needed",
       "Reviewed auto-fix patches",
       "Project export (zip)",
     ],
@@ -68,7 +68,7 @@ export const PLANS: Plan[] = [
     tagline: "Heavy multi-file work, long sessions, priority routing.",
     perks: [
       "600 credits / month",
-      "Premium tier first on every coding task",
+      "Claude Sonnet first on every coding task",
       "Unlimited projects & version history",
       "Priority routing",
     ],
