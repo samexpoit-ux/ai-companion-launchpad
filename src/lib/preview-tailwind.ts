@@ -14,9 +14,10 @@ let runtimePromise: Promise<string> | null = null;
 /** Lazily fetch the Tailwind browser compiler source (~270 kB, preview only). */
 export function loadTailwindRuntime(): Promise<string> {
   if (!runtimePromise) {
-    runtimePromise = import("@tailwindcss/browser/dist/index.global.js?raw")
+    runtimePromise = import("@/assets/vendor/tailwind-browser-4.3.3.js.txt?raw")
       .then((mod) => (mod as { default: string }).default)
       .catch(() => "");
+
   }
   return runtimePromise;
 }
