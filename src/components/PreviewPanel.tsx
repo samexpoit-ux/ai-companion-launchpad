@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { ShipDialog } from "@/components/ShipDialog";
 import {
   X,
   Code2,
@@ -15,6 +16,7 @@ import {
   History,
   GitCompare,
   MoreHorizontal,
+  Rocket,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -178,6 +180,26 @@ export function PreviewPanel() {
           >
             <RefreshCw className="h-3.5 w-3.5" />
           </button>
+
+          {/* Shipping is the end of every build, so it stays one click away. */}
+          <ShipDialog
+            payload={{
+              title: payload.title ?? "Nexura project",
+              entry: payload.entry ?? "App.jsx",
+              files: payload.files ?? { "App.jsx": payload.code },
+            }}
+            trigger={
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--color-iris)] px-2.5 py-1.5 text-2xs font-semibold text-white shadow-sm transition hover:brightness-105 active:scale-95"
+              >
+                <Rocket className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Ship</span>
+              </button>
+            }
+          />
+
+
 
           {/* Secondary controls collapse into one menu so the bar never wraps */}
           <DropdownMenu>

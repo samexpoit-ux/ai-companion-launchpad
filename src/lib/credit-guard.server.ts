@@ -100,7 +100,9 @@ export async function chargeRequest(
       _thread_id: opts.threadId ?? null,
       _reason: opts.reason ?? "unlimited admin usage",
     });
-    if (error) {
+    // Admin usage tracking is monitoring, never a gate: if the ledger function is
+    // missing on this database, the build still proceeds without a ledger row.
+    if (error && !/could not find the function|schema cache|does not exist/i.test(error.message ?? "")) {
       throw new CreditError("unavailable", error.message ?? "Usage ledger is unavailable.");
     }
     const row = (data ?? {}) as Partial<ChargeResult>;
@@ -208,6 +210,7 @@ export async function finalizeRequestCost(
       total: Number(row.total ?? 0),
       used: Number(row.used ?? 0),
       remaining: Number(row.remaining ?? 0),
+      unlimited: row.unlimited === true,
     };
   } catch (err) {
     console.error("[credits] usage finalization failed", err);
