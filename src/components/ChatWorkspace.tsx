@@ -122,6 +122,8 @@ function ChatWorkspaceInner() {
   const [mode, setMode] = useState<"Build" | "Chat" | "Plan">("Build");
   const [loadedThreads, setLoadedThreads] = useState<Set<string>>(() => new Set());
   const credits = useCredits();
+  // Engine / provider details are admin-only; customers only see credits + workload.
+  const { isAdmin } = useAdmin();
 
   const { isOpen: previewOpen, toggleWorkspace, openWorkspace, openProject, clearProject } =
     usePreview();
