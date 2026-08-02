@@ -124,14 +124,28 @@ function renderChildren(children: AnchorProps["children"], isActive: boolean): R
   return children;
 }
 
+function renderClass(className: AnchorProps["className"], isActive: boolean) {
+  if (typeof className === "function") {
+    return (className as (s: { isActive: boolean }) => string)({ isActive });
+  }
+  return className;
+}
+
+function renderStyle(style: AnchorProps["style"], isActive: boolean) {
+  if (typeof style === "function") {
+    return (style as (s: { isActive: boolean }) => React.CSSProperties)({ isActive });
+  }
+  return style;
+}
+
 function Link({ to = "/", replace, onClick, children, className, style, ...rest }: AnchorProps) {
   const { navigate } = useRouter();
   return (
     <a
       {...rest}
       href={to}
-      className={typeof className === "function" ? className({ isActive: false }) : className}
-      style={typeof style === "function" ? style({ isActive: false }) : style}
+      className={renderClass(className, false)}
+      style={renderStyle(style, false)}
       onClick={(event) => {
         event.preventDefault();
         onClick?.(event);
@@ -150,8 +164,8 @@ function NavLink({ to = "/", className, style, children, end, ...rest }: AnchorP
     <Link
       {...rest}
       to={to}
-      className={typeof className === "function" ? className({ isActive }) : className}
-      style={typeof style === "function" ? style({ isActive }) : style}
+      className={renderClass(className, isActive)}
+      style={renderStyle(style, isActive)}
       aria-current={isActive ? "page" : undefined}
     >
       {renderChildren(children, isActive)}
