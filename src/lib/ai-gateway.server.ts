@@ -269,20 +269,24 @@ export async function runWithFallback(
         // provider only explains the page, continue to the next coding model.
         if (route.task === "code") {
           const hasArtifact = /<nexusArtifact\b[\s\S]*?<\/nexusArtifact>/i.test(out.content);
-          const hasEntry = /<nexusAction\b[^>]*filePath=["'](?:src\/)?App\.(?:tsx|jsx)["']/i.test(
-            out.content,
-          );
+          // A build can target any stack, so accept a React entry, a static web
+          // entry, or a real backend/infra file as proof of delivery.
+          const hasEntry =
+            /<nexusAction\b[^>]*filePath=["'][^"']*\.(?:tsx|jsx|html|php|blade\.php|ts|js|py|go|rb|java|sql|ya?ml|toml)["']/i.test(
+              out.content,
+            ) || /<nexusAction\b[^>]*filePath=["'][^"']*Dockerfile[^"']*["']/i.test(out.content);
           if (!hasArtifact || !hasEntry) {
             lastError = new Error(`[openrouter:${model}] incomplete build delivery`);
             onAttempt?.({
               model,
               ok: false,
               ms: Date.now() - started,
-              error: "incomplete build delivery: missing artifact or App entry",
+              error: "incomplete build delivery: missing artifact or entry file",
             });
             continue;
           }
         }
+
         onAttempt?.({ model, ok: true, ms: Date.now() - started });
         return { ...out, upstream: model };
       }
