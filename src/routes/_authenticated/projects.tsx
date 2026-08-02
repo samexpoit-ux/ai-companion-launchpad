@@ -6,6 +6,7 @@ import {
   MoreHorizontal,
   Pencil,
   Search,
+  Share2,
   Star,
   Trash2,
 } from "lucide-react";
@@ -18,6 +19,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { PageBar, PageBody, PageHeader, PageShell } from "@/components/page-shell";
 import { deleteThread, listThreads, renameThread, type StoredThread } from "@/lib/chat-store";
+import { listSharedThreadIds, listStarredThreadIds, setThreadStar } from "@/lib/collab";
+import { ShareDialog } from "@/components/ShareDialog";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/projects")({
@@ -36,20 +40,6 @@ export const Route = createFileRoute("/_authenticated/projects")({
     ],
   }),
 });
-
-const STAR_KEY = "nexura.starred-projects";
-
-/** Stars are a local view preference — no schema change, no server round-trip. */
-function readStars(): string[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(STAR_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === "string") : [];
-  } catch {
-    return [];
-  }
-}
 
 const FILTERS = [
   { id: "all", label: "All projects" },
@@ -79,21 +69,24 @@ function ProjectsPage() {
   const navigate = useNavigate();
   const [threads, setThreads] = useState<StoredThread[]>([]);
   const [stars, setStars] = useState<string[]>([]);
+  const [sharedIds, setSharedIds] = useState<string[]>([]);
+  const [myId, setMyId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [shareTarget, setShareTarget] = useState<StoredThread | null>(null);
 
   useEffect(() => {
+    // Stars and share membership live in the database, so they follow the
+    // account across devices instead of sitting in one browser.
     void listThreads().then(setThreads);
-    setStars(readStars());
+    void listStarredThreadIds().then(setStars);
+    void listSharedThreadIds().then(setSharedIds);
+    void supabase.auth.getUser().then(({ data }) => setMyId(data.user?.id ?? null));
   }, []);
 
   const toggleStar = useCallback((id: string) => {
     setStars((prev) => {
       const next = prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id];
-      try {
-        window.localStorage.setItem(STAR_KEY, JSON.stringify(next));
-      } catch {
-        /* storage disabled — stars stay in-memory for this session */
-      }
+      void setThreadStar(id, !prev.includes(id));
       return next;
     });
   }, []);
@@ -115,22 +108,27 @@ function ProjectsPage() {
     () => ({
       all: threads.length,
       starred: threads.filter((t) => stars.includes(t.id)).length,
-      owned: threads.length,
-      shared: 0,
+      owned: threads.filter((t) => !myId || t.ownerId === myId).length,
+      shared: threads.filter((t) => sharedIds.includes(t.id) || (myId ? t.ownerId !== myId : false))
+        .length,
     }),
-    [threads, stars],
+    [threads, stars, sharedIds, myId],
   );
 
   const visible = useMemo(() => {
+    const isShared = (t: StoredThread) =>
+      sharedIds.includes(t.id) || (myId ? t.ownerId !== myId : false);
     const base =
       filter === "starred"
         ? threads.filter((t) => stars.includes(t.id))
         : filter === "shared"
-          ? []
-          : threads;
+          ? threads.filter(isShared)
+          : filter === "owned"
+            ? threads.filter((t) => !myId || t.ownerId === myId)
+            : threads;
     const q = query.trim().toLowerCase();
     return q ? base.filter((t) => t.title.toLowerCase().includes(q)) : base;
-  }, [filter, threads, stars, query]);
+  }, [filter, threads, stars, sharedIds, myId, query]);
 
   const title = FILTERS.find((f) => f.id === filter)?.label ?? "All projects";
 
@@ -246,6 +244,10 @@ function ProjectsPage() {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuItem onSelect={() => setShareTarget(thread)}>
+                          <Share2 className="mr-2 h-3.5 w-3.5" />
+                          Share
+                        </DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => void rename(thread)}>
                           <Pencil className="mr-2 h-3.5 w-3.5" />
                           Rename
@@ -268,7 +270,7 @@ function ProjectsPage() {
           <div className="rounded-2xl border border-dashed border-ink-300 bg-white/60 py-16 text-center">
             <p className="text-sm font-medium text-ink-900">
               {filter === "shared"
-                ? "Sharing is coming soon"
+                ? "Nothing shared with you yet"
                 : filter === "starred"
                   ? "No starred projects yet"
                   : "No projects yet"}
@@ -276,7 +278,9 @@ function ProjectsPage() {
             <p className="mx-auto mt-1.5 max-w-sm text-xs text-ink-500">
               {filter === "starred"
                 ? "Star a project from its card to pin it here."
-                : "Describe what you want to build and Nexura ships a working project."}
+                : filter === "shared"
+                  ? "Ask a teammate to invite you, or share one of your projects from its ⋯ menu."
+                  : "Describe what you want to build and Nexura ships a working project."}
             </p>
             <Button size="sm" className="mt-4" onClick={() => void navigate({ to: "/workspace" })}>
               Start building
@@ -284,6 +288,18 @@ function ProjectsPage() {
           </div>
         )}
       </PageBody>
+
+      {shareTarget ? (
+        <ShareDialog
+          threadId={shareTarget.id}
+          title={shareTarget.title}
+          open
+          onOpenChange={(open) => {
+            if (!open) setShareTarget(null);
+            void listSharedThreadIds().then(setSharedIds);
+          }}
+        />
+      ) : null}
     </PageShell>
   );
 }
