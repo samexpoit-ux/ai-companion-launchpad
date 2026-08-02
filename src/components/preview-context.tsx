@@ -525,6 +525,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
         setDevice,
         openPreview,
         openProject,
+        clearProject,
         openWorkspace,
         toggleWorkspace,
         loadStarterProject,
