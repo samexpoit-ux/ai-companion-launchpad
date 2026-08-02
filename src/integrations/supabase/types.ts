@@ -607,6 +607,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      reserve_unlimited_usage: {
+        Args: {
+          _action: string
+          _credits: number
+          _model?: string
+          _reason?: string
+          _thread_id?: string
+          _tier: string
+        }
+        Returns: Json
+      }
       rollback_charge: {
         Args: { _ledger_id: string; _reason?: string }
         Returns: Json
