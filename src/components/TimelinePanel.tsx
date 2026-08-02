@@ -140,9 +140,7 @@ function PaneBtn({
       aria-pressed={active}
       className={cn(
         "inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-2xs font-semibold transition",
-        active
-          ? "bg-white text-ink-900 shadow-ds-sm"
-          : "text-ink-500 hover:text-ink-800",
+        active ? "bg-white text-ink-900 shadow-ds-sm" : "text-ink-500 hover:text-ink-800",
       )}
     >
       <Icon className="h-3 w-3" />
