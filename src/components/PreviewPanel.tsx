@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { ShipDialog } from "@/components/ShipDialog";
 import {
   X,
   Code2,
