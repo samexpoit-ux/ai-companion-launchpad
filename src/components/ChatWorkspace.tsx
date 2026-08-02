@@ -6,6 +6,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { parseApiError } from "@/lib/api-error";
 import { useNavigate } from "@tanstack/react-router";
@@ -51,6 +53,8 @@ import {
   ChevronRight,
   Crown,
   Coins,
+  History,
+  ArrowLeft,
 } from "lucide-react";
 import {
   sendChatMessage,
@@ -662,7 +666,7 @@ function ChatWorkspaceInner() {
             : "-translate-x-full md:w-0 md:-translate-x-0 md:overflow-hidden md:border-0",
         )}
       >
-        {/* Brand */}
+        {/* Brand + back out of the workspace */}
         <div className="flex items-center gap-2.5 border-b border-ink-200 px-4 py-4">
           <BrandMark size="md" />
           <div className="min-w-0">
@@ -671,6 +675,57 @@ function ChatWorkspaceInner() {
               Build · Preview · Ship
             </div>
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Workspace menu"
+                className="ml-auto inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-500 transition hover:bg-white hover:text-ink-900 data-[state=open]:bg-white data-[state=open]:text-ink-900"
+              >
+                <ChevronDown className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuItem asChild>
+                <Link to="/dashboard">
+                  <ArrowLeft className="mr-2 h-3.5 w-3.5" />
+                  Back to dashboard
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/projects">
+                  <FolderTree className="mr-2 h-3.5 w-3.5" />
+                  All projects
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/credits">
+                  <Coins className="mr-2 h-3.5 w-3.5" />
+                  Credits &amp; usage
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/account">
+                  <Settings className="mr-2 h-3.5 w-3.5" />
+                  Account settings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => void handleSignOut()}>
+                <LogOut className="mr-2 h-3.5 w-3.5" />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="px-4 pt-3">
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-600 transition hover:text-ink-900"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Dashboard
+          </Link>
         </div>
 
         {/* New chat + search */}
@@ -883,6 +938,62 @@ function ChatWorkspaceInner() {
               </div>
 
               <div className="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-ink-700 sm:gap-2">
+                {/* Chat history switcher — Lovable keeps this separate from the sidebar */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      data-testid="history-switcher"
+                      aria-label="Chat history"
+                      title="Switch to a previous conversation"
+                      className="inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-ink-200 bg-white/70 px-2.5 text-xs font-medium text-ink-700 transition hover:border-[color:var(--color-iris)]/40 hover:text-ink-900 data-[state=open]:border-[color:var(--color-iris)]/45"
+                    >
+                      <History className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">History</span>
+                      <ChevronDown className="h-3 w-3 text-ink-400" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-72">
+                    <DropdownMenuLabel className="text-2xs font-semibold uppercase tracking-[0.18em] text-ink-400">
+                      Chat history
+                    </DropdownMenuLabel>
+                    <div className="max-h-72 overflow-y-auto">
+                      {threads.length === 0 && (
+                        <p className="px-2 py-3 text-xs text-ink-500">No conversations yet.</p>
+                      )}
+                      {threads.map((t) => (
+                        <DropdownMenuItem
+                          key={t.id}
+                          onSelect={() => selectThread(t.id)}
+                          className="items-start gap-2"
+                        >
+                          <Check
+                            className={cn(
+                              "mt-0.5 h-3.5 w-3.5 shrink-0 text-[color:var(--color-iris)]",
+                              t.id === activeId ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm text-ink-900">{t.title}</span>
+                            <span className="block text-2xs text-ink-500">
+                              {new Date(t.updatedAt).toLocaleDateString(undefined, {
+                                month: "short",
+                                day: "numeric",
+                              })}{" "}
+                              · {t.messages.length} turns
+                            </span>
+                          </span>
+                        </DropdownMenuItem>
+                      ))}
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={() => void newChat()}>
+                      <Plus className="mr-2 h-3.5 w-3.5" />
+                      New workspace
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 <button
                   onClick={toggleWorkspace}
                   data-testid="workspace-toggle"
@@ -1370,6 +1481,8 @@ function MessageBubble({
             }
             project={project}
             adminView={adminView}
+            messageId={message.id}
+            durationMs={message.latencyMs}
             charge={{
               action: creditActionFor(message, Boolean(project)),
               credits: message.credits,

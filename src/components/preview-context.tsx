@@ -21,6 +21,27 @@ export type PreviewLang =
   | "css"
   | "mdx";
 export type PreviewTab = "preview" | "code" | "console" | "stack";
+
+/** One line in the right-hand Details timeline. */
+export interface TimelineStep {
+  label: string;
+  detail?: string;
+}
+
+/**
+ * Lovable-style "Details" view: the trajectory of one assistant turn, shown in
+ * the right-hand panel instead of the preview until the user goes back to the
+ * latest state.
+ */
+export interface TimelineView {
+  messageId: string;
+  title: string;
+  steps: TimelineStep[];
+  files: string[];
+  charge?: TimelineStep[];
+  durationMs?: number;
+  at?: number;
+}
 export type PreviewDevice = "desktop" | "tablet" | "mobile";
 
 export const DEVICE_WIDTH: Record<PreviewDevice, number | null> = {
@@ -153,6 +174,12 @@ interface PreviewContextValue {
   versions: PatchVersion[];
   activeVersionId: string | null;
   rollbackTo: (id: string) => void;
+  // ---- details timeline ----
+  /** Non-null while the right panel shows a turn's timeline instead of preview. */
+  timeline: TimelineView | null;
+  openTimeline: (view: TimelineView) => void;
+  /** Leaves the timeline and restores preview / code / console. */
+  backToLatest: () => void;
 }
 
 
@@ -245,6 +272,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
   const [pendingPatch, setPendingPatch] = useState<PendingPatch | null>(null);
   const [versions, setVersions] = useState<PatchVersion[]>([]);
   const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
+  const [timeline, setTimeline] = useState<TimelineView | null>(null);
 
   const payloadRef = useRef<PreviewPayload | null>(null);
   payloadRef.current = payload;
@@ -307,6 +335,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
       setPayload(next);
       setActiveFile(entry);
       setIsOpen(true);
+      setTimeline(null);
       setTab("preview");
       setRevision((r) => r + 1);
       resetFixState();
@@ -395,6 +424,12 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
 
   const closePreview = useCallback(() => setIsOpen(false), []);
 
+  const openTimeline = useCallback((view: TimelineView) => {
+    setTimeline(view);
+    setIsOpen(true);
+  }, []);
+  const backToLatest = useCallback(() => setTimeline(null), []);
+
   const openWorkspace = useCallback(() => setIsOpen(true), []);
   const toggleWorkspace = useCallback(() => setIsOpen((o) => !o), []);
 
@@ -404,6 +439,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
 
   const clearProject = useCallback(() => {
     setPayload(null);
+    setTimeline(null);
     setActiveFile(null);
     setVersions([]);
     setActiveVersionId(null);
@@ -646,6 +682,9 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
         versions,
         activeVersionId,
         rollbackTo,
+        timeline,
+        openTimeline,
+        backToLatest,
       }}
     >
       {children}
