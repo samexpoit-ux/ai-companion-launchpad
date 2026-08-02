@@ -16,6 +16,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 import { cn } from "@/lib/utils";
+import { prismLangFor } from "@/lib/stack";
 import { usePreview } from "./preview-context";
 import { ShipDialog } from "@/components/ShipDialog";
 
@@ -53,19 +54,8 @@ function buildTree(paths: string[]): TreeNode[] {
   return sort(root);
 }
 
-/** Prism language for a file path. */
-function langFor(path: string): string {
-  const ext = path.split(".").pop()?.toLowerCase() ?? "";
-  if (ext === "tsx" || ext === "ts") return "tsx";
-  if (ext === "jsx" || ext === "js" || ext === "mjs" || ext === "cjs") return "jsx";
-  if (ext === "json") return "json";
-  if (ext === "css") return "css";
-  if (ext === "html" || ext === "htm") return "markup";
-  if (ext === "md" || ext === "mdx") return "markdown";
-  if (ext === "sql") return "sql";
-  if (ext === "sh" || ext === "bash") return "bash";
-  return "text";
-}
+/** Prism language for a file path (shared with the stack analyser). */
+const langFor = prismLangFor;
 
 function TreeItem({
   node,
