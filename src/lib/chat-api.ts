@@ -97,7 +97,14 @@ export async function sendChatMessage(
   inputTokens: number;
   outputTokens: number;
   latencyMs: number;
-  credits?: { charged: number; remaining: number; total: number; used: number; plan: string; unlimited?: boolean };
+  credits?: {
+    charged: number;
+    remaining: number;
+    total: number;
+    used: number;
+    plan: string;
+    unlimited?: boolean;
+  };
   traceId?: string;
   task?: string;
   upstream?: string;
@@ -127,7 +134,14 @@ export async function sendChatMessage(
     inputTokens: number;
     outputTokens: number;
     latencyMs: number;
-    credits?: { charged: number; remaining: number; total: number; used: number; plan: string; unlimited?: boolean };
+    credits?: {
+      charged: number;
+      remaining: number;
+      total: number;
+      used: number;
+      plan: string;
+      unlimited?: boolean;
+    };
     traceId?: string;
     task?: string;
     upstream?: string;
