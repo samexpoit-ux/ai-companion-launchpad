@@ -17,6 +17,7 @@ import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 import { cn } from "@/lib/utils";
 import { usePreview } from "./preview-context";
+import { ShipDialog } from "@/components/ShipDialog";
 
 interface TreeNode {
   name: string;
