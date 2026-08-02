@@ -814,7 +814,7 @@ function ChatWorkspaceInner() {
               </div>
               <div className="mt-0.5 flex items-center gap-1.5 text-2xs">
                 <span className="rounded-sm bg-[color:var(--color-iris)]/15 px-1 py-px font-medium uppercase text-[color:var(--color-iris)]">
-                  {profile?.plan ?? "free"}
+                  {credits.unlimited ? "Admin" : (profile?.plan ?? "free")}
                 </span>
                 <span className="truncate text-ink-500">{user?.email ?? ""}</span>
               </div>
