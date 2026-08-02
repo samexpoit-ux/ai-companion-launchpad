@@ -53,6 +53,9 @@ const VersionHistory = lazy(() => import("./VersionHistory"));
 const ValidationBadge = lazy(() => import("./ValidationBadge"));
 // Build/runtime failure overlay with logs + next steps.
 const ErrorOverlay = lazy(() => import("./ErrorOverlay"));
+// Blueprint view for stacks the sandbox cannot execute (Laravel/PHP, Node, SQL, Docker…).
+const StackPreview = lazy(() => import("./StackPreview"));
+
 
 export function PreviewPanel() {
   const {
