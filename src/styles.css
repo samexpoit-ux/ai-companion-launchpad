@@ -25,16 +25,12 @@
   --text-xl--line-height: 1.75rem;
   --text-2xl: 1.5rem;
   --text-2xl--line-height: 1.95rem;
-  --text-2xl--letter-spacing: -0.015em;
   --text-3xl: 1.9375rem;
   --text-3xl--line-height: 2.3rem;
-  --text-3xl--letter-spacing: -0.02em;
   --text-4xl: 2.5rem;
   --text-4xl--line-height: 2.8rem;
-  --text-4xl--letter-spacing: -0.025em;
   --text-5xl: 3.25rem;
   --text-5xl--line-height: 3.4rem;
-  --text-5xl--letter-spacing: -0.03em;
 
   /* ---- Spacing rhythm (4px base, used by p-*, gap-*, m-*) ---- */
   --spacing: 0.25rem;

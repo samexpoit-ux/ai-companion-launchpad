@@ -31,7 +31,6 @@ import { listThreads } from "@/lib/chat-store";
 import { WorkspaceSidebar, type RecentProject } from "@/components/dashboard/WorkspaceSidebar";
 import { planById } from "@/lib/plans";
 
-
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
   head: () => ({
@@ -115,7 +114,6 @@ function DashboardPage() {
     };
   }, []);
 
-
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -130,10 +128,7 @@ function DashboardPage() {
     return clean.charAt(0).toUpperCase() + clean.slice(1);
   }, [profile, user?.email]);
 
-  const workspaceName = useMemo(
-    () => `${firstName}'s workspace`,
-    [firstName],
-  );
+  const workspaceName = useMemo(() => `${firstName}'s workspace`, [firstName]);
 
   const visible = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -214,7 +209,6 @@ function DashboardPage() {
           </button>
         )}
 
-
         {/* Aurora hero */}
         <section className="relative isolate flex min-h-[420px] flex-col items-center justify-center overflow-hidden px-4 py-12 sm:min-h-[520px] sm:px-5 sm:py-16 lg:rounded-bl-[28px]">
           <div className="aurora-canvas absolute inset-0 -z-10" />
@@ -225,7 +219,6 @@ function DashboardPage() {
             </span>
             Smart routing picks the model — you just build
           </span>
-
 
           <h1 className="mt-8 text-center font-display text-3xl font-bold tracking-tight text-ink-900 sm:text-4xl">
             Got an idea, {firstName}?
@@ -341,7 +334,10 @@ function DashboardPage() {
         </section>
 
         {/* Compact plan + credit strip */}
-        <section className="mx-auto w-full max-w-5xl px-3 pt-6 sm:px-5" aria-label="Plan and credits">
+        <section
+          className="mx-auto w-full max-w-5xl px-3 pt-6 sm:px-5"
+          aria-label="Plan and credits"
+        >
           <div className="rounded-2xl border border-ink-200 bg-ink-50 p-4 shadow-ds-xs sm:p-5">
             <div className="flex flex-wrap items-center gap-4">
               <div className="min-w-0">
@@ -356,6 +352,7 @@ function DashboardPage() {
                   plan={credits.plan}
                   remaining={credits.remaining}
                   total={credits.total}
+                  unlimited={credits.unlimited}
                   compact
                   className="border-0 bg-transparent p-0"
                 />
@@ -375,10 +372,8 @@ function DashboardPage() {
           </div>
         </section>
 
-
         {/* Projects panel */}
         <section className="min-h-[360px] px-3 py-8 sm:px-5">
-
           <div className="mx-auto w-full max-w-5xl">
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex min-w-0 items-center gap-2 rounded-full border border-ink-200 bg-ink-100/70 px-3 py-1.5">
@@ -424,7 +419,6 @@ function DashboardPage() {
                     key={project.id}
                     to="/workspace"
                     search={{ thread: project.id }}
-
                     className="group rounded-2xl border border-ink-200 bg-ink-50 p-4 shadow-ds-xs transition hover:-translate-y-0.5 hover:shadow-ds-md"
                   >
                     <div className="h-24 rounded-xl bg-gradient-to-br from-[color:var(--color-iris-soft)] via-ink-100 to-white" />

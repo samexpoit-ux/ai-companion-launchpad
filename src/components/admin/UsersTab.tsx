@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   deleteUser,
+  fetchUserStats,
   grantCredits,
   listUsers,
   setUserAdmin,
@@ -25,6 +26,7 @@ import {
   setUserPlan,
   setUserStatus,
   type AdminUserRow,
+  type AdminUserStats,
 } from "@/lib/admin-api";
 import { formatCredits } from "@/lib/credits";
 import { PLANS, planById } from "@/lib/plans";
@@ -48,10 +50,18 @@ export function UsersTab() {
   const [filter, setFilter] = useState<Filter>("all");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  const [stats, setStats] = useState<AdminUserStats>({
+    total: 0,
+    premium: 0,
+    suspended: 0,
+    admins: 0,
+  });
 
   const load = useCallback(async (term: string) => {
     setLoading(true);
-    setRows(await listUsers(term));
+    const [users, userStats] = await Promise.all([listUsers(term), fetchUserStats()]);
+    setRows(users);
+    setStats(userStats);
     setLoading(false);
   }, []);
 
@@ -89,7 +99,10 @@ export function UsersTab() {
   };
 
   const topUp = (row: AdminUserRow) => {
-    const input = window.prompt(`Grant credits to ${row.email ?? "this account"} (negative removes)`, "50");
+    const input = window.prompt(
+      `Grant credits to ${row.email ?? "this account"} (negative removes)`,
+      "50",
+    );
     if (input === null) return;
     const credits = Number(input);
     if (!Number.isFinite(credits) || credits === 0) {
@@ -110,13 +123,17 @@ export function UsersTab() {
     if (row.status === "suspended") {
       return run(row, "Account reactivated", () => setUserStatus(row.id, "active"));
     }
-    const reason = window.prompt(`Why are you suspending ${row.email ?? "this account"}?`, "Abuse of credit system");
+    const reason = window.prompt(
+      `Why are you suspending ${row.email ?? "this account"}?`,
+      "Abuse of credit system",
+    );
     if (reason === null) return;
     return run(row, "Account suspended", () => setUserStatus(row.id, "suspended", reason));
   };
 
   const removeUser = (row: AdminUserRow) => {
-    if (!window.confirm(`Permanently delete ${row.email ?? row.id}? This cannot be undone.`)) return;
+    if (!window.confirm(`Permanently delete ${row.email ?? row.id}? This cannot be undone.`))
+      return;
     return run(row, "Account deleted", () => deleteUser(row.id));
   };
 
@@ -132,22 +149,27 @@ export function UsersTab() {
     [rows, filter],
   );
 
-  const stats = useMemo(
-    () => ({
-      total: rows.length,
-      premium: rows.filter((r) => r.plan !== "free").length,
-      suspended: rows.filter((r) => r.status === "suspended").length,
-      admins: rows.filter((r) => r.isAdmin).length,
-    }),
-    [rows],
-  );
-
   return (
     <div className="space-y-5">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Accounts" value={stats.total} icon={UsersIcon} accent="var(--color-iris)" />
-        <MetricCard label="Premium" value={stats.premium} icon={Crown} accent="var(--color-orchid)" />
-        <MetricCard label="Suspended" value={stats.suspended} icon={Ban} accent="var(--color-flare)" />
+        <MetricCard
+          label="Accounts"
+          value={stats.total}
+          icon={UsersIcon}
+          accent="var(--color-iris)"
+        />
+        <MetricCard
+          label="Premium"
+          value={stats.premium}
+          icon={Crown}
+          accent="var(--color-orchid)"
+        />
+        <MetricCard
+          label="Suspended"
+          value={stats.suspended}
+          icon={Ban}
+          accent="var(--color-flare)"
+        />
         <MetricCard label="Admins" value={stats.admins} icon={Shield} accent="var(--color-mint)" />
       </div>
 
@@ -264,7 +286,8 @@ export function UsersTab() {
                   </div>
                   <p className="truncate text-xs text-ink-500">{row.email ?? row.id}</p>
                   <p className="mt-1 text-xs text-ink-500">
-                    {formatCredits(row.creditsUsed)} of {formatCredits(row.creditsTotal)} credits used
+                    {formatCredits(row.creditsUsed)} of {formatCredits(row.creditsTotal)} credits
+                    used
                     {row.createdAt
                       ? ` · joined ${new Date(row.createdAt).toLocaleDateString()}`
                       : ""}
@@ -333,7 +356,12 @@ export function UsersTab() {
                 >
                   <Sparkles className="mr-1.5 h-3.5 w-3.5" aria-hidden /> Make premium
                 </Button>
-                <Button size="sm" variant="outline" disabled={busy === row.id} onClick={() => void topUp(row)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={busy === row.id}
+                  onClick={() => void topUp(row)}
+                >
                   <Coins className="mr-1.5 h-3.5 w-3.5" aria-hidden /> Grant credits
                 </Button>
                 <Button
@@ -408,7 +436,9 @@ function MetricCard({
         </span>
         <p className="text-2xs font-semibold uppercase tracking-wider text-ink-500">{label}</p>
       </div>
-      <p className="mt-2 font-display text-2xl font-semibold tracking-tight text-ink-900">{value}</p>
+      <p className="mt-2 font-display text-2xl font-semibold tracking-tight text-ink-900">
+        {value}
+      </p>
     </div>
   );
 }

@@ -66,6 +66,10 @@ RETURNS boolean LANGUAGE sql STABLE SET search_path = public AS $$
   SELECT public.has_role(_user_id, 'admin')
 $$;
 
+DROP POLICY IF EXISTS "profiles_admin_read" ON public.profiles;
+CREATE POLICY "profiles_admin_read" ON public.profiles FOR SELECT TO authenticated
+  USING (public.is_admin());
+
 -- projects -------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.projects (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -81,6 +85,9 @@ ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "own projects" ON public.projects;
 CREATE POLICY "own projects" ON public.projects FOR ALL TO authenticated
   USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "projects_admin_read" ON public.projects;
+CREATE POLICY "projects_admin_read" ON public.projects FOR SELECT TO authenticated
+  USING (public.is_admin());
 
 -- chat_threads ---------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.chat_threads (
@@ -99,6 +106,9 @@ ALTER TABLE public.chat_threads ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "own threads" ON public.chat_threads;
 CREATE POLICY "own threads" ON public.chat_threads FOR ALL TO authenticated
   USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "chat_threads_admin_read" ON public.chat_threads;
+CREATE POLICY "chat_threads_admin_read" ON public.chat_threads FOR SELECT TO authenticated
+  USING (public.is_admin());
 CREATE INDEX IF NOT EXISTS chat_threads_user_recent_idx
   ON public.chat_threads (user_id, last_message_at DESC);
 
@@ -122,6 +132,9 @@ ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "own messages" ON public.chat_messages;
 CREATE POLICY "own messages" ON public.chat_messages FOR ALL TO authenticated
   USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "chat_messages_admin_read" ON public.chat_messages;
+CREATE POLICY "chat_messages_admin_read" ON public.chat_messages FOR SELECT TO authenticated
+  USING (public.is_admin());
 CREATE INDEX IF NOT EXISTS chat_messages_thread_idx ON public.chat_messages (thread_id, created_at);
 CREATE UNIQUE INDEX IF NOT EXISTS chat_messages_client_id_idx
   ON public.chat_messages (thread_id, client_id) WHERE client_id IS NOT NULL;

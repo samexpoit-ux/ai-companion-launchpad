@@ -3,7 +3,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { resolveRoute, runWithFallback } from "@/lib/ai-gateway.server";
 import { isPlanId } from "@/lib/plans";
 import { actionForMode } from "@/lib/credits";
-import { CreditError, chargeRequest, creditErrorCode, finalizeRequestCost } from "@/lib/credit-guard.server";
+import {
+  CreditError,
+  chargeRequest,
+  creditErrorCode,
+  finalizeRequestCost,
+} from "@/lib/credit-guard.server";
 
 interface IncomingMessage {
   role: "user" | "assistant" | "system";
@@ -21,10 +26,19 @@ interface ChatBody {
   threadId?: string;
 }
 
-const SYSTEM_PROMPT = `You are Nexura AI — a premium, precise coding and product intelligence assistant.
+const CHAT_PROMPT = `You are Nexura AI, a precise and concise product assistant. Respond in clean Markdown.
+Answer the user's actual question directly. Give concrete steps rather than generic advice.`;
+
+const PLAN_PROMPT = `You are Nexura AI, a senior product architect. Respond in clean Markdown with an ordered,
+practical implementation plan. Identify constraints, dependencies, edge cases, security risks, and verification steps.
+Do not generate a project artifact unless the user explicitly switches to Build mode.`;
+
+const BUILD_PROMPT = `You are Nexura AI — a senior product engineer and precise coding assistant.
 Respond in clean Markdown. Use fenced code blocks with language tags (tsx, ts, js, html, css, sql, bash, json)
-whenever you include code. Prefer tables for comparisons and bullet lists for enumerations. Be concise, senior,
-and opinionated.
+whenever you include code. First infer the user's actual outcome, constraints, existing stack, and likely edge cases.
+For chat and planning, give direct, concrete answers with an ordered implementation path—not generic advice.
+For builds, produce polished, responsive, accessible code with coherent hierarchy, working interactions,
+empty/loading/error states, and no placeholder buttons. Prefer small focused components.
 
 MULTI-FILE PROJECTS — very important:
 When the user asks you to build an app, page, component set, or anything that needs more than one file,
@@ -47,7 +61,16 @@ Artifact rules:
 - Only these runtime packages exist in the live preview: react, react-dom, lucide-react.
   Style with inline styles or Tailwind utility classes. Never import UI libraries or fetch remote packages.
 - Put a short plain-language explanation BEFORE the artifact, not inside it.
+- Ensure every imported local file is included and every visible interaction works.
+- Use semantic HTML, accessible labels, stable responsive dimensions, and high-contrast colors.
+- Before answering, silently check imports, exports, JSX balance, state flow, mobile layout, and preview compatibility.
 - For a single tiny snippet, a normal fenced code block is fine — reserve artifacts for real projects.`;
+
+function systemPromptFor(task: "fast" | "chat" | "reason" | "code" | "fix") {
+  if (task === "code" || task === "fix") return BUILD_PROMPT;
+  if (task === "reason") return PLAN_PROMPT;
+  return CHAT_PROMPT;
+}
 
 export const Route = createFileRoute("/api/chat")({
   server: {
@@ -73,30 +96,26 @@ export const Route = createFileRoute("/api/chat")({
               m.role === "assistant"
                 ? ("assistant" as const)
                 : m.role === "system"
-                ? ("system" as const)
-                : ("user" as const),
+                  ? ("system" as const)
+                  : ("user" as const),
             content: m.content,
           }));
 
         const lastUser = [...normalizedMessages].reverse().find((m) => m.role === "user");
         const mode = (body.mode ?? "").toLowerCase();
         const forcedTask =
-          mode === "plan" ? ("reason" as const) : mode === "chat" ? ("chat" as const) : undefined;
-        const route = resolveRoute(body.modelId, {
-          prompt: lastUser?.content ?? "",
-          task: forcedTask,
-          plan: isPlanId(body.plan) ? body.plan : undefined,
-        });
-        if ("error" in route) {
-          return apiErrorResponse("no_provider", "chat", route.error);
-        }
-
+          mode === "plan"
+            ? ("reason" as const)
+            : mode === "chat"
+              ? ("chat" as const)
+              : mode === "build"
+                ? ("code" as const)
+                : undefined;
         // ---- server-side credit enforcement (before any provider call) ----
         let charge;
         try {
           charge = await chargeRequest(request, actionForMode(mode), {
             inputChars: lastUser?.content.length ?? 0,
-            model: route.friendlyId,
             threadId: typeof body.threadId === "string" ? body.threadId : null,
           });
         } catch (err) {
@@ -108,15 +127,40 @@ export const Route = createFileRoute("/api/chat")({
           throw err;
         }
 
+        // The browser cannot grant itself a premium model by spoofing `plan`.
+        // Route from the authoritative server-side plan returned by the guard.
+        let route;
+        try {
+          route = resolveRoute(body.modelId, {
+            prompt: lastUser?.content ?? "",
+            task: forcedTask,
+            plan: isPlanId(charge.plan) ? charge.plan : undefined,
+          });
+        } catch (err) {
+          await finalizeRequestCost(request, charge.id, actionForMode(mode), { failed: true });
+          const message = err instanceof Error ? err.message : "Model routing failed.";
+          return apiErrorResponse("no_provider", "chat", message);
+        }
+        if ("error" in route) {
+          await finalizeRequestCost(request, charge.id, actionForMode(mode), { failed: true });
+          return apiErrorResponse("no_provider", "chat", route.error);
+        }
+
         const started = Date.now();
         const cleanMessages = [
-          { role: "system" as const, content: SYSTEM_PROMPT },
+          { role: "system" as const, content: systemPromptFor(route.task) },
           ...normalizedMessages,
         ];
 
         try {
-          const { content, tokens, inputTokens, outputTokens, costUsd, upstream } = await runWithFallback(route, cleanMessages);
-          const finalCharge = await finalizeRequestCost(request, charge.id, actionForMode(mode), { costUsd, inputTokens, outputTokens, upstream });
+          const { content, tokens, inputTokens, outputTokens, costUsd, upstream } =
+            await runWithFallback(route, cleanMessages);
+          const finalCharge = await finalizeRequestCost(request, charge.id, actionForMode(mode), {
+            costUsd,
+            inputTokens,
+            outputTokens,
+            upstream,
+          });
           const balance = finalCharge ?? charge;
           return Response.json({
             content,

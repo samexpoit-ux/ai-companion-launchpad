@@ -43,8 +43,7 @@ export function ActivityCard({
   return (
     <div
       data-testid="activity-card"
-      className="not-prose mb-3 overflow-hidden rounded-2xl border border-ink-200 bg-white/80"
-      style={{ boxShadow: "0 10px 30px -22px rgba(37,74,140,0.35)" }}
+      className="not-prose mb-3 overflow-hidden rounded-lg border border-ink-200 bg-white/80 shadow-ds-sm"
     >
       <div className="flex items-center gap-2.5 px-3.5 py-3">
         <span
@@ -64,7 +63,6 @@ export function ActivityCard({
             "min-w-0 flex-1 truncate text-sm font-medium text-ink-900",
             busy && "animate-pulse",
           )}
-
         >
           {title}
         </span>
@@ -79,7 +77,9 @@ export function ActivityCard({
         >
           <ListTree className="h-3.5 w-3.5" />
           Details
-          <ChevronDown className={cn("h-3.5 w-3.5 text-ink-400 transition-transform", open && "rotate-180")} />
+          <ChevronDown
+            className={cn("h-3.5 w-3.5 text-ink-400 transition-transform", open && "rotate-180")}
+          />
         </button>
         <button
           type="button"
@@ -99,14 +99,18 @@ export function ActivityCard({
 
       {open && (
         <ol className="border-t border-ink-200/70 bg-ink-100/50 px-3.5 py-3 text-xs">
-          {steps.length === 0 && <li className="text-ink-500">No activity recorded for this turn.</li>}
+          {steps.length === 0 && (
+            <li className="text-ink-500">No activity recorded for this turn.</li>
+          )}
           {steps.map((s, i) => (
             <li key={`${s.label}-${i}`} className="flex gap-2 py-1">
               <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--color-iris)]/70" />
               <span className="min-w-0">
                 <span className="font-medium text-ink-800">{s.label}</span>
                 {s.detail && (
-                  <span className="ml-1.5 break-words font-mono text-2xs text-ink-500">{s.detail}</span>
+                  <span className="ml-1.5 break-words font-mono text-2xs text-ink-500">
+                    {s.detail}
+                  </span>
                 )}
               </span>
             </li>
@@ -148,22 +152,31 @@ export function stepsForMessage(opts: {
   if (opts.modelName) steps.push({ label: "Routed to model", detail: opts.modelName, done: true });
   steps.push({
     label: "Generated the response",
-    detail: [
-      opts.latencyMs ? `${(opts.latencyMs / 1000).toFixed(2)}s` : null,
-      opts.tokens ? `${opts.tokens} total tokens` : null,
-    ]
-      .filter(Boolean)
-      .join(" · ") || undefined,
+    detail:
+      [
+        opts.latencyMs ? `${(opts.latencyMs / 1000).toFixed(2)}s` : null,
+        opts.tokens ? `${opts.tokens} total tokens` : null,
+      ]
+        .filter(Boolean)
+        .join(" · ") || undefined,
     done: true,
   });
   if (opts.inputTokens != null || opts.outputTokens != null) {
-    steps.push({ label: "Measured delivery", detail: `${opts.inputTokens ?? 0} input · ${opts.outputTokens ?? 0} output tokens`, done: true });
+    steps.push({
+      label: "Measured delivery",
+      detail: `${opts.inputTokens ?? 0} input · ${opts.outputTokens ?? 0} output tokens`,
+      done: true,
+    });
   }
   if (opts.fileCount) {
     steps.push({ label: "Wrote project files", detail: `${opts.fileCount} files`, done: true });
   }
   if (opts.credits != null) {
-    steps.push({ label: "Charged credits", detail: `${formatCredits(opts.credits)} credits`, done: true });
+    steps.push({
+      label: "Charged credits",
+      detail: `${formatCredits(opts.credits)} credits`,
+      done: true,
+    });
   }
   return steps;
 }

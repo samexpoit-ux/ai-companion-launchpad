@@ -13,7 +13,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useProfile, displayNameOf } from "@/hooks/useAuth";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentPropsWithoutRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentPropsWithoutRef,
+} from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -44,7 +51,6 @@ import {
   ChevronRight,
   Crown,
   Coins,
-
 } from "lucide-react";
 import {
   sendChatMessage,
@@ -80,10 +86,7 @@ import { PlayCircle, GripVertical, FolderTree, PanelRight } from "lucide-react";
 import { hasArtifact, parseArtifacts, stripArtifacts, type ArtifactProject } from "@/lib/artifact";
 import { ActivityCard, stepsForMessage } from "@/components/ActivityCard";
 
-
 import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from "react-resizable-panels";
-
-
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const createFreshThread = (): ChatThread => ({
@@ -112,10 +115,9 @@ function ChatWorkspaceInner() {
   const [mode, setMode] = useState<"Build" | "Chat" | "Plan">("Build");
   const [loadedThreads, setLoadedThreads] = useState<Set<string>>(() => new Set());
   const credits = useCredits();
-  
+
   const { isOpen: previewOpen, toggleWorkspace, openWorkspace, openProject } = usePreview();
   const isMobile = useIsMobile();
-
 
   // Deep link: /workspace?thread=<id> opens that conversation.
   const requestedThreadId = useRouterState({
@@ -125,7 +127,6 @@ function ChatWorkspaceInner() {
       return typeof value === "string" && value ? value : null;
     },
   });
-
 
   const { user } = useAuth();
   const profile = useProfile(user?.id);
@@ -139,7 +140,6 @@ function ChatWorkspaceInner() {
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   };
-
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [query, setQuery] = useState("");
@@ -271,9 +271,6 @@ function ChatWorkspaceInner() {
     });
   }, [user?.id, hydrated]);
 
-
-
-
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
   useFocusTrap(sidebarRef, isMobile && sidebarOpen, closeSidebar);
 
@@ -281,10 +278,7 @@ function ChatWorkspaceInner() {
     () => threads.find((t) => t.id === activeId) ?? threads[0],
     [threads, activeId],
   );
-  const model = useMemo(
-    () => AI_MODELS.find((m) => m.id === modelId) ?? AI_MODELS[0],
-    [modelId],
-  );
+  const model = useMemo(() => AI_MODELS.find((m) => m.id === modelId) ?? AI_MODELS[0], [modelId]);
 
   // Lovable behaviour: opening a conversation that already has turns reveals
   // the right-hand workspace automatically on desktop.
@@ -292,8 +286,6 @@ function ChatWorkspaceInner() {
     if (isMobile) return;
     if ((active?.messages.length ?? 0) > 0) openWorkspace();
   }, [active?.id, active?.messages.length, isMobile, openWorkspace]);
-
-
 
   const filtered = useMemo(() => {
     if (!query.trim()) return threads;
@@ -334,7 +326,12 @@ function ChatWorkspaceInner() {
     setThreads((prev) => {
       const next = prev.filter((t) => t.id !== id);
       if (next.length === 0) {
-        const fresh: ChatThread = { id: uid(), title: "Untitled dossier", messages: [], updatedAt: Date.now() };
+        const fresh: ChatThread = {
+          id: uid(),
+          title: "Untitled dossier",
+          messages: [],
+          updatedAt: Date.now(),
+        };
         setActiveId(fresh.id);
         return [fresh];
       }
@@ -399,7 +396,6 @@ function ChatWorkspaceInner() {
     [isMobile, navigate, loadedThreads],
   );
 
-
   const sendText = useCallback(
     async (text: string, thread: ChatThread) => {
       const value = text.trim();
@@ -424,7 +420,12 @@ function ChatWorkspaceInner() {
         return;
       }
 
-      const userMsg: ChatMessage = { id: uid(), role: "user", content: value, createdAt: Date.now() };
+      const userMsg: ChatMessage = {
+        id: uid(),
+        role: "user",
+        content: value,
+        createdAt: Date.now(),
+      };
       const isFirst = thread.messages.length === 0;
       updateThread(thread.id, (t) => ({
         ...t,
@@ -481,7 +482,6 @@ function ChatWorkspaceInner() {
         if (generated) openProject(generated);
         if (reply.credits) credits.applyServerBalance(reply.credits);
         else void credits.refresh();
-
       } catch (error) {
         const apiErr = parseApiError(error, "chat");
         // Server rejected the charge — pull the authoritative balance back in.
@@ -549,7 +549,6 @@ function ChatWorkspaceInner() {
     })();
   }, [hydrated, threads, activeId, sendText]);
 
-
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -557,12 +556,8 @@ function ChatWorkspaceInner() {
     }
   };
 
-
   return (
     <div className="relative flex h-screen w-full overflow-hidden bg-white text-ink-900">
-
-
-
       {/* Mobile backdrop */}
       {isMobile && sidebarOpen && (
         <div
@@ -589,8 +584,6 @@ function ChatWorkspaceInner() {
             : "-translate-x-full md:w-0 md:-translate-x-0 md:overflow-hidden md:border-0",
         )}
       >
-
-
         {/* Brand */}
         <div className="flex items-center gap-2.5 border-b border-ink-200 px-4 py-4">
           <BrandMark size="md" />
@@ -604,7 +597,10 @@ function ChatWorkspaceInner() {
 
         {/* New chat + search */}
         <div className="flex flex-col gap-3 border-b border-ink-200 p-4">
-          <Button onClick={() => void newChat()} className="w-full rounded-xl font-display font-semibold active:scale-[0.99]">
+          <Button
+            onClick={() => void newChat()}
+            className="w-full rounded-xl font-display font-semibold active:scale-[0.99]"
+          >
             <Plus className="h-4 w-4" strokeWidth={2.5} />
             New Workspace
           </Button>
@@ -621,11 +617,13 @@ function ChatWorkspaceInner() {
         </div>
 
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
-          <span className="text-2xs font-bold uppercase tracking-[0.18em] text-ink-400">Chat history</span>
-          <span className="rounded-full bg-ink-200 px-1.5 text-2xs text-ink-500">{filtered.length}</span>
+          <span className="text-2xs font-bold uppercase tracking-[0.18em] text-ink-400">
+            Chat history
+          </span>
+          <span className="rounded-full bg-ink-200 px-1.5 text-2xs text-ink-500">
+            {filtered.length}
+          </span>
         </div>
-
-
 
         <div className="flex-1 overflow-y-auto px-2 pb-2">
           {filtered.map((t) => {
@@ -641,8 +639,6 @@ function ChatWorkspaceInner() {
                     : "border-transparent text-ink-700 hover:bg-[color:var(--color-iris-soft)]/30 hover:text-ink-900",
                 )}
               >
-
-
                 {isRenaming ? (
                   <>
                     <Input
@@ -655,8 +651,23 @@ function ChatWorkspaceInner() {
                       }}
                       className="h-7 flex-1 px-1.5 text-sm"
                     />
-                    <Button variant="ghost" size="icon-sm" onClick={commitRename} className="text-primary" aria-label="Save name"><Check className="h-3.5 w-3.5" /></Button>
-                    <Button variant="ghost" size="icon-sm" onClick={cancelRename} aria-label="Cancel rename"><X className="h-3.5 w-3.5" /></Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={commitRename}
+                      className="text-primary"
+                      aria-label="Save name"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={cancelRename}
+                      aria-label="Cancel rename"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
                   </>
                 ) : (
                   <>
@@ -665,19 +676,34 @@ function ChatWorkspaceInner() {
                       onDoubleClick={() => startRename(t)}
                       className="min-w-0 flex-1 text-left"
                     >
-
                       <div className="truncate">{t.title}</div>
                       <div className="mt-0.5 flex items-center gap-1.5 text-2xs text-ink-500">
-                        <span>{new Date(t.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+                        <span>
+                          {new Date(t.updatedAt).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </span>
                         <span className="text-ink-300">·</span>
                         <span>{t.messages.length} turns</span>
                       </div>
                     </button>
                     <div className="flex items-center opacity-0 transition group-hover:opacity-100">
-                      <Button variant="ghost" size="icon-sm" onClick={() => startRename(t)} aria-label="Rename">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => startRename(t)}
+                        aria-label="Rename"
+                      >
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon-sm" onClick={() => deleteThread(t.id)} className="hover:text-destructive" aria-label="Delete">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => deleteThread(t.id)}
+                        className="hover:text-destructive"
+                        aria-label="Delete"
+                      >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -693,24 +719,34 @@ function ChatWorkspaceInner() {
           )}
         </div>
 
-
         {/* Credits */}
         <div className="px-3 pb-1">
-          <CreditMeter plan={credits.plan} remaining={credits.remaining} total={credits.total} />
+          <CreditMeter
+            plan={credits.plan}
+            remaining={credits.remaining}
+            total={credits.total}
+            unlimited={credits.unlimited}
+          />
         </div>
 
         {/* User */}
         <div className="border-t border-ink-200 p-3">
           <div className="flex items-center gap-3 rounded-xl border border-ink-200 bg-white/60 p-2.5">
-            <div className="relative flex h-10 w-10 items-center justify-center rounded-full p-[1.5px]" style={{
-              background: "var(--iris-gradient)",
-            }}>
+            <div
+              className="relative flex h-10 w-10 items-center justify-center rounded-full p-[1.5px]"
+              style={{
+                background: "var(--iris-gradient)",
+              }}
+            >
               <div className="flex h-full w-full items-center justify-center rounded-full bg-white">
                 <span className="font-display text-base font-semibold text-[color:var(--color-iris)]">
                   {accountName.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full ring-1 ring-white" style={{ background: "var(--iris-gradient)" }}>
+              <span
+                className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full ring-1 ring-white"
+                style={{ background: "var(--iris-gradient)" }}
+              >
                 <Crown className="h-2 w-2 text-white" />
               </span>
             </div>
@@ -733,242 +769,250 @@ function ChatWorkspaceInner() {
               <LogOut className="h-3.5 w-3.5" />
             </Button>
           </div>
-
         </div>
-
-
-
-
       </aside>
 
       {/* Main + Live workspace (resizable split) */}
       <PanelGroup orientation="horizontal" className="flex h-full min-w-0 flex-1">
-      <Panel id="chat" minSize="26%" className="flex min-w-0 flex-col">
-      <main className="relative flex h-full min-w-0 flex-1 flex-col">
+        <Panel id="chat" minSize="26%" className="flex min-w-0 flex-col">
+          <main className="relative flex h-full min-w-0 flex-1 flex-col">
+            {/* Header */}
+            <header className="relative z-10 flex h-14 shrink-0 items-center gap-2 overflow-hidden border-b border-ink-200 bg-white px-3 sm:gap-3 sm:px-6">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setSidebarOpen((v) => !v)}
+                className="shrink-0"
+                aria-label="Toggle sidebar"
+              >
+                {isMobile ? (
+                  <Menu className="h-4 w-4" />
+                ) : sidebarOpen ? (
+                  <PanelLeftClose className="h-4 w-4" />
+                ) : (
+                  <PanelLeft className="h-4 w-4" />
+                )}
+              </Button>
 
-        {/* Header */}
-        <header className="relative z-10 flex h-14 shrink-0 items-center gap-2 overflow-hidden border-b border-ink-200 bg-white px-3 sm:gap-3 sm:px-6">
+              {/* Smart auto-router — no model picker, Lovable style */}
+              <div
+                className="flex min-w-0 items-center gap-1.5 rounded-full border border-ink-200 bg-ink-100 px-2.5 py-1"
+                title="Nexura automatically picks the best-value model for each request"
+              >
+                <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[color:var(--color-iris)]" />
+                <span className="truncate text-xs font-semibold text-ink-900">Smart routing</span>
+                <span className="hidden text-2xs text-ink-500 sm:inline">· auto</span>
+              </div>
 
-
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => setSidebarOpen((v) => !v)}
-            className="shrink-0"
-            aria-label="Toggle sidebar"
-          >
-            {isMobile ? <Menu className="h-4 w-4" /> : sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
-          </Button>
-
-
-
-
-
-
-          {/* Smart auto-router — no model picker, Lovable style */}
-          <div
-            className="flex min-w-0 items-center gap-1.5 rounded-full border border-ink-200 bg-ink-100 px-2.5 py-1"
-            title="Nexura automatically picks the best-value model for each request"
-          >
-            <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[color:var(--color-iris)]" />
-            <span className="truncate text-xs font-semibold text-ink-900">Smart routing</span>
-            <span className="hidden text-2xs text-ink-500 sm:inline">· auto</span>
-          </div>
-
-
-          <div className="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-ink-700 sm:gap-2">
-
-            <button
-              onClick={toggleWorkspace}
-              data-testid="workspace-toggle"
-              aria-label="Toggle live workspace"
-              title="Toggle the live workspace panel (preview, code, console)"
-              className={cn(
-                "inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 text-xs font-medium transition",
-                previewOpen
-                  ? "border-[color:var(--color-iris)]/45 bg-[color:var(--color-iris)]/10 text-ink-900"
-                  : "border-ink-200 bg-white/70 text-ink-700 hover:border-[color:var(--color-iris)]/40 hover:text-ink-900",
-              )}
-            >
-              <PanelRight className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Workspace</span>
-            </button>
-            <span
-              className="inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-ink-200 bg-white/70 px-2.5 text-xs font-medium text-ink-700"
-              title="Credits included in your workspace plan"
-            >
-              <Coins className="h-3.5 w-3.5 text-[color:var(--color-iris)]" />
-              {formatCredits(credits.remaining)}
-              <span className="hidden text-ink-400 sm:inline">
-                / {formatCredits(credits.total)} credits
-              </span>
-            </span>
-
-            <ThemePicker />
-          </div>
-
-        </header>
-
-        {/* Messages */}
-        <div ref={scrollRef} className="relative flex-1 overflow-y-auto">
-          {!active || active.messages.length === 0 ? (
-            <EmptyState onPick={(q) => setInput(q)} model={model} />
-          ) : (
-            <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8 sm:px-6 lg:py-10">
-              {active?.messages.map((m) => (
-                <MessageBubble key={m.id} message={m} userInitial={accountName.charAt(0).toUpperCase()} />
-              ))}
-              {isSending && <TypingIndicator model={model} />}
-            </div>
-          )}
-        </div>
-
-        {/* Composer — Lovable-style floating prompt box */}
-        <div className="relative shrink-0 bg-white">
-          {/* soft fade so the transcript melts into the composer instead of a hard rule */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -top-10 left-0 right-0 h-10 bg-gradient-to-b from-transparent to-white"
-          />
-
-          <div className="nx-rise mx-auto w-full max-w-3xl px-3 pb-4 pt-2 sm:px-6 sm:pb-6 sm:pt-3">
-            <div
-              data-testid="composer"
-              className={cn(
-                "group relative rounded-[26px] border border-ink-200 bg-white",
-                "transition-[box-shadow,border-color,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-                "shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-16px_rgba(16,24,40,0.18)]",
-                "hover:border-ink-300 hover:shadow-[0_1px_2px_rgba(16,24,40,0.04),0_16px_38px_-18px_rgba(16,24,40,0.22)]",
-                "focus-within:-translate-y-0.5 focus-within:border-[color:var(--color-iris)]/50",
-                "focus-within:shadow-[0_1px_2px_rgba(16,24,40,0.05),0_22px_50px_-20px_color-mix(in_oklab,var(--color-iris)_50%,transparent)]",
-              )}
-            >
-              <textarea
-                ref={taRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={onKeyDown}
-                rows={1}
-                placeholder="Ask Nexura to build something…"
-                className="block max-h-56 w-full resize-none bg-transparent px-4 pb-2 pt-4 text-[15px] leading-6 text-ink-900 transition-[height] duration-150 ease-out placeholder:text-ink-400 focus:outline-none sm:px-5 sm:pt-4.5"
-              />
-
-              <div className="flex items-center gap-1.5 px-3 pb-3 pt-0.5 sm:px-3.5">
-                {/* + menu, exactly one entry point for attachments like Lovable */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      aria-label="Add attachment"
-                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-ink-200 text-ink-600 transition-all duration-150 hover:border-ink-300 hover:bg-ink-100 hover:text-ink-900 active:scale-95 data-[state=open]:border-[color:var(--color-iris)]/45 data-[state=open]:text-ink-900"
-                    >
-                      <Plus className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-45" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" side="top" className="w-52">
-                    <DropdownMenuItem>
-                      <Paperclip className="mr-2 h-4 w-4" /> Attach a file
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <ImageIcon className="mr-2 h-4 w-4" /> Add an image
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Command className="mr-2 h-4 w-4" /> Browse commands
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                <span className="hidden min-w-0 truncate text-2xs text-ink-400 sm:inline">
-                  {ACTION_RULES[actionForMode(mode)].label} ·{" "}
-                  <span className="font-medium text-ink-600">
-                    {formatCredits(credits.quote(actionForMode(mode), input.length))}
-                  </span>{" "}
-                  credits
+              <div className="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-ink-700 sm:gap-2">
+                <button
+                  onClick={toggleWorkspace}
+                  data-testid="workspace-toggle"
+                  aria-label="Toggle live workspace"
+                  title="Toggle the live workspace panel (preview, code, console)"
+                  className={cn(
+                    "inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 text-xs font-medium transition",
+                    previewOpen
+                      ? "border-[color:var(--color-iris)]/45 bg-[color:var(--color-iris)]/10 text-ink-900"
+                      : "border-ink-200 bg-white/70 text-ink-700 hover:border-[color:var(--color-iris)]/40 hover:text-ink-900",
+                  )}
+                >
+                  <PanelRight className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Workspace</span>
+                </button>
+                <span
+                  className="inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-ink-200 bg-white/70 px-2.5 text-xs font-medium text-ink-700"
+                  title="Credits included in your workspace plan"
+                >
+                  <Coins className="h-3.5 w-3.5 text-[color:var(--color-iris)]" />
+                  {credits.unlimited ? "Unlimited" : formatCredits(credits.remaining)}
+                  {!credits.unlimited && (
+                    <span className="hidden text-ink-400 sm:inline">
+                      / {formatCredits(credits.total)} credits
+                    </span>
+                  )}
                 </span>
 
-                <div className="ml-auto flex shrink-0 items-center gap-1">
-                  {/* Mode as a compact dropdown, not a tab strip */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label="Response mode"
-                        className="inline-flex h-8 max-w-[7.5rem] shrink-0 items-center gap-1 truncate rounded-full px-2.5 text-xs font-medium text-ink-700 transition-colors duration-150 hover:bg-ink-100 hover:text-ink-900 data-[state=open]:bg-ink-100 data-[state=open]:text-ink-900"
-                      >
-                        {mode}
-                        <ChevronDown className="h-3.5 w-3.5 text-ink-400" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" side="top" className="w-64">
-                      {(["Build", "Chat", "Plan"] as const).map((m) => (
-                        <DropdownMenuItem key={m} onSelect={() => setMode(m)} className="items-start gap-2">
-                          <Check
-                            className={cn(
-                              "mt-0.5 h-3.5 w-3.5 shrink-0 text-[color:var(--color-iris)]",
-                              mode === m ? "opacity-100" : "opacity-0",
-                            )}
-                          />
-                          <span className="min-w-0">
-                            <span className="block text-sm font-medium text-ink-900">{m}</span>
-                            <span className="block text-2xs leading-snug text-ink-500">
-                              {ACTION_RULES[actionForMode(m)].note}
-                            </span>
-                          </span>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  <button
-                    type="button"
-                    aria-label="Voice input"
-                    className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-500 transition-all duration-150 hover:bg-ink-100 hover:text-ink-900 active:scale-95 sm:inline-flex"
-                  >
-                    <Mic className="h-4 w-4" />
-                  </button>
-
-                  <SendButton
-                    onClick={() => void handleSend()}
-                    disabled={!input.trim() || isSending}
-                    loading={isSending}
-                  />
-                </div>
+                <ThemePicker />
               </div>
+            </header>
+
+            {/* Messages */}
+            <div ref={scrollRef} className="relative flex-1 overflow-y-auto">
+              {!active || active.messages.length === 0 ? (
+                <EmptyState onPick={(q) => setInput(q)} model={model} />
+              ) : (
+                <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8 sm:px-6 lg:py-10">
+                  {active?.messages.map((m) => (
+                    <MessageBubble
+                      key={m.id}
+                      message={m}
+                      userInitial={accountName.charAt(0).toUpperCase()}
+                    />
+                  ))}
+                  {isSending && <TypingIndicator model={model} />}
+                </div>
+              )}
             </div>
 
-            <p className="mt-3 text-center text-2xs leading-relaxed text-ink-400">
-              Smart routing · {formatCredits(credits.remaining)} of {formatCredits(credits.total)} credits left
-            </p>
-          </div>
-        </div>
+            {/* Composer — Lovable-style floating prompt box */}
+            <div className="relative shrink-0 bg-white">
+              {/* soft fade so the transcript melts into the composer instead of a hard rule */}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -top-10 left-0 right-0 h-10 bg-gradient-to-b from-transparent to-white"
+              />
 
+              <div className="nx-rise mx-auto w-full max-w-3xl px-3 pb-4 pt-2 sm:px-6 sm:pb-6 sm:pt-3">
+                <div
+                  data-testid="composer"
+                  className={cn(
+                    "group relative rounded-[26px] border border-ink-200 bg-white",
+                    "transition-[box-shadow,border-color,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                    "shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-16px_rgba(16,24,40,0.18)]",
+                    "hover:border-ink-300 hover:shadow-[0_1px_2px_rgba(16,24,40,0.04),0_16px_38px_-18px_rgba(16,24,40,0.22)]",
+                    "focus-within:-translate-y-0.5 focus-within:border-[color:var(--color-iris)]/50",
+                    "focus-within:shadow-[0_1px_2px_rgba(16,24,40,0.05),0_22px_50px_-20px_color-mix(in_oklab,var(--color-iris)_50%,transparent)]",
+                  )}
+                >
+                  <textarea
+                    ref={taRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={onKeyDown}
+                    rows={1}
+                    placeholder="Ask Nexura to build something…"
+                    className="block max-h-56 w-full resize-none bg-transparent px-4 pb-2 pt-4 text-[15px] leading-6 text-ink-900 transition-[height] duration-150 ease-out placeholder:text-ink-400 focus:outline-none sm:px-5 sm:pt-4.5"
+                  />
 
-      </main>
-      </Panel>
+                  <div className="flex items-center gap-1.5 px-3 pb-3 pt-0.5 sm:px-3.5">
+                    {/* + menu, exactly one entry point for attachments like Lovable */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          aria-label="Add attachment"
+                          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-ink-200 text-ink-600 transition-all duration-150 hover:border-ink-300 hover:bg-ink-100 hover:text-ink-900 active:scale-95 data-[state=open]:border-[color:var(--color-iris)]/45 data-[state=open]:text-ink-900"
+                        >
+                          <Plus className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-45" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" side="top" className="w-52">
+                        <DropdownMenuItem>
+                          <Paperclip className="mr-2 h-4 w-4" /> Attach a file
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <ImageIcon className="mr-2 h-4 w-4" /> Add an image
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Command className="mr-2 h-4 w-4" /> Browse commands
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
 
-      {previewOpen && (
-        <>
-          <PanelResizeHandle className="group relative w-1.5 shrink-0 bg-transparent outline-none">
-            <span
-              aria-hidden
-              className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-ink-200 transition group-hover:bg-[color:var(--color-iris)] group-data-[resize-handle-state=drag]:bg-[color:var(--color-iris)]"
-            />
-            <span className="pointer-events-none absolute left-1/2 top-1/2 flex h-10 w-3 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-ink-200 bg-white/80 opacity-0 shadow-lg transition group-hover:opacity-100">
-              <GripVertical className="h-3 w-3 text-ink-600" />
-            </span>
-          </PanelResizeHandle>
-          <Panel id="workspace" defaultSize="46%" minSize="24%" className="min-w-0">
-            <PreviewPanel />
-          </Panel>
-        </>
-      )}
+                    <span className="hidden min-w-0 truncate text-2xs text-ink-400 sm:inline">
+                      {ACTION_RULES[actionForMode(mode)].label} ·{" "}
+                      <span className="font-medium text-ink-600">
+                        {credits.unlimited
+                          ? "No charge"
+                          : formatCredits(credits.quote(actionForMode(mode), input.length))}
+                      </span>{" "}
+                      {!credits.unlimited && "credits"}
+                    </span>
+
+                    <div className="ml-auto flex shrink-0 items-center gap-1">
+                      {/* Mode as a compact dropdown, not a tab strip */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label="Response mode"
+                            className="inline-flex h-8 max-w-[7.5rem] shrink-0 items-center gap-1 truncate rounded-full px-2.5 text-xs font-medium text-ink-700 transition-colors duration-150 hover:bg-ink-100 hover:text-ink-900 data-[state=open]:bg-ink-100 data-[state=open]:text-ink-900"
+                          >
+                            {mode}
+                            <ChevronDown className="h-3.5 w-3.5 text-ink-400" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" side="top" className="w-64">
+                          {(["Build", "Chat", "Plan"] as const).map((m) => (
+                            <DropdownMenuItem
+                              key={m}
+                              onSelect={() => setMode(m)}
+                              className="items-start gap-2"
+                            >
+                              <Check
+                                className={cn(
+                                  "mt-0.5 h-3.5 w-3.5 shrink-0 text-[color:var(--color-iris)]",
+                                  mode === m ? "opacity-100" : "opacity-0",
+                                )}
+                              />
+                              <span className="min-w-0">
+                                <span className="block text-sm font-medium text-ink-900">{m}</span>
+                                <span className="block text-2xs leading-snug text-ink-500">
+                                  {ACTION_RULES[actionForMode(m)].note}
+                                </span>
+                              </span>
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      <button
+                        type="button"
+                        aria-label="Voice input"
+                        className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-500 transition-all duration-150 hover:bg-ink-100 hover:text-ink-900 active:scale-95 sm:inline-flex"
+                      >
+                        <Mic className="h-4 w-4" />
+                      </button>
+
+                      <SendButton
+                        onClick={() => void handleSend()}
+                        disabled={!input.trim() || isSending}
+                        loading={isSending}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <p className="mt-3 text-center text-2xs leading-relaxed text-ink-400">
+                  Smart routing · {formatCredits(credits.remaining)} of{" "}
+                  {formatCredits(credits.total)} credits left
+                </p>
+              </div>
+            </div>
+          </main>
+        </Panel>
+
+        {previewOpen && (
+          <>
+            <PanelResizeHandle className="group relative w-1.5 shrink-0 bg-transparent outline-none">
+              <span
+                aria-hidden
+                className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-ink-200 transition group-hover:bg-[color:var(--color-iris)] group-data-[resize-handle-state=drag]:bg-[color:var(--color-iris)]"
+              />
+              <span className="pointer-events-none absolute left-1/2 top-1/2 flex h-10 w-3 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-ink-200 bg-white/80 opacity-0 shadow-lg transition group-hover:opacity-100">
+                <GripVertical className="h-3 w-3 text-ink-600" />
+              </span>
+            </PanelResizeHandle>
+            <Panel id="workspace" defaultSize="46%" minSize="24%" className="min-w-0">
+              <PreviewPanel />
+            </Panel>
+          </>
+        )}
       </PanelGroup>
     </div>
-
   );
 }
 
-function SendButton({ onClick, disabled, loading }: { onClick: () => void; disabled: boolean; loading: boolean }) {
+function SendButton({
+  onClick,
+  disabled,
+  loading,
+}: {
+  onClick: () => void;
+  disabled: boolean;
+  loading: boolean;
+}) {
   const ready = !disabled;
   return (
     <button
@@ -993,8 +1037,6 @@ function SendButton({ onClick, disabled, loading }: { onClick: () => void; disab
   );
 }
 
-
-
 const markdownComponents: Components = {
   code(props) {
     const { className, children, ...rest } = props as ComponentPropsWithoutRef<"code"> & {
@@ -1016,7 +1058,9 @@ const markdownComponents: Components = {
     }
     return <CodeBlock language={match?.[1] ?? "text"} value={raw} />;
   },
-  pre({ children }) { return <>{children}</>; },
+  pre({ children }) {
+    return <>{children}</>;
+  },
   table({ children }) {
     return (
       <div className="my-4 overflow-x-auto rounded-xl border border-ink-200/80">
@@ -1025,14 +1069,23 @@ const markdownComponents: Components = {
     );
   },
   th({ children }) {
-    return <th className="border-b border-ink-200/80 bg-[color:var(--color-iris)]/[0.06] px-3 py-2 text-left font-medium uppercase tracking-wider text-xs text-[color:var(--color-gold-soft)]">{children}</th>;
+    return (
+      <th className="border-b border-ink-200/80 bg-[color:var(--color-iris)]/[0.06] px-3 py-2 text-left font-medium uppercase tracking-wider text-xs text-[color:var(--color-gold-soft)]">
+        {children}
+      </th>
+    );
   },
   td({ children }) {
     return <td className="border-b border-ink-200 px-3 py-2 align-top">{children}</td>;
   },
   a({ children, href }) {
     return (
-      <a href={href} target="_blank" rel="noreferrer" className="text-[color:var(--color-iris)] underline decoration-[color:var(--color-iris)]/30 underline-offset-4 hover:decoration-[color:var(--color-iris)]">
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        className="text-[color:var(--color-iris)] underline decoration-[color:var(--color-iris)]/30 underline-offset-4 hover:decoration-[color:var(--color-iris)]"
+      >
         {children}
       </a>
     );
@@ -1048,7 +1101,6 @@ function sanitizeCode(input: string) {
   out = out.replace(/^`+(?=\S)/, "").replace(/`+$/, "");
   return out.trim();
 }
-
 
 /** Multi-file project generated by the model — opens in the live workspace. */
 function ArtifactCard({ project }: { project: ArtifactProject }) {
@@ -1094,7 +1146,6 @@ function ArtifactCard({ project }: { project: ArtifactProject }) {
 }
 
 function CodeBlock({ language, value: rawValue }: { language: string; value: string }) {
-
   const value = useMemo(() => sanitizeCode(rawValue), [rawValue]);
   const [copied, setCopied] = useState(false);
   const { openPreview } = usePreview();
@@ -1105,13 +1156,18 @@ function CodeBlock({ language, value: rawValue }: { language: string; value: str
       await navigator.clipboard.writeText(value);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch {/* ignore */}
+    } catch {
+      /* ignore */
+    }
   };
   return (
-    <div className="group relative my-4 overflow-hidden rounded-xl border border-ink-200/80" style={{
-      background: "linear-gradient(180deg, #FFFFFF 0%, #F4F6F9 100%)",
-      boxShadow: "0 10px 30px -18px rgba(37,74,140,0.18), inset 0 1px 0 rgba(255,255,255,0.9)",
-    }}>
+    <div
+      className="group relative my-4 overflow-hidden rounded-xl border border-ink-200/80"
+      style={{
+        background: "linear-gradient(180deg, #FFFFFF 0%, #F4F6F9 100%)",
+        boxShadow: "0 10px 30px -18px rgba(37,74,140,0.18), inset 0 1px 0 rgba(255,255,255,0.9)",
+      }}
+    >
       <div className="flex items-center justify-between border-b border-ink-200 bg-white/80 px-3 py-1.5">
         <div className="flex items-center gap-2">
           <span className="flex gap-1">
@@ -1119,7 +1175,9 @@ function CodeBlock({ language, value: rawValue }: { language: string; value: str
             <span className="h-2 w-2 rounded-full bg-[color:var(--color-iris)]/50" />
             <span className="h-2 w-2 rounded-full bg-[color:var(--color-iris-cyan)]/60" />
           </span>
-          <span className="font-mono text-2xs uppercase tracking-[0.2em] text-ink-500">{language}</span>
+          <span className="font-mono text-2xs uppercase tracking-[0.2em] text-ink-500">
+            {language}
+          </span>
         </div>
         <div className="flex items-center gap-1">
           {previewable && (
@@ -1158,7 +1216,9 @@ function CodeBlock({ language, value: rawValue }: { language: string; value: str
           fontSize: "12.5px",
           lineHeight: "1.6",
         }}
-        codeTagProps={{ style: { fontFamily: "JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, monospace" } }}
+        codeTagProps={{
+          style: { fontFamily: "JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, monospace" },
+        }}
       >
         {value}
       </SyntaxHighlighter>
@@ -1166,21 +1226,28 @@ function CodeBlock({ language, value: rawValue }: { language: string; value: str
   );
 }
 
-function MessageBubble({ message, userInitial = "Y" }: { message: ChatMessage; userInitial?: string }) {
+function MessageBubble({
+  message,
+  userInitial = "Y",
+}: {
+  message: ChatMessage;
+  userInitial?: string;
+}) {
   const isUser = message.role === "user";
-  const time = new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  const project = !isUser ? parseArtifacts(message.content)[0] ?? null : null;
+  const time = new Date(message.createdAt).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const project = !isUser ? (parseArtifacts(message.content)[0] ?? null) : null;
   const modelName = message.model
-    ? AI_MODELS.find((m) => m.id === message.model)?.name ?? message.model
+    ? (AI_MODELS.find((m) => m.id === message.model)?.name ?? message.model)
     : undefined;
   return (
     <div className={cn("flex gap-3 sm:gap-4", isUser ? "flex-row-reverse" : "flex-row")}>
       <div
         className={cn(
           "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border",
-          isUser
-            ? "border-ink-200 bg-white/80"
-            : "border-transparent p-[1.5px]",
+          isUser ? "border-ink-200 bg-white/80" : "border-transparent p-[1.5px]",
         )}
         style={!isUser ? { background: "var(--iris-gradient)" } : undefined}
       >
@@ -1192,8 +1259,15 @@ function MessageBubble({ message, userInitial = "Y" }: { message: ChatMessage; u
           </div>
         )}
       </div>
-      <div className={cn("min-w-0 max-w-[92%] sm:max-w-[85%]", isUser ? "text-right" : "text-left")}>
-        <div className={cn("mb-1.5 flex items-center gap-2 text-2xs uppercase tracking-[0.18em] text-ink-500", isUser && "justify-end")}>
+      <div
+        className={cn("min-w-0 max-w-[92%] sm:max-w-[85%]", isUser ? "text-right" : "text-left")}
+      >
+        <div
+          className={cn(
+            "mb-1.5 flex items-center gap-2 text-2xs uppercase tracking-[0.18em] text-ink-500",
+            isUser && "justify-end",
+          )}
+        >
           <span>{isUser ? "You" : "Nexura"}</span>
           {!isUser && message.model && (
             <>
@@ -1208,7 +1282,9 @@ function MessageBubble({ message, userInitial = "Y" }: { message: ChatMessage; u
         </div>
         {!isUser && (
           <ActivityCard
-            title={project ? `Built ${project.title || "your project"}` : "Responded to your prompt"}
+            title={
+              project ? `Built ${project.title || "your project"}` : "Responded to your prompt"
+            }
             project={project}
             steps={stepsForMessage({
               modelName,
@@ -1223,21 +1299,10 @@ function MessageBubble({ message, userInitial = "Y" }: { message: ChatMessage; u
         )}
         <div
           className={cn(
-            "relative rounded-2xl px-4 py-3 text-base leading-relaxed",
-            isUser
-              ? "inline-block text-ink-900"
-              : "border border-ink-200 text-ink-900",
+            "relative px-4 py-3 text-base leading-relaxed",
+            isUser ? "inline-block rounded-lg bg-primary text-primary-foreground" : "text-ink-900",
           )}
-          style={isUser ? {
-            background: "linear-gradient(135deg, color-mix(in oklab, var(--color-iris-deep) 55%, transparent), color-mix(in oklab, var(--color-iris) 35%, transparent))",
-            border: "1px solid color-mix(in oklab, var(--color-iris) 40%, transparent)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12), 0 8px 24px -12px color-mix(in oklab, var(--color-iris-deep) 60%, transparent)",
-          } : {
-            background: "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(244,246,249,0.88))",
-            boxShadow: "0 10px 30px -18px rgba(37,74,140,0.25), inset 0 1px 0 rgba(255,255,255,0.9)",
-          }}
         >
-
           {isUser ? (
             <div className="whitespace-pre-wrap break-words text-left">{message.content}</div>
           ) : (
@@ -1247,13 +1312,17 @@ function MessageBubble({ message, userInitial = "Y" }: { message: ChatMessage; u
               </ReactMarkdown>
             </div>
           )}
-
         </div>
 
         {!isUser && (message.tokens || message.latencyMs || message.credits != null) && (
           <div className="mt-1.5 flex items-center gap-2 font-mono text-2xs text-ink-500">
             {message.latencyMs && <span>{(message.latencyMs / 1000).toFixed(2)}s</span>}
-            {message.tokens && <><span className="text-ink-200">·</span><span>{message.tokens} tokens</span></>}
+            {message.tokens && (
+              <>
+                <span className="text-ink-200">·</span>
+                <span>{message.tokens} tokens</span>
+              </>
+            )}
             {message.credits != null && (
               <>
                 <span className="text-ink-200">·</span>
@@ -1272,16 +1341,22 @@ function MessageBubble({ message, userInitial = "Y" }: { message: ChatMessage; u
 function TypingIndicator({ model }: { model: AIModel }) {
   return (
     <div className="flex gap-3 sm:gap-4">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl p-[1.5px]" style={{
-        background: "var(--iris-gradient)",
-      }}>
+      <div
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl p-[1.5px]"
+        style={{
+          background: "var(--iris-gradient)",
+        }}
+      >
         <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-white p-1">
           <BrandGlyph />
         </div>
       </div>
       <div className="min-w-0 flex-1 max-w-[92%] sm:max-w-[85%]">
         <div className="mb-1.5 text-2xs uppercase tracking-[0.18em] text-ink-500">
-          Nexura · <span className="normal-case tracking-normal font-mono text-[color:var(--color-iris-cyan)]/90">{model.name}</span>
+          Nexura ·{" "}
+          <span className="normal-case tracking-normal font-mono text-[color:var(--color-iris-cyan)]/90">
+            {model.name}
+          </span>
         </div>
         <ActivityCard
           busy
@@ -1297,7 +1372,6 @@ function TypingIndicator({ model }: { model: AIModel }) {
   );
 }
 
-
 function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIModel }) {
   const starters = [
     {
@@ -1305,7 +1379,8 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
       icon: Sparkle,
       title: "SaaS landing page",
       body: "Hero, pricing tiers and a comparison table.",
-      prompt: "Build a modern SaaS landing page with a hero, 3 pricing tiers and a feature comparison table.",
+      prompt:
+        "Build a modern SaaS landing page with a hero, 3 pricing tiers and a feature comparison table.",
     },
     {
       key: "table",
@@ -1326,7 +1401,8 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
       icon: Zap,
       title: "Analytics dashboard",
       body: "Charts, KPI cards and a sidebar shell.",
-      prompt: "Build an analytics dashboard with KPI cards, a line chart and a collapsible sidebar.",
+      prompt:
+        "Build an analytics dashboard with KPI cards, a line chart and a collapsible sidebar.",
     },
   ];
 
@@ -1395,5 +1471,3 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
     </div>
   );
 }
-
-

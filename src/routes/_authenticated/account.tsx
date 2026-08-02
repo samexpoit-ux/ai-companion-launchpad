@@ -156,6 +156,7 @@ function AccountPage() {
               plan={credits.plan}
               remaining={credits.remaining}
               total={credits.total}
+              unlimited={credits.unlimited}
               compact
               className="mt-2 border-0 bg-transparent p-0"
             />
@@ -222,7 +223,10 @@ function AccountPage() {
                     search={{ thread: thread.id }}
                     className="flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-ink-100"
                   >
-                    <MessageSquare className="h-3.5 w-3.5 shrink-0 text-ink-500" aria-hidden="true" />
+                    <MessageSquare
+                      className="h-3.5 w-3.5 shrink-0 text-ink-500"
+                      aria-hidden="true"
+                    />
                     <span className="min-w-0 flex-1 truncate text-ink-900">
                       {thread.title || "Untitled build"}
                     </span>

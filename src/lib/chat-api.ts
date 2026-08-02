@@ -59,17 +59,17 @@ export const AI_MODELS: AIModel[] = [
     id: "nx-reasoner",
     name: "Nexura Reasoner",
     tier: "Signature",
-    tagline: "Claude 3.7 Sonnet · architecture & planning",
-    context: "200K tokens",
-    price: "Premium",
+    tagline: "DeepSeek / Gemini Flash · focused low-cost planning",
+    context: "Adaptive",
+    price: "Low cost",
     badge: "Thinks",
   },
   {
     id: "nx-flash",
     name: "Nexura Flash",
     tier: "Reserve",
-    tagline: "Claude 3.5 Haiku · fast, low-cost everyday chat",
-    context: "200K tokens",
+    tagline: "DeepSeek / Gemini Flash · fast everyday chat",
+    context: "Adaptive",
     price: "Low cost",
   },
   {
@@ -81,8 +81,6 @@ export const AI_MODELS: AIModel[] = [
     price: "Balanced",
   },
 ];
-
-
 
 export async function sendChatMessage(
   messages: ChatMessage[],
@@ -105,7 +103,6 @@ export async function sendChatMessage(
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
   };
 
-
   const res = await apiFetch("/api/chat", payload);
 
   if (!res.ok) {
@@ -114,7 +111,6 @@ export async function sendChatMessage(
     error.apiError = apiErr;
     throw error;
   }
-
 
   const data = (await res.json()) as {
     content: string;
@@ -127,4 +123,3 @@ export async function sendChatMessage(
   };
   return data;
 }
-

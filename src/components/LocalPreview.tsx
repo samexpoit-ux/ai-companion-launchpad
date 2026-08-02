@@ -4,8 +4,12 @@ import * as ReactDOMClient from "react-dom/client";
 import * as LucideIcons from "lucide-react";
 import { transform } from "@babel/standalone";
 import { resolveAlias, resolveModule } from "@/lib/artifact";
-import { DEVICE_WIDTH, usePreview, type PreviewDevice, type PreviewPayload } from "./preview-context";
-
+import {
+  DEVICE_WIDTH,
+  usePreview,
+  type PreviewDevice,
+  type PreviewPayload,
+} from "./preview-context";
 
 /**
  * Offline-first preview engine.
@@ -24,8 +28,20 @@ const BASE_HTML = `<!doctype html><html><head><meta charset="utf-8" />
 </style>
 </head><body><div id="root"></div></body></html>`;
 
+const PREVIEW_BRIDGE = `<script>(function(){
+  var send=function(type,level,message){ parent.postMessage({source:'nexura-preview',type:type,level:level,message:String(message)}, '*'); };
+  ['log','info','warn','error'].forEach(function(level){ var native=console[level].bind(console); console[level]=function(){ var args=[].slice.call(arguments); send('console',level,args.map(function(v){ try{return typeof v==='object'?JSON.stringify(v):String(v)}catch(e){return String(v)} }).join(' ')); native.apply(console,args); }; });
+  window.addEventListener('error',function(e){send('error','error',e.message||'Preview error')});
+  window.addEventListener('unhandledrejection',function(e){send('error','error',e.reason&&e.reason.message||e.reason||'Unhandled rejection')});
+})();</script>`;
+
+function withBridge(html: string): string {
+  if (/<head[^>]*>/i.test(html)) return html.replace(/<head([^>]*)>/i, `<head$1>${PREVIEW_BRIDGE}`);
+  return `${PREVIEW_BRIDGE}${html}`;
+}
+
 const CSS_HTML = (css: string) => `<!doctype html><html><head><meta charset="utf-8" />
-<style>body{font-family:ui-sans-serif,system-ui,sans-serif;background:#fff;color:#1B1A17;padding:24px;margin:0}
+${PREVIEW_BRIDGE}<style>body{font-family:ui-sans-serif,system-ui,sans-serif;background:#fff;color:#1B1A17;padding:24px;margin:0}
 .demo-card{padding:16px;border:1px solid #E4EDFA;border-radius:12px;background:#F7FBFF;margin-top:12px}</style>
 <style>${css}</style></head><body>
 <h1>Heading 1</h1><h2>Heading 2</h2>
@@ -36,14 +52,14 @@ const CSS_HTML = (css: string) => `<!doctype html><html><head><meta charset="utf
 
 const JS_HTML = (js: string) => `<!doctype html><html><head><meta charset="utf-8" />
 <style>body{font-family:ui-sans-serif,system-ui,sans-serif;background:#fff;color:#1B1A17;padding:24px;margin:0}</style>
-</head><body><div id="app"></div><script type="module">
+</head><body><div id="app"></div>${PREVIEW_BRIDGE}<script type="module">
 try {
 ${js}
 } catch (e) { console.error(e); document.body.innerHTML = '<pre style="color:#b91c1c;white-space:pre-wrap">' + (e && e.stack || e) + '</pre>'; }
 </script></body></html>`;
 
 const MD_HTML = (md: string) => `<!doctype html><html><head><meta charset="utf-8" />
-<style>body{font-family:ui-sans-serif,system-ui,sans-serif;background:#fff;color:#1B1A17;padding:24px;margin:0;line-height:1.65}
+${PREVIEW_BRIDGE}<style>body{font-family:ui-sans-serif,system-ui,sans-serif;background:#fff;color:#1B1A17;padding:24px;margin:0;line-height:1.65}
 pre{background:#F1F6FE;padding:12px;border-radius:10px;overflow:auto}</style></head>
 <body><pre style="white-space:pre-wrap;background:transparent;padding:0">${md
   .replace(/&/g, "&amp;")
@@ -140,9 +156,10 @@ function runProject(
 function pickComponent(exports: Record<string, unknown>): React.ComponentType | undefined {
   const def = exports.default;
   if (typeof def === "function") return def as React.ComponentType;
-  return Object.values(exports).find((v) => typeof v === "function") as React.ComponentType | undefined;
+  return Object.values(exports).find((v) => typeof v === "function") as
+    | React.ComponentType
+    | undefined;
 }
-
 
 interface Props {
   payload: PreviewPayload;
@@ -156,19 +173,54 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
   const { reportRuntimeError, reportConsole, setBuildError } = usePreview();
   const [compileError, setCompileError] = useState<string | null>(null);
 
-
   const isReact = payload.lang === "react" || payload.lang === "react-ts" || !!payload.files;
 
   // Non-React languages render as plain documents.
+  let plainCode = payload.code;
+  let plainCompileError: string | null = null;
+  if (payload.lang === "vanilla-ts") {
+    try {
+      plainCode =
+        transform(payload.code, { filename: "index.ts", presets: ["typescript"] }).code ?? "";
+    } catch (err) {
+      plainCompileError = err instanceof Error ? err.message : String(err);
+    }
+  }
   const srcDoc = isReact
     ? BASE_HTML
     : payload.lang === "css"
       ? CSS_HTML(payload.code)
       : payload.lang === "html"
-        ? payload.code
+        ? withBridge(payload.code)
         : payload.lang === "mdx"
           ? MD_HTML(payload.code)
-          : JS_HTML(payload.code);
+          : JS_HTML(
+              plainCompileError
+                ? `throw new Error(${JSON.stringify(plainCompileError)})`
+                : plainCode,
+            );
+
+  useEffect(() => {
+    const receive = (event: MessageEvent) => {
+      if (event.source !== frameRef.current?.contentWindow) return;
+      const data = event.data as {
+        source?: string;
+        type?: string;
+        level?: string;
+        message?: string;
+      };
+      if (data?.source !== "nexura-preview" || !data.message) return;
+      if (data.type === "console") {
+        const level = ["log", "info", "warn", "error"].includes(data.level ?? "")
+          ? (data.level as "log" | "info" | "warn" | "error")
+          : "log";
+        reportConsole(level, data.message);
+      }
+      if (data.type === "error" || data.level === "error") reportRuntimeError(data.message);
+    };
+    window.addEventListener("message", receive);
+    return () => window.removeEventListener("message", receive);
+  }, [reportConsole, reportRuntimeError]);
 
   useEffect(() => {
     setCompileError(null);
@@ -188,25 +240,35 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
 
       // Mirror the host stylesheets so Tailwind classes render inside the frame.
       try {
-        for (const node of Array.from(document.head.querySelectorAll("style, link[rel=stylesheet]"))) {
+        for (const node of Array.from(
+          document.head.querySelectorAll("style, link[rel=stylesheet]"),
+        )) {
           const clone = node.cloneNode(true) as HTMLElement;
           if (clone instanceof HTMLLinkElement) clone.href = (node as HTMLLinkElement).href;
           doc.head.appendChild(clone);
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
 
       // Pipe sandbox errors into the auto-fix loop.
       const frameConsole = (win as unknown as { console: Console }).console;
       for (const level of ["log", "info", "warn", "error"] as const) {
         const native = frameConsole[level].bind(frameConsole);
         frameConsole[level] = (...args: unknown[]) => {
-          const message = args.map((a) => {
-            if (a instanceof Error) return a.message;
-            if (a && typeof a === "object") {
-              try { return JSON.stringify(a); } catch { return String(a); }
-            }
-            return String(a);
-          }).join(" ");
+          const message = args
+            .map((a) => {
+              if (a instanceof Error) return a.message;
+              if (a && typeof a === "object") {
+                try {
+                  return JSON.stringify(a);
+                } catch {
+                  return String(a);
+                }
+              }
+              return String(a);
+            })
+            .join(" ");
           reportConsole(level, message);
           if (level === "error") reportRuntimeError(message);
           native(...args);
@@ -225,17 +287,11 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
 
         if (payload.files && payload.entry) {
           const files = payload.files;
-          let entry = payload.entry;
-          Component = pickComponent(runProject(files, entry, doc));
-
-          // Entry files like main.tsx only bootstrap; fall back to the App module.
-          if (!Component) {
-            const appPath = Object.keys(files).find((p) => /(^|\/)App\.(tsx|jsx)$/.test(p));
-            if (appPath) {
-              entry = appPath;
-              Component = pickComponent(runProject(files, entry, doc));
-            }
-          }
+          // Bootstrap entries call createRoot themselves. Running those in the
+          // host realm can mount outside the iframe and leave a blank preview.
+          const appPath = Object.keys(files).find((p) => /(^|\/)App\.(tsx|jsx|ts|js)$/.test(p));
+          const renderEntry = appPath ?? payload.entry;
+          Component = pickComponent(runProject(files, renderEntry, doc));
         } else {
           const source = ensureDefaultExport(payload.code);
           const out = compileModule(payload.lang === "react-ts" ? "App.tsx" : "App.jsx", source);
@@ -248,11 +304,14 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
 
         if (!Component) throw new Error("No React component was exported from this project.");
 
-
         rootRef.current?.unmount();
         rootRef.current = ReactDOMClient.createRoot(host);
         rootRef.current.render(
-          React.createElement(PreviewErrorBoundary, { onError: reportRuntimeError }, React.createElement(Component)),
+          React.createElement(
+            PreviewErrorBoundary,
+            { onError: reportRuntimeError },
+            React.createElement(Component),
+          ),
         );
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -260,7 +319,6 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
         setBuildError(message);
         reportRuntimeError(message);
       }
-
     };
 
     if (frame.contentDocument?.readyState === "complete") mount();
@@ -272,7 +330,17 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
       rootRef.current = null;
       if (root) setTimeout(() => root.unmount(), 0);
     };
-  }, [payload.code, payload.lang, payload.files, payload.entry, isReact, reloadKey, reportConsole, reportRuntimeError, setBuildError]);
+  }, [
+    payload.code,
+    payload.lang,
+    payload.files,
+    payload.entry,
+    isReact,
+    reloadKey,
+    reportConsole,
+    reportRuntimeError,
+    setBuildError,
+  ]);
 
   const width = DEVICE_WIDTH[device];
 
@@ -309,7 +377,6 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
       )}
     </div>
   );
-
 }
 
 class PreviewErrorBoundary extends React.Component<
@@ -330,7 +397,13 @@ class PreviewErrorBoundary extends React.Component<
     if (this.state.error) {
       return React.createElement(
         "pre",
-        { style: { color: "#b91c1c", whiteSpace: "pre-wrap", fontFamily: "ui-monospace, monospace" } },
+        {
+          style: {
+            color: "#b91c1c",
+            whiteSpace: "pre-wrap",
+            fontFamily: "ui-monospace, monospace",
+          },
+        },
         this.state.error,
       );
     }
