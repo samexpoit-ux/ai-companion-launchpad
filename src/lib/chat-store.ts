@@ -21,6 +21,8 @@ export interface StoredMessage {
 
 export interface StoredThread {
   id: string;
+  /** Owner of the thread — differs from the viewer for shared projects. */
+  ownerId: string;
   title: string;
   mode: string;
   projectId: string | null;
@@ -30,6 +32,7 @@ export interface StoredThread {
 
 function threadFromRow(row: {
   id: string;
+  user_id: string;
   title: string;
   mode: string;
   project_id: string | null;
@@ -38,6 +41,7 @@ function threadFromRow(row: {
 }): StoredThread {
   return {
     id: row.id,
+    ownerId: row.user_id,
     title: row.title,
     mode: row.mode,
     projectId: row.project_id,
@@ -77,7 +81,7 @@ async function currentUserId(): Promise<string | null> {
 export async function listThreads(): Promise<StoredThread[]> {
   const { data, error } = await supabase
     .from("chat_threads")
-    .select("id,title,mode,project_id,last_message_at,created_at")
+    .select("id,user_id,title,mode,project_id,last_message_at,created_at")
     .order("last_message_at", { ascending: false })
     .limit(200);
   if (error) {
@@ -102,7 +106,7 @@ export async function createThread(input?: {
       mode: input?.mode ?? "build",
       project_id: input?.projectId ?? null,
     })
-    .select("id,title,mode,project_id,last_message_at,created_at")
+    .select("id,user_id,title,mode,project_id,last_message_at,created_at")
     .single();
   if (error || !data) {
     console.error("[chat-store] createThread failed", error?.message);
