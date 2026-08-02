@@ -15,6 +15,7 @@ import {
   History,
   GitCompare,
   MoreHorizontal,
+  Rocket,
 } from "lucide-react";
 import {
   DropdownMenu,
