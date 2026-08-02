@@ -5,6 +5,7 @@ import * as LucideIcons from "lucide-react";
 import { transform } from "@babel/standalone";
 import { resolveAlias, resolveModule } from "@/lib/artifact";
 import { PREVIEW_DOC_CSS, PREVIEW_TOKENS_CSS, previewStyleTag } from "@/lib/preview-theme";
+import { classNameShims, framerMotion, reactRouterDom } from "@/lib/preview-shims";
 
 import {
   DEVICE_WIDTH,
@@ -78,6 +79,17 @@ const EXTERNALS: Record<string, unknown> = {
   "react-dom": ReactDOMClient,
   "react-dom/client": ReactDOMClient,
   "lucide-react": LucideIcons,
+  // Shimmed dependencies: generated projects commonly import these, and the
+  // sandbox has no bundler, so we hand them API-compatible stand-ins instead of
+  // failing the build. Exported projects install the real packages.
+  "react-router-dom": reactRouterDom,
+  "react-router": reactRouterDom,
+  "framer-motion": framerMotion,
+  motion: framerMotion,
+  "motion/react": framerMotion,
+  clsx: classNameShims.clsx,
+  classnames: classNameShims.clsx,
+  "tailwind-merge": classNameShims.twMerge,
 };
 
 function makeRequire() {
@@ -85,7 +97,7 @@ function makeRequire() {
     if (id in EXTERNALS) return EXTERNALS[id];
     if (/\.(css|scss|sass|less)$/.test(id)) return {};
     throw new Error(
-      `Module "${id}" is not available in the live preview. Available: react, react-dom, lucide-react.`,
+      `Module "${id}" is not available in the live preview. Available: react, react-dom, lucide-react, react-router-dom, framer-motion, clsx, tailwind-merge.`,
     );
   };
 }

@@ -51,14 +51,16 @@
   --iris-h-warm: 224;
   --iris-chroma: 0.14;
 
-  --color-iris:       #3B82F6;
-  --color-iris-soft:  #E8ECF1;
-  --color-iris-cyan:  #93B4FA;
-  --color-iris-deep:  #2563EB;
-  --color-iris-warm:  #60A5FA;
+  /* Accents are derived from the hue/chroma tokens above so Theme Studio (and
+     any preset) recolours the whole product by changing four numbers. */
+  --color-iris:       oklch(0.62 var(--iris-chroma) var(--iris-h));
+  --color-iris-soft:  oklch(0.94 calc(var(--iris-chroma) * 0.16) var(--iris-h));
+  --color-iris-cyan:  oklch(0.78 calc(var(--iris-chroma) * 0.6) var(--iris-h-cyan));
+  --color-iris-deep:  oklch(0.55 var(--iris-chroma) var(--iris-h));
+  --color-iris-warm:  oklch(0.72 calc(var(--iris-chroma) * 0.8) var(--iris-h-warm));
 
   /* Ink-strength accent for readable text on white surfaces (AA on #FFFFFF) */
-  --color-iris-ink:   #1D4ED8;
+  --color-iris-ink:   oklch(0.46 calc(var(--iris-chroma) * 0.95) var(--iris-h));
 
   /* Contrast-safe foreground on accent surfaces */
   --color-iris-fg: #FFFFFF;
