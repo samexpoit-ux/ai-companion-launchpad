@@ -233,14 +233,18 @@ export default function ProjectExplorer() {
         {tree.map((node) => (
           <TreeItem key={node.path} node={node} depth={0} active={current} changed={changed} onSelect={select} />
         ))}
-        <button
-          onClick={() => void downloadZip()}
-          disabled={zipping}
-          className="mx-2 mt-3 flex w-[calc(100%-16px)] items-center justify-center gap-1.5 rounded-md border border-ink-200 px-2 py-1.5 text-2xs text-ink-600 transition hover:border-[color:var(--color-iris)]/40 hover:text-ink-900 disabled:opacity-50"
-        >
-          <FileArchive className="h-3 w-3" />
-          {zipping ? "Packaging…" : "Export project (.zip)"}
-        </button>
+        <ShipDialog
+          payload={payload ? { title: payload.title, entry: payload.entry, files } : null}
+          trigger={
+            <button
+              disabled={!payload}
+              className="mx-2 mt-3 flex w-[calc(100%-16px)] items-center justify-center gap-1.5 rounded-md border border-ink-200 px-2 py-1.5 text-2xs text-ink-600 transition hover:border-[color:var(--color-iris)]/40 hover:text-ink-900 disabled:opacity-50"
+            >
+              <FileArchive className="h-3 w-3" />
+              Ship project
+            </button>
+          }
+        />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
