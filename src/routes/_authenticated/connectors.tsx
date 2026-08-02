@@ -58,7 +58,7 @@ const CONNECTORS: Array<{
     title: "GitHub",
     status: "available",
     text: "Push every generated file to a new or existing repo straight from Ship project → GitHub.",
-    accent: "from-[#1F2937] to-[#4B5563]",
+    accent: "linear-gradient(135deg, #1F2937, #4B5563)",
     action: { label: "Open workspace", to: "/workspace" },
   },
   {
@@ -66,7 +66,7 @@ const CONNECTORS: Array<{
     title: "VPS deploy",
     status: "available",
     text: "Ship a built project to your own server over SSH, or download the runnable zip and deploy anywhere.",
-    accent: "from-[color:var(--color-iris)] to-[color:var(--color-iris-cyan)]",
+    accent: "linear-gradient(135deg, #3B82F6, #93B4FA)",
     action: { label: "Ship a project", to: "/workspace" },
   },
   {
@@ -74,28 +74,28 @@ const CONNECTORS: Array<{
     title: "Database & auth",
     status: "live",
     text: "Your workspace, chat history, credits and audit log run on the self-hosted Nexura backend.",
-    accent: "from-[#059669] to-[#5EEAD4]",
+    accent: "linear-gradient(135deg, #059669, #5EEAD4)",
   },
   {
     icon: Cloud,
     title: "OpenRouter models",
     status: "live",
     text: "Smart cost routing picks the cheapest capable model per request, with automatic fallbacks.",
-    accent: "from-[#7C3AED] to-[#C084FC]",
+    accent: "linear-gradient(135deg, #7C3AED, #C084FC)",
   },
   {
     icon: Globe,
     title: "Custom domain",
     status: "soon",
     text: "Point a domain at a shipped project and Nexura will handle DNS verification and TLS.",
-    accent: "from-[#0EA5E9] to-[#67E8F9]",
+    accent: "linear-gradient(135deg, #0EA5E9, #67E8F9)",
   },
   {
     icon: Webhook,
     title: "Webhooks",
     status: "soon",
     text: "Trigger external workflows whenever a project builds, ships or deploys.",
-    accent: "from-[#F59E0B] to-[#FCD34D]",
+    accent: "linear-gradient(135deg, #F59E0B, #FCD34D)",
   },
 ];
 
@@ -128,10 +128,8 @@ function ConnectorsPage() {
               >
                 <div className="flex items-start gap-3">
                   <span
-                    className={cn(
-                      "grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br",
-                      accent,
-                    )}
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-xl"
+                    style={{ background: accent }}
                   >
                     <Icon className="h-5 w-5 text-white" aria-hidden="true" />
                   </span>

@@ -60,12 +60,12 @@ const FILTERS = [
 
 /** Deterministic accent per project so the grid reads colourful, not grey. */
 const ACCENTS = [
-  "from-[color:var(--color-iris)] to-[color:var(--color-iris-cyan)]",
-  "from-[#7C3AED] to-[#C084FC]",
-  "from-[#059669] to-[#5EEAD4]",
-  "from-[#F59E0B] to-[#FCD34D]",
-  "from-[#E11D48] to-[#FB7185]",
-  "from-[#0EA5E9] to-[#67E8F9]",
+  "linear-gradient(135deg, #3B82F6, #93B4FA)",
+  "linear-gradient(135deg, #7C3AED, #C084FC)",
+  "linear-gradient(135deg, #059669, #5EEAD4)",
+  "linear-gradient(135deg, #F59E0B, #FCD34D)",
+  "linear-gradient(135deg, #E11D48, #FB7185)",
+  "linear-gradient(135deg, #0EA5E9, #67E8F9)",
 ];
 
 function accentFor(id: string) {
@@ -212,12 +212,10 @@ function ProjectsPage() {
                     className="block focus-visible:outline-none"
                   >
                     <div
-                      className={cn(
-                        "relative grid h-28 place-items-center bg-gradient-to-br",
-                        accentFor(thread.id),
-                      )}
+                      className="relative grid h-28 place-items-center"
+                      style={{ background: accentFor(thread.id) }}
                     >
-                      <Layers className="h-7 w-7 text-white/85" aria-hidden="true" />
+                      <Layers className="h-7 w-7 text-white opacity-90" aria-hidden="true" />
                     </div>
                     <div className="p-4">
                       <p className="truncate text-sm font-semibold text-ink-900">{thread.title}</p>
