@@ -85,6 +85,8 @@ interface PreviewContextValue {
   setDevice: (d: PreviewDevice) => void;
   openPreview: (code: string, rawLang: string) => void;
   openProject: (project: ArtifactProject) => void;
+  /** Empty the workspace (used when switching to a conversation with no build yet). */
+  clearProject: () => void;
   /** Opens the split workspace panel even when nothing has been generated yet. */
   openWorkspace: () => void;
   toggleWorkspace: () => void;
@@ -325,6 +327,19 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
     void import("@/lib/starter-project").then((mod) => openProject(mod.createStarterProject()));
   }, [openProject]);
 
+  const clearProject = useCallback(() => {
+    setPayload(null);
+    setActiveFile(null);
+    setVersions([]);
+    setActiveVersionId(null);
+    setBuildError(null);
+    setConsoleEntries([]);
+    resetFixState();
+    setRevision((r) => r + 1);
+  }, [resetFixState]);
+
+
+
 
   const clearRuntimeErrors = useCallback(() => {
     setRuntimeErrors([]);
@@ -510,6 +525,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
         setDevice,
         openPreview,
         openProject,
+        clearProject,
         openWorkspace,
         toggleWorkspace,
         loadStarterProject,

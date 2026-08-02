@@ -116,7 +116,8 @@ function ChatWorkspaceInner() {
   const [loadedThreads, setLoadedThreads] = useState<Set<string>>(() => new Set());
   const credits = useCredits();
 
-  const { isOpen: previewOpen, toggleWorkspace, openWorkspace, openProject } = usePreview();
+  const { isOpen: previewOpen, toggleWorkspace, openWorkspace, openProject, clearProject } =
+    usePreview();
   const isMobile = useIsMobile();
 
   // Deep link: /workspace?thread=<id> opens that conversation.
@@ -323,12 +324,22 @@ function ChatWorkspaceInner() {
         break;
       }
     }
-    if (!project) return;
+    if (!project) {
+      // Switching into a conversation that has no build yet must not keep the
+      // previous thread's project on screen.
+      const empty = `${active.id}:empty`;
+      if (restoredProjectRef.current !== empty) {
+        restoredProjectRef.current = empty;
+        clearProject();
+      }
+      return;
+    }
     const signature = `${active.id}:${project.title}:${Object.keys(project.files).join(",")}`;
     if (restoredProjectRef.current === signature) return;
     restoredProjectRef.current = signature;
     openProject(project);
-  }, [active, openProject]);
+  }, [active, openProject, clearProject]);
+
 
 
 
@@ -803,7 +814,7 @@ function ChatWorkspaceInner() {
               </div>
               <div className="mt-0.5 flex items-center gap-1.5 text-2xs">
                 <span className="rounded-sm bg-[color:var(--color-iris)]/15 px-1 py-px font-medium uppercase text-[color:var(--color-iris)]">
-                  {profile?.plan ?? "free"}
+                  {credits.unlimited ? "Admin" : (profile?.plan ?? "free")}
                 </span>
                 <span className="truncate text-ink-500">{user?.email ?? ""}</span>
               </div>
