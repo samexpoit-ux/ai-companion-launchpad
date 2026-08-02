@@ -10,6 +10,7 @@ import {
   Route as RouteIcon,
   ScrollText,
   ShieldAlert,
+  TrendingUp,
   ShieldCheck,
   SlidersHorizontal,
   Users,
@@ -23,6 +24,7 @@ import { PaymentsTab } from "@/components/admin/PaymentsTab";
 import { PlansTab } from "@/components/admin/PlansTab";
 import { SettingsTab } from "@/components/admin/SettingsTab";
 import { TracesTab } from "@/components/admin/TracesTab";
+import { ProfitTab } from "@/components/admin/ProfitTab";
 import { AuditTab } from "@/components/admin/AuditTab";
 import { useAdmin } from "@/hooks/useAdmin";
 import { cn } from "@/lib/utils";
@@ -56,13 +58,62 @@ const SECTIONS = [
     icon: LayoutDashboard,
     accent: "var(--color-iris)",
   },
-  { id: "users", label: "Users", hint: "Manage accounts", icon: Users, accent: "var(--color-orchid)" },
-  { id: "usage", label: "Usage & cost", hint: "Tokens & spend", icon: BarChart3, accent: "var(--color-mint)" },
-  { id: "payments", label: "Payments", hint: "Sales & refunds", icon: BadgeDollarSign, accent: "var(--color-sun)" },
-  { id: "plans", label: "Plans", hint: "Pricing tiers", icon: Layers, accent: "var(--color-iris-warm)" },
-  { id: "settings", label: "Settings", hint: "Platform config", icon: SlidersHorizontal, accent: "var(--color-iris-cyan)" },
-  { id: "traces", label: "Model traces", hint: "Routing & fallbacks", icon: RouteIcon, accent: "var(--color-orchid)" },
-  { id: "audit", label: "Audit log", hint: "Admin trail", icon: ScrollText, accent: "var(--color-flare)" },
+  {
+    id: "users",
+    label: "Users",
+    hint: "Manage accounts",
+    icon: Users,
+    accent: "var(--color-orchid)",
+  },
+  {
+    id: "usage",
+    label: "Usage & cost",
+    hint: "Tokens & spend",
+    icon: BarChart3,
+    accent: "var(--color-mint)",
+  },
+  {
+    id: "profit",
+    label: "Profit & margin",
+    hint: "Revenue vs cost",
+    icon: TrendingUp,
+    accent: "var(--color-iris)",
+  },
+  {
+    id: "payments",
+    label: "Payments",
+    hint: "Sales & refunds",
+    icon: BadgeDollarSign,
+    accent: "var(--color-sun)",
+  },
+  {
+    id: "plans",
+    label: "Plans",
+    hint: "Pricing tiers",
+    icon: Layers,
+    accent: "var(--color-iris-warm)",
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    hint: "Platform config",
+    icon: SlidersHorizontal,
+    accent: "var(--color-iris-cyan)",
+  },
+  {
+    id: "traces",
+    label: "Model traces",
+    hint: "Routing & fallbacks",
+    icon: RouteIcon,
+    accent: "var(--color-orchid)",
+  },
+  {
+    id: "audit",
+    label: "Audit log",
+    hint: "Admin trail",
+    icon: ScrollText,
+    accent: "var(--color-flare)",
+  },
 ] as const;
 
 type TabId = (typeof SECTIONS)[number]["id"];
@@ -248,6 +299,7 @@ function AdminPage() {
           {tab === "overview" && <OverviewTab />}
           {tab === "users" && <UsersTab />}
           {tab === "usage" && <UsageTab />}
+          {tab === "profit" && <ProfitTab />}
           {tab === "payments" && <PaymentsTab />}
           {tab === "plans" && <PlansTab />}
           {tab === "settings" && <SettingsTab />}

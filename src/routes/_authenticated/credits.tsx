@@ -13,7 +13,7 @@ import {
   PageStatGrid,
 } from "@/components/page-shell";
 
-import { formatCredits } from "@/lib/credits";
+import { ACTION_RULES, chargeExplanation, formatCredits, type CreditAction } from "@/lib/credits";
 import { useCredits } from "@/hooks/useCredits";
 import {
   breakdownByAction,
@@ -122,7 +122,7 @@ function CreditsPage() {
           <PageStat label="Remaining" value={formatCredits(credits.remaining)} />
           <PageStat label="Charged this period" value={formatCredits(net)} />
           <PageStat label="Ledger entries" value={String(entries.length)} />
-          <PageStat label="Provider cost" value={formatUsd(spendUsd)} />
+          {admin && <PageStat label="Provider cost" value={formatUsd(spendUsd)} />}
         </PageStatGrid>
 
         {notice && (
@@ -143,12 +143,26 @@ function CreditsPage() {
                 <caption className="sr-only">Credits grouped by action</caption>
                 <thead className="text-2xs uppercase tracking-wider text-ink-500">
                   <tr>
-                    <th scope="col" className="py-2 pr-3">Action</th>
-                    <th scope="col" className="py-2 pr-3">Charges</th>
-                    <th scope="col" className="py-2 pr-3">Charged</th>
-                    <th scope="col" className="py-2 pr-3">Refunded</th>
-                    <th scope="col" className="py-2 pr-3">Net</th>
-                    <th scope="col" className="py-2">Provider cost</th>
+                    <th scope="col" className="py-2 pr-3">
+                      Action
+                    </th>
+                    <th scope="col" className="py-2 pr-3">
+                      Charges
+                    </th>
+                    <th scope="col" className="py-2 pr-3">
+                      Charged
+                    </th>
+                    <th scope="col" className="py-2 pr-3">
+                      Refunded
+                    </th>
+                    <th scope="col" className="py-2 pr-3">
+                      Net
+                    </th>
+                    {admin && (
+                      <th scope="col" className="py-2">
+                        Provider cost
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -158,13 +172,68 @@ function CreditsPage() {
                       <td className="py-2.5 pr-3 text-ink-600">{row.charges}</td>
                       <td className="py-2.5 pr-3 text-ink-600">{formatCredits(row.credits)}</td>
                       <td className="py-2.5 pr-3 text-ink-600">{formatCredits(row.refunded)}</td>
-                      <td className="py-2.5 pr-3 font-semibold text-ink-900">{formatCredits(row.net)}</td>
-                      <td className="py-2.5 text-ink-600">{formatUsd(row.costUsd)}</td>
+                      <td className="py-2.5 pr-3 font-semibold text-ink-900">
+                        {formatCredits(row.net)}
+                      </td>
+                      {admin && <td className="py-2.5 text-ink-600">{formatUsd(row.costUsd)}</td>}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+          )}
+        </PageSection>
+
+        <PageSection
+          title="Why each request was charged"
+          description="Every API call Nexura ran for you, the credits it burned and the workload behind that number."
+        >
+          {entries.length === 0 ? (
+            <PageEmpty>Nothing charged yet.</PageEmpty>
+          ) : (
+            <ul className="space-y-2">
+              {entries
+                .filter((e) => e.credits > 0)
+                .slice(0, 25)
+                .map((entry) => {
+                  const action =
+                    (entry.action as CreditAction) in ACTION_RULES
+                      ? (entry.action as CreditAction)
+                      : "chat";
+                  const lines = chargeExplanation(action, { credits: entry.credits });
+                  return (
+                    <li
+                      key={`why-${entry.id}`}
+                      className="rounded-xl border border-ink-200 bg-white/70 p-3"
+                    >
+                      <div className="flex flex-wrap items-baseline gap-2 text-xs">
+                        <span className="font-medium text-ink-900">
+                          {ACTION_RULES[action].label}
+                        </span>
+                        <span className="font-semibold text-[color:var(--color-iris)]">
+                          {formatCredits(entry.credits)} credits
+                        </span>
+                        {entry.tokens > 0 && (
+                          <span className="text-ink-500">{entry.tokens} tokens processed</span>
+                        )}
+                        <span className="ml-auto text-ink-400">{fmtWhen(entry.createdAt)}</span>
+                      </div>
+                      <ul className="mt-1.5 space-y-0.5 text-2xs text-ink-500">
+                        {lines.map((line) => (
+                          <li key={line.label}>
+                            <span className="text-ink-700">{line.label}</span> — {line.detail}
+                          </li>
+                        ))}
+                        {admin && entry.upstreamModel && (
+                          <li className="font-mono text-ink-400">
+                            engine {entry.upstreamModel} · {formatUsd(entry.costUsd)}
+                          </li>
+                        )}
+                      </ul>
+                    </li>
+                  );
+                })}
+            </ul>
           )}
         </PageSection>
 
@@ -182,15 +251,23 @@ function CreditsPage() {
                 >
                   <span className="font-medium text-ink-900">{entry.action}</span>
                   <span className="text-ink-500">{entry.tier}</span>
-                  <span className={entry.credits < 0 ? "font-semibold text-emerald-600" : "font-semibold text-ink-900"}>
+                  <span
+                    className={
+                      entry.credits < 0
+                        ? "font-semibold text-emerald-600"
+                        : "font-semibold text-ink-900"
+                    }
+                  >
                     {entry.credits < 0 ? "+" : "−"}
                     {formatCredits(Math.abs(entry.credits))}
                   </span>
-                  {entry.model && <span className="min-w-0 truncate text-ink-500">{entry.model}</span>}
-                  {entry.upstreamModel && (
+                  {admin && entry.model && (
+                    <span className="min-w-0 truncate text-ink-500">{entry.model}</span>
+                  )}
+                  {admin && entry.upstreamModel && (
                     <span className="min-w-0 truncate text-ink-400">{entry.upstreamModel}</span>
                   )}
-                  {entry.costUsd > 0 && (
+                  {admin && entry.costUsd > 0 && (
                     <span className="rounded-full border border-ink-200 px-2 py-0.5 text-2xs font-medium text-ink-600">
                       {formatUsd(entry.costUsd)}
                       {entry.tokens > 0 ? ` · ${entry.tokens} tok` : ""}
@@ -251,4 +328,3 @@ function CreditsPage() {
     </PageShell>
   );
 }
-
