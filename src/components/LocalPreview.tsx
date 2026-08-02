@@ -106,6 +106,7 @@ function runProject(
   files: Record<string, string>,
   entry: string,
   doc: Document,
+  win: Window,
 ): Record<string, unknown> {
   const cache = new Map<string, Record<string, unknown>>();
 
@@ -142,8 +143,10 @@ function runProject(
     };
 
     // eslint-disable-next-line no-new-func
-    const run = new Function("require", "module", "exports", "React", out ?? "");
-    run(req, mod, mod.exports, React);
+    const run = new Function(
+      "require", "module", "exports", "React", "window", "document", "globalThis", out ?? "",
+    );
+    run(req, mod, mod.exports, React, win, doc, win);
     cache.set(path, mod.exports);
     return mod.exports;
   };
@@ -300,14 +303,16 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
           // host realm can mount outside the iframe and leave a blank preview.
           const appPath = Object.keys(files).find((p) => /(^|\/)App\.(tsx|jsx|ts|js)$/.test(p));
           const renderEntry = appPath ?? payload.entry;
-          Component = pickComponent(runProject(files, renderEntry, doc));
+           Component = pickComponent(runProject(files, renderEntry, doc, win));
         } else {
           const source = ensureDefaultExport(payload.code);
           const out = compileModule(payload.lang === "react-ts" ? "App.tsx" : "App.jsx", source);
           const module: { exports: Record<string, unknown> } = { exports: {} };
           // eslint-disable-next-line no-new-func
-          const run = new Function("require", "module", "exports", "React", out ?? "");
-          run(makeRequire(), module, module.exports, React);
+          const run = new Function(
+            "require", "module", "exports", "React", "window", "document", "globalThis", out ?? "",
+          );
+          run(makeRequire(), module, module.exports, React, win, doc, win);
           Component = pickComponent(module.exports);
         }
 

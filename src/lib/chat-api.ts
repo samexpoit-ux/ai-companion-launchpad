@@ -16,6 +16,10 @@ export interface ChatMessage {
   latencyMs?: number;
   /** Credits charged for the prompt that produced this reply. */
   credits?: number;
+  traceId?: string;
+  task?: string;
+  upstream?: string;
+  attempts?: Array<{ model: string; ok: boolean; ms: number; error?: string }>;
 }
 
 export interface ChatThread {
@@ -94,6 +98,10 @@ export async function sendChatMessage(
   outputTokens: number;
   latencyMs: number;
   credits?: { charged: number; remaining: number; total: number; used: number; plan: string };
+  traceId?: string;
+  task?: string;
+  upstream?: string;
+  attempts?: Array<{ model: string; ok: boolean; ms: number; error?: string }>;
 }> {
   const payload = {
     modelId,
@@ -120,6 +128,10 @@ export async function sendChatMessage(
     outputTokens: number;
     latencyMs: number;
     credits?: { charged: number; remaining: number; total: number; used: number; plan: string };
+    traceId?: string;
+    task?: string;
+    upstream?: string;
+    attempts?: Array<{ model: string; ok: boolean; ms: number; error?: string }>;
   };
   return data;
 }
