@@ -3,7 +3,12 @@ import { Check, ChevronDown, Loader2, Eye, ListTree, FileCode2 } from "lucide-re
 import { cn } from "@/lib/utils";
 import { usePreview } from "@/components/preview-context";
 import type { ArtifactProject } from "@/lib/artifact";
-import { formatCredits } from "@/lib/credits";
+import {
+  chargeExplanation,
+  formatCredits,
+  type ChargeLine,
+  type CreditAction,
+} from "@/lib/credits";
 
 export interface ActivityStep {
   label: string;
@@ -138,7 +143,11 @@ export function ActivityCard({
 
 /** Builds the Details timeline for a completed assistant turn. */
 export function stepsForMessage(opts: {
+  /** Only rendered for admin viewers — customers never see engine names. */
   modelName?: string;
+  /** True when the viewer holds the admin role. */
+  adminView?: boolean;
+  action?: CreditAction;
   latencyMs?: number;
   tokens?: number;
   inputTokens?: number;
@@ -163,15 +172,18 @@ export function stepsForMessage(opts: {
       : "response structure and checks",
     done: true,
   });
-  if (opts.modelName) {
+  if (opts.modelName && opts.adminView) {
     steps.push({ label: "Selected the AI engine", detail: opts.modelName, done: true });
+  } else {
+    steps.push({ label: "Selected the best-value engine", detail: "smart cost router", done: true });
   }
   for (const [index, attempt] of (opts.attempts ?? []).entries()) {
+    const timing = attempt.ok
+      ? `${attempt.ms}ms`
+      : `${attempt.ms}ms · ${attempt.error?.slice(0, 90) ?? "delivery incomplete"}`;
     steps.push({
       label: attempt.ok ? "Delivery check passed" : `Fallback check ${index + 1}`,
-      detail: attempt.ok
-        ? `${attempt.ms}ms`
-        : `${attempt.ms}ms · ${attempt.error?.slice(0, 90) ?? "delivery incomplete"}`,
+      detail: opts.adminView ? `${attempt.model} · ${timing}` : timing,
       done: true,
     });
   }
