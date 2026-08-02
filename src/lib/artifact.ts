@@ -102,6 +102,22 @@ export function stripArtifacts(text: string): string {
   return text.replace(ARTIFACT_RE, "").replace(/\n{3,}/g, "\n\n").trim();
 }
 
+/**
+ * Chat prose for a build reply.
+ *
+ * Nexura never delivers code by hand: when a message carries a project the
+ * files land in the live workspace, so the bubble keeps only the summary and
+ * every fenced snippet is dropped.
+ */
+export function chatProse(text: string): string {
+  if (!hasArtifact(text)) return text;
+  const prose = stripArtifacts(text)
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return prose || "Built it — the project is live in the workspace on the right.";
+}
+
 export function hasArtifact(text: string): boolean {
   return /<(nexusArtifact|boltArtifact)\b/i.test(text);
 }
