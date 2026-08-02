@@ -192,7 +192,7 @@ export const Route = createFileRoute("/api/autofix")({
                   tokens: result.tokens,
                   costUsd: result.costUsd,
                   latencyMs: Date.now() - started,
-                  credits: { charged: balance.charged, remaining: balance.remaining },
+                  credits: { charged: balance.charged, remaining: balance.remaining, unlimited: balance.unlimited === true },
                 });
               }
               return apiErrorResponse("bad_model_output", "autofix", "The model did not return a usable patch.");
@@ -206,7 +206,7 @@ export const Route = createFileRoute("/api/autofix")({
               tokens: result.tokens,
               costUsd: result.costUsd,
               latencyMs: Date.now() - started,
-              credits: { charged: balance.charged, remaining: balance.remaining },
+              credits: { charged: balance.charged, remaining: balance.remaining, unlimited: balance.unlimited === true },
             });
           }
 
@@ -223,7 +223,7 @@ export const Route = createFileRoute("/api/autofix")({
             tokens: result.tokens,
             costUsd: result.costUsd,
             latencyMs: Date.now() - started,
-            credits: { charged: balance.charged, remaining: balance.remaining },
+            credits: { charged: balance.charged, remaining: balance.remaining, unlimited: balance.unlimited === true },
           });
         } catch (err) {
           await finalizeRequestCost(request, charge.id, "autofix", { failed: true });

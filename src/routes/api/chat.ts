@@ -200,6 +200,7 @@ export const Route = createFileRoute("/api/chat")({
               total: balance.total,
               used: balance.used,
               plan: balance.plan,
+              unlimited: balance.unlimited === true,
             },
           });
         } catch (err) {

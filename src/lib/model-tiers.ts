@@ -69,7 +69,7 @@ export const TIER_CHAINS = {
 } as const;
 
 /** Small code question — no need to pay Claude prices. */
-export const LIGHT_CODE_CHAIN = [CHEAP_CHAT, CODING_SECONDARY, FREE_CODE, FREE_POWER, FREE_OSS];
+export const LIGHT_CODE_CHAIN = [CODING_SECONDARY, CHEAP_CHAT, FREE_CODE, FREE_POWER, FREE_OSS];
 
 /** Models that cost real money, grouped by how expensive they are. */
 export const PREMIUM_MODELS: readonly string[] = [

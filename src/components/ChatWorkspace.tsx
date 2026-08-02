@@ -214,11 +214,32 @@ function ChatWorkspaceInner() {
   // Follow ?thread= deep links after the initial hydration too.
   useEffect(() => {
     if (!hydrated || !requestedThreadId) return;
-    setThreads((prev) => {
-      if (prev.some((t) => t.id === requestedThreadId)) setActiveId(requestedThreadId);
-      return prev;
-    });
-  }, [hydrated, requestedThreadId]);
+    if (!threads.some((thread) => thread.id === requestedThreadId)) return;
+    setActiveId(requestedThreadId);
+    if (loadedThreads.has(requestedThreadId)) return;
+    void (async () => {
+      const rows = await listMessages(requestedThreadId);
+      setThreads((prev) =>
+        prev.map((thread) =>
+          thread.id === requestedThreadId
+            ? {
+                ...thread,
+                messages: rows.map((message) => ({
+                  id: message.clientId ?? message.id,
+                  role: message.role === "assistant" ? ("assistant" as const) : ("user" as const),
+                  content: message.content,
+                  createdAt: new Date(message.createdAt).getTime(),
+                  model: message.model ?? undefined,
+                  tokens: message.tokens ?? undefined,
+                  latencyMs: message.latencyMs ?? undefined,
+                })),
+              }
+            : thread,
+        ),
+      );
+      setLoadedThreads((prev) => new Set(prev).add(requestedThreadId));
+    })();
+  }, [hydrated, requestedThreadId, threads, loadedThreads]);
 
   /**
    * Live sync: threads and messages written anywhere (another tab, another
@@ -531,12 +552,8 @@ function ChatWorkspaceInner() {
       setMode(pending.mode);
     }
 
-    const current = threads.find((t) => t.id === activeId);
-    if (current && current.messages.length === 0) {
-      setInput("");
-      void sendText(pending.prompt, current, pending.mode as "Build" | "Chat" | "Plan");
-      return;
-    }
+    // Dashboard prompts always start a new conversation. Reusing whichever
+    // thread happened to be active made hand-offs dependent on load timing.
     void (async () => {
       const created = await createDbThread({
         title: pending.prompt.slice(0, 48),
@@ -552,7 +569,7 @@ function ChatWorkspaceInner() {
       void navigate({ to: "/workspace", search: { thread: fresh.id }, replace: true });
       await sendText(pending.prompt, fresh, pending.mode as "Build" | "Chat" | "Plan");
     })();
-  }, [hydrated, threads, activeId, sendText, navigate]);
+  }, [hydrated, sendText, navigate]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {

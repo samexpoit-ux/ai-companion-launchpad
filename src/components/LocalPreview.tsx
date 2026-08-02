@@ -309,7 +309,7 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
           // Bootstrap entries call createRoot themselves. Running those in the
           // host realm can mount outside the iframe and leave a blank preview.
           const appPath = Object.keys(files).find((p) => /(^|\/)App\.(tsx|jsx|ts|js)$/.test(p));
-          const renderEntry = appPath ?? payload.entry;
+          const renderEntry = payload.entry ?? appPath;
           Component = pickComponent(runProject(files, renderEntry, doc, win));
         } else {
           const source = ensureDefaultExport(payload.code);
