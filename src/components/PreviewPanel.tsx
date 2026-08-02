@@ -158,7 +158,16 @@ export function PreviewPanel() {
             icon={Terminal}
             label="Console"
           />
+          {stackReport?.hasBackend && (
+            <TabBtn
+              active={tab === "stack"}
+              onClick={() => setTab("stack")}
+              icon={Layers}
+              label="Stack"
+            />
+          )}
         </div>
+
 
         <span className="pointer-events-none hidden min-w-0 shrink truncate rounded-full border border-ink-200 bg-ink-100 px-2 py-1 font-mono text-2xs text-ink-500 lg:inline">
           {payload.files ? `${Object.keys(payload.files).length} files` : payload.lang}
