@@ -12,6 +12,9 @@
  * output also works.
  */
 
+import { prismLangFor } from "@/lib/stack";
+
+
 export interface ArtifactProject {
   id: string;
   title: string;
