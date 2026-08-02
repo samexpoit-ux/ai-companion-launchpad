@@ -38,10 +38,10 @@ const when = (iso: string) =>
 function StatusPill({ status }: { status: string }) {
   const tone =
     status === "ok"
-      ? "bg-mint-100 text-mint-700"
+      ? "bg-[color:var(--color-mint-soft)] text-[color:var(--color-mint)]"
       : status === "blocked"
-        ? "bg-sun-100 text-sun-700"
-        : "bg-flare-100 text-flare-700";
+        ? "bg-[color:var(--color-sun-soft)] text-[color:var(--color-sun)]"
+        : "bg-[color:var(--color-flare-soft)] text-[color:var(--color-flare)]";
   return (
     <span className={cn("rounded-full px-2 py-0.5 text-2xs font-semibold capitalize", tone)}>
       {status}
@@ -83,7 +83,7 @@ function AttemptChain({ row }: { row: RequestTraceRow }) {
             title={a.error ?? undefined}
             className={cn(
               "rounded-md px-1.5 py-0.5 font-mono text-2xs",
-              a.ok ? "bg-mint-100 text-mint-700" : "bg-flare-100 text-flare-700",
+              a.ok ? "bg-[color:var(--color-mint-soft)] text-[color:var(--color-mint)]" : "bg-[color:var(--color-flare-soft)] text-[color:var(--color-flare)]",
             )}
           >
             {shortModel(a.model)} · {a.ms}ms
@@ -292,7 +292,7 @@ export function TracesTab() {
                             </div>
                           </dl>
                           {r.errorMessage ? (
-                            <p className="mt-2 rounded-lg bg-flare-100 px-3 py-2 font-mono text-2xs break-words text-flare-700">
+                            <p className="mt-2 rounded-lg bg-[color:var(--color-flare-soft)] px-3 py-2 font-mono text-2xs break-words text-[color:var(--color-flare)]">
                               {r.errorMessage}
                             </p>
                           ) : null}
