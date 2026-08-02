@@ -43,8 +43,7 @@ export function ActivityCard({
   return (
     <div
       data-testid="activity-card"
-      className="not-prose mb-3 overflow-hidden rounded-2xl border border-ink-200 bg-white/80"
-      style={{ boxShadow: "0 10px 30px -22px rgba(37,74,140,0.35)" }}
+      className="not-prose mb-3 overflow-hidden rounded-lg border border-ink-200 bg-white/80 shadow-ds-sm"
     >
       <div className="flex items-center gap-2.5 px-3.5 py-3">
         <span

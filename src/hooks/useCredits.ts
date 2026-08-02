@@ -18,6 +18,7 @@ interface CreditState {
   total: number;
   used: number;
   loading: boolean;
+  unlimited: boolean;
 }
 
 interface BalancePayload {
@@ -51,6 +52,7 @@ export function useCredits(): UseCredits {
     total: planById(DEFAULT_PLAN).credits,
     used: 0,
     loading: true,
+    unlimited: false,
   });
 
   const load = useCallback(async () => {
@@ -67,6 +69,7 @@ export function useCredits(): UseCredits {
       return;
     }
 
+    const { data: admin } = await supabase.rpc("is_admin");
     const payload = (data ?? {}) as BalancePayload;
     const plan: PlanId = isPlanId(payload.plan) ? payload.plan : DEFAULT_PLAN;
     setState({
@@ -74,6 +77,7 @@ export function useCredits(): UseCredits {
       total: Number(payload.total ?? planById(plan).credits),
       used: Number(payload.used ?? 0),
       loading: false,
+      unlimited: admin === true,
     });
   }, []);
 
@@ -125,8 +129,8 @@ export function useCredits(): UseCredits {
   return {
     ...state,
     remaining,
-    quote: (action, inputChars) => estimateCost(action, inputChars ?? 0),
-    canAfford: (action, inputChars) => remaining >= estimateCost(action, inputChars ?? 0),
+    quote: (action, inputChars) => state.unlimited ? 0 : estimateCost(action, inputChars ?? 0),
+    canAfford: (action, inputChars) => state.unlimited || remaining >= estimateCost(action, inputChars ?? 0),
     applyServerBalance,
     setPlan,
     refresh: load,

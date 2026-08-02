@@ -20,6 +20,7 @@ export interface ChargeResult {
   total: number;
   used: number;
   remaining: number;
+  unlimited?: boolean;
 }
 
 export class CreditError extends Error {
@@ -73,6 +74,21 @@ export async function chargeRequest(
       "unauthenticated",
       "This account is suspended. Contact support to restore access.",
     );
+  }
+
+  // Operational admin accounts remain authenticated and suspension-checked,
+  // but are not charged or blocked by workspace credit limits.
+  const { data: admin } = await supabase.rpc("is_admin");
+  if (admin === true) {
+    return {
+      id: "",
+      charged: 0,
+      plan: "pro",
+      total: 0,
+      used: 0,
+      remaining: 0,
+      unlimited: true,
+    };
   }
 
   const cost = usageReservationCost(action, opts.inputChars ?? 0);

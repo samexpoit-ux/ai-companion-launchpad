@@ -21,10 +21,12 @@ interface ChatBody {
   threadId?: string;
 }
 
-const SYSTEM_PROMPT = `You are Nexura AI — a premium, precise coding and product intelligence assistant.
+const SYSTEM_PROMPT = `You are Nexura AI — a senior product engineer and precise coding assistant.
 Respond in clean Markdown. Use fenced code blocks with language tags (tsx, ts, js, html, css, sql, bash, json)
-whenever you include code. Prefer tables for comparisons and bullet lists for enumerations. Be concise, senior,
-and opinionated.
+whenever you include code. First infer the user's actual outcome, constraints, existing stack, and likely edge cases.
+For chat and planning, give direct, concrete answers with an ordered implementation path—not generic advice.
+For builds, produce polished, responsive, accessible code with coherent hierarchy, working interactions,
+empty/loading/error states, and no placeholder buttons. Prefer small focused components.
 
 MULTI-FILE PROJECTS — very important:
 When the user asks you to build an app, page, component set, or anything that needs more than one file,
@@ -47,6 +49,9 @@ Artifact rules:
 - Only these runtime packages exist in the live preview: react, react-dom, lucide-react.
   Style with inline styles or Tailwind utility classes. Never import UI libraries or fetch remote packages.
 - Put a short plain-language explanation BEFORE the artifact, not inside it.
+- Ensure every imported local file is included and every visible interaction works.
+- Use semantic HTML, accessible labels, stable responsive dimensions, and high-contrast colors.
+- Before answering, silently check imports, exports, JSX balance, state flow, mobile layout, and preview compatibility.
 - For a single tiny snippet, a normal fenced code block is fine — reserve artifacts for real projects.`;
 
 export const Route = createFileRoute("/api/chat")({
@@ -82,21 +87,11 @@ export const Route = createFileRoute("/api/chat")({
         const mode = (body.mode ?? "").toLowerCase();
         const forcedTask =
           mode === "plan" ? ("reason" as const) : mode === "chat" ? ("chat" as const) : undefined;
-        const route = resolveRoute(body.modelId, {
-          prompt: lastUser?.content ?? "",
-          task: forcedTask,
-          plan: isPlanId(body.plan) ? body.plan : undefined,
-        });
-        if ("error" in route) {
-          return apiErrorResponse("no_provider", "chat", route.error);
-        }
-
         // ---- server-side credit enforcement (before any provider call) ----
         let charge;
         try {
           charge = await chargeRequest(request, actionForMode(mode), {
             inputChars: lastUser?.content.length ?? 0,
-            model: route.friendlyId,
             threadId: typeof body.threadId === "string" ? body.threadId : null,
           });
         } catch (err) {
@@ -106,6 +101,18 @@ export const Route = createFileRoute("/api/chat")({
             });
           }
           throw err;
+        }
+
+        // The browser cannot grant itself a premium model by spoofing `plan`.
+        // Route from the authoritative server-side plan returned by the guard.
+        const route = resolveRoute(body.modelId, {
+          prompt: lastUser?.content ?? "",
+          task: forcedTask,
+          plan: isPlanId(charge.plan) ? charge.plan : undefined,
+        });
+        if ("error" in route) {
+          await finalizeRequestCost(request, charge.id, actionForMode(mode), { failed: true });
+          return apiErrorResponse("no_provider", "chat", route.error);
         }
 
         const started = Date.now();

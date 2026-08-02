@@ -30,10 +30,10 @@ export interface ActionRule {
 }
 
 export const ACTION_RULES: Record<CreditAction, ActionRule> = {
-  chat: { action: "chat", label: "Chat message", base: 0.4, perKChars: 0.1, tier: "chat", note: "Cheap conversational tier" },
-  plan: { action: "plan", label: "Plan / architecture", base: 0.2, perKChars: 0.05, tier: "reason", note: "Reasoning tier" },
-  code: { action: "code", label: "Build / edit code", base: 0.6, perKChars: 0.1, tier: "code", note: "Coding tier — most expensive" },
-  autofix: { action: "autofix", label: "Auto-fix patch", base: 0.6, perKChars: 0.08, tier: "fix", note: "Coding tier, one charge per attempt" },
+  chat: { action: "chat", label: "Chat message", base: 0.03, perKChars: 0.02, tier: "chat", note: "Low-cost DeepSeek / Gemini tier" },
+  plan: { action: "plan", label: "Plan / architecture", base: 0.06, perKChars: 0.025, tier: "reason", note: "Low-cost planning tier" },
+  code: { action: "code", label: "Build / edit code", base: 0.18, perKChars: 0.05, tier: "code", note: "Claude coding tier when delivery needs it" },
+  autofix: { action: "autofix", label: "Auto-fix patch", base: 0.16, perKChars: 0.04, tier: "fix", note: "Focused coding repair" },
   preview_run: { action: "preview_run", label: "Run preview", base: 0.02, perKChars: 0, tier: "fast", note: "Compile + run in the sandbox" },
   export: { action: "export", label: "Export project", base: 0.02, perKChars: 0, tier: "fast", note: "Download files as a zip" },
 };
@@ -54,15 +54,15 @@ export function actualUsageCost(
   const rule = ACTION_RULES[action];
   const inputTokens = Math.max(0, usage.inputTokens ?? 0);
   const outputTokens = Math.max(0, usage.outputTokens ?? 0);
-  const inputRate = rule.perKChars * 0.4;
-  const outputRate = action === "code" || action === "autofix" ? 0.18 : action === "plan" ? 0.08 : 0.05;
-  return Math.max(0.02, round(rule.base + (inputTokens / 1000) * inputRate + (outputTokens / 1000) * outputRate));
+  const inputRate = rule.perKChars * 0.35;
+  const outputRate = action === "code" || action === "autofix" ? 0.05 : action === "plan" ? 0.025 : 0.02;
+  return Math.max(0.01, round(rule.base + (inputTokens / 1000) * inputRate + (outputTokens / 1000) * outputRate));
 }
 
 /** Maximum expected delivery reservation; unused credits are returned later. */
 export function usageReservationCost(action: CreditAction, inputChars = 0): number {
   const inputTokens = Math.ceil(Math.max(0, inputChars) / 3.6);
-  const maxOutputTokens = action === "code" || action === "autofix" ? 3000 : action === "plan" ? 1500 : 900;
+  const maxOutputTokens = action === "code" || action === "autofix" ? 4200 : action === "plan" ? 1800 : 1200;
   return actualUsageCost(action, { inputTokens, outputTokens: maxOutputTokens });
 }
 

@@ -1223,19 +1223,11 @@ function MessageBubble({ message, userInitial = "Y" }: { message: ChatMessage; u
         )}
         <div
           className={cn(
-            "relative rounded-2xl px-4 py-3 text-base leading-relaxed",
+            "relative px-4 py-3 text-base leading-relaxed",
             isUser
-              ? "inline-block text-ink-900"
-              : "border border-ink-200 text-ink-900",
+              ? "inline-block rounded-lg bg-primary text-primary-foreground"
+              : "text-ink-900",
           )}
-          style={isUser ? {
-            background: "linear-gradient(135deg, color-mix(in oklab, var(--color-iris-deep) 55%, transparent), color-mix(in oklab, var(--color-iris) 35%, transparent))",
-            border: "1px solid color-mix(in oklab, var(--color-iris) 40%, transparent)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12), 0 8px 24px -12px color-mix(in oklab, var(--color-iris-deep) 60%, transparent)",
-          } : {
-            background: "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(244,246,249,0.88))",
-            boxShadow: "0 10px 30px -18px rgba(37,74,140,0.25), inset 0 1px 0 rgba(255,255,255,0.9)",
-          }}
         >
 
           {isUser ? (
