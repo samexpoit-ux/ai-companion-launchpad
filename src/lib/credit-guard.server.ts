@@ -86,22 +86,33 @@ export async function chargeRequest(
     );
   }
 
-  // Operational admin accounts remain authenticated and suspension-checked,
-  // but are not charged or blocked by workspace credit limits.
+  const cost = usageReservationCost(action, opts.inputChars ?? 0);
+
+  // Admins are never blocked by a balance, but still get a normal ledger row
+  // so real token and provider usage remains visible to the admin console.
   const { data: admin } = await supabase.rpc("is_admin");
   if (admin === true) {
+    const { data, error } = await supabase.rpc("reserve_unlimited_usage", {
+      _action: action,
+      _tier: ACTION_RULES[action].tier,
+      _credits: cost,
+      _model: opts.model ?? null,
+      _thread_id: opts.threadId ?? null,
+      _reason: opts.reason ?? "unlimited admin usage",
+    });
+    if (error) throw new CreditError("unavailable", error.message ?? "Usage ledger is unavailable.");
+    const row = (data ?? {}) as Partial<ChargeResult>;
     return {
-      id: "",
-      charged: 0,
+      id: String(row.id ?? ""),
+      charged: Number(row.charged ?? cost),
       plan: "pro",
-      total: 0,
-      used: 0,
-      remaining: 0,
+      total: Number(row.total ?? 0),
+      used: Number(row.used ?? 0),
+      remaining: Number(row.remaining ?? 0),
       unlimited: true,
     };
   }
 
-  const cost = usageReservationCost(action, opts.inputChars ?? 0);
   const { data, error } = await supabase.rpc("spend_credits", {
     _action: action,
     _tier: ACTION_RULES[action].tier,
