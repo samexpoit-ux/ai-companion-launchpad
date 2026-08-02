@@ -40,6 +40,19 @@ export interface PreviewPayload {
 }
 
 
+/** One element picked with the visual "select to edit" tool. */
+export interface PreviewSelection {
+  /** Human label, e.g. `h1.text-4xl`. */
+  label: string;
+  /** Text content of the element, used to locate it in the source. */
+  text: string;
+  /** File the text was found in, when we could locate it. */
+  file: string | null;
+  /** Tag name, for the picker card. */
+  tag: string;
+  className: string;
+}
+
 export type FixStatus = "idle" | "detected" | "fixing" | "review" | "fixed" | "failed" | "exhausted";
 
 export interface FixEntry {
@@ -99,6 +112,13 @@ interface PreviewContextValue {
   liveUpdateFile: (path: string, code: string) => void;
   liveEdit: boolean;
   setLiveEdit: (v: boolean) => void;
+  // ---- visual edit ----
+  selectMode: boolean;
+  setSelectMode: (v: boolean) => void;
+  selection: PreviewSelection | null;
+  setSelection: (s: PreviewSelection | null) => void;
+  /** Replace the selected element's text everywhere it appears in the source. */
+  applySelectionText: (nextText: string) => boolean;
   /** Compile/build failure surfaced by the preview engine. */
   buildError: string | null;
   setBuildError: (m: string | null) => void;
@@ -193,6 +213,8 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
   const [revision, setRevision] = useState(0);
   const [activeFile, setActiveFile] = useState<string | null>(null);
   const [liveEdit, setLiveEdit] = useState(true);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selection, setSelection] = useState<PreviewSelection | null>(null);
   const [buildError, setBuildError] = useState<string | null>(null);
 
 
@@ -317,6 +339,46 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
   }, []);
 
 
+
+  /**
+   * Visual edit: rewrite the picked element's text in the source file so the
+   * change survives a rebuild, an export and a GitHub push — not just the DOM.
+   */
+  const applySelectionText = useCallback(
+    (nextText: string) => {
+      const prev = payloadRef.current;
+      const current = selection?.text?.trim();
+      if (!prev || !current || nextText === current) return false;
+
+      if (prev.files) {
+        const hit =
+          (selection?.file && prev.files[selection.file]?.includes(current) ? selection.file : null) ??
+          Object.keys(prev.files).find((path) => prev.files?.[path]?.includes(current));
+        if (!hit) return false;
+        const source = prev.files[hit] ?? "";
+        const files = { ...prev.files, [hit]: source.split(current).join(nextText) };
+        const next = {
+          ...prev,
+          files,
+          code: hit === prev.entry ? (files[hit] ?? prev.code) : prev.code,
+        };
+        setPayload(next);
+        pushVersion(next, `Visual edit · ${hit}`, [hit]);
+        setRevision((r) => r + 1);
+        setSelection((sel) => (sel ? { ...sel, text: nextText } : sel));
+        return true;
+      }
+
+      if (!prev.code.includes(current)) return false;
+      const next = { ...prev, code: prev.code.split(current).join(nextText) };
+      setPayload(next);
+      pushVersion(next, "Visual edit", []);
+      setRevision((r) => r + 1);
+      setSelection((sel) => (sel ? { ...sel, text: nextText } : sel));
+      return true;
+    },
+    [pushVersion, selection],
+  );
 
   const closePreview = useCallback(() => setIsOpen(false), []);
 
@@ -534,6 +596,11 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
         setActiveFile,
         updateFile,
         liveUpdateFile,
+        selectMode,
+        setSelectMode,
+        selection,
+        setSelection,
+        applySelectionText,
         liveEdit,
         setLiveEdit,
         buildError,

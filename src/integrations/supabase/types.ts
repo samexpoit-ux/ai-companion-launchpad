@@ -254,6 +254,53 @@ export type Database = {
           },
         ]
       }
+      custom_domains: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          last_check: string | null
+          status: string
+          target: string | null
+          thread_id: string | null
+          user_id: string
+          verification_token: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          last_check?: string | null
+          status?: string
+          target?: string | null
+          thread_id?: string | null
+          user_id: string
+          verification_token?: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          last_check?: string | null
+          status?: string
+          target?: string | null
+          thread_id?: string | null
+          user_id?: string
+          verification_token?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_domains_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount_cents: number
@@ -515,6 +562,70 @@ export type Database = {
         }
         Relationships: []
       }
+      thread_collaborators: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          invited_by: string | null
+          role: string
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          invited_by?: string | null
+          role?: string
+          thread_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          invited_by?: string | null
+          role?: string
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thread_collaborators_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      thread_stars: {
+        Row: {
+          created_at: string
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          thread_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thread_stars_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -563,6 +674,92 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_deliveries: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          event: string
+          id: string
+          payload: Json | null
+          response_code: number | null
+          status: string
+          user_id: string
+          webhook_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          event: string
+          id?: string
+          payload?: Json | null
+          response_code?: number | null
+          status?: string
+          user_id: string
+          webhook_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          event?: string
+          id?: string
+          payload?: Json | null
+          response_code?: number | null
+          status?: string
+          user_id?: string
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_deliveries_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhooks: {
+        Row: {
+          active: boolean
+          created_at: string
+          events: string[]
+          id: string
+          label: string
+          last_delivery_at: string | null
+          last_status: string | null
+          secret: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          events?: string[]
+          id?: string
+          label?: string
+          last_delivery_at?: string | null
+          last_status?: string | null
+          secret?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          events?: string[]
+          id?: string
+          label?: string
+          last_delivery_at?: string | null
+          last_status?: string | null
+          secret?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -577,6 +774,7 @@ export type Database = {
         Returns: undefined
       }
       assert_account_active: { Args: { _user_id: string }; Returns: undefined }
+      can_edit_thread: { Args: { _thread: string }; Returns: boolean }
       credit_balance: { Args: { _user_id?: string }; Returns: Json }
       downgrade_to_free: { Args: never; Returns: Json }
       finalize_request_usage: {
@@ -634,6 +832,7 @@ export type Database = {
         }
         Returns: Json
       }
+      thread_role: { Args: { _thread: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

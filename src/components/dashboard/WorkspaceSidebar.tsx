@@ -9,6 +9,8 @@ import {
   LogOut,
   PanelLeft,
   Plug,
+  Webhook,
+  Globe,
   Plus,
   Search,
   Settings,
@@ -35,6 +37,8 @@ const NAV = [
   { label: "Search", to: "/search", icon: Search, hint: "Ctrl K" },
   { label: "Resources", to: "/resources", icon: Compass, hint: "" },
   { label: "Connectors", to: "/connectors", icon: Plug, hint: "" },
+  { label: "Webhooks", to: "/webhooks", icon: Webhook, hint: "" },
+  { label: "Domains", to: "/domains", icon: Globe, hint: "" },
 ] as const;
 
 const PROJECT_NAV = [

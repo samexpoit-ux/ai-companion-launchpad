@@ -11,6 +11,7 @@ import {
   creditErrorCode,
   finalizeRequestCost,
 } from "@/lib/credit-guard.server";
+import { dispatchWebhooks } from "@/lib/webhooks.server";
 
 interface IncomingMessage {
   role: "user" | "assistant" | "system";
@@ -186,6 +187,17 @@ export const Route = createFileRoute("/api/chat")({
             latencyMs: Date.now() - started,
             threadId,
           });
+          // Outbound webhooks are fire-and-forget: a slow receiver must never
+          // delay the build response.
+          void dispatchWebhooks(request, "project.built", {
+            mode,
+            model: route.friendlyId,
+            upstream,
+            traceId,
+            threadId,
+            latencyMs: Date.now() - started,
+          }).catch(() => {});
+
           return Response.json({
             content,
             model: route.friendlyId,

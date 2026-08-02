@@ -126,6 +126,20 @@ export const pushProjectToGitHub = createServerFn({ method: "POST" })
         throw new Error(`Failed to update ${branch}: ${String(create.json["message"] ?? create.status)}`);
     }
 
+    // Tell the user's own services the project left Nexura.
+    try {
+      const { dispatchWithClient } = await import("@/lib/webhooks.server");
+      await dispatchWithClient(context.supabase, context.userId, "project.shipped", {
+        target: "github",
+        repoUrl: `https://github.com/${owner}/${data.repo}`,
+        branch,
+        commit: commitSha.slice(0, 7),
+        files: Object.keys(data.files).length,
+      });
+    } catch {
+      /* webhook problems never fail a successful push */
+    }
+
     return {
       ok: true as const,
       repoUrl: `https://github.com/${owner}/${data.repo}`,

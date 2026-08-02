@@ -178,7 +178,8 @@ interface Props {
 export default function LocalPreview({ payload, device, reloadKey }: Props) {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const rootRef = useRef<ReactDOMClient.Root | null>(null);
-  const { reportRuntimeError, reportConsole, setBuildError } = usePreview();
+  const { reportRuntimeError, reportConsole, setBuildError, selectMode, setSelection } =
+    usePreview();
   const [compileError, setCompileError] = useState<string | null>(null);
 
   const isReact = payload.lang === "react" || payload.lang === "react-ts" || !!payload.files;
@@ -369,6 +370,60 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
     reportRuntimeError,
     setBuildError,
   ]);
+
+  /**
+   * Visual "select element to edit": while the picker is armed we outline the
+   * element under the cursor inside the same-origin frame and hand the click
+   * back to the workspace so the user can rewrite its text or ask the AI.
+   */
+  useEffect(() => {
+    const doc = frameRef.current?.contentDocument;
+    if (!selectMode || !doc) return;
+
+    const HIGHLIGHT = "2px solid #7C3AED";
+    let hovered: HTMLElement | null = null;
+    const clear = () => {
+      if (hovered) hovered.style.outline = "";
+      hovered = null;
+    };
+
+    const over = (event: Event) => {
+      const el = event.target as HTMLElement | null;
+      if (!el || el === hovered || el.id === "root") return;
+      clear();
+      hovered = el;
+      el.style.outline = HIGHLIGHT;
+      el.style.outlineOffset = "1px";
+    };
+
+    const pick = (event: Event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const el = event.target as HTMLElement | null;
+      if (!el) return;
+      const tag = el.tagName.toLowerCase();
+      const className = typeof el.className === "string" ? el.className : "";
+      const text = (el.textContent ?? "").trim().slice(0, 400);
+      setSelection({
+        tag,
+        className,
+        text,
+        file: null,
+        label: className ? `${tag}.${className.split(/\s+/)[0]}` : tag,
+      });
+    };
+
+    doc.addEventListener("mouseover", over, true);
+    doc.addEventListener("click", pick, true);
+    doc.body?.style.setProperty("cursor", "crosshair");
+
+    return () => {
+      doc.removeEventListener("mouseover", over, true);
+      doc.removeEventListener("click", pick, true);
+      doc.body?.style.removeProperty("cursor");
+      clear();
+    };
+  }, [selectMode, setSelection, reloadKey, payload]);
 
   const width = DEVICE_WIDTH[device];
 
