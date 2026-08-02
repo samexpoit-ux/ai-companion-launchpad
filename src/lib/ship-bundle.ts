@@ -133,9 +133,26 @@ Entry component: \`${entry}\`
 /** Project files plus the scaffolding needed to install, run and deploy them. */
 export function buildShipFiles(payload: ShipPayload): Record<string, string> {
   const files = { ...payload.files };
+  const paths = Object.keys(files);
   const entry = payload.entry || "src/App.tsx";
   const title = payload.title || "Nexura AI project";
   const slug = slugify(title);
+
+  // Only scaffold a Vite/React app when the project actually contains a React
+  // front end — Laravel, Node, Python or SQL-only projects ship as authored.
+  const hasReact = paths.some((p) => /\.(tsx|jsx)$/.test(p));
+  const isForeignStack =
+    !hasReact &&
+    paths.some((p) => /\.(php|py|go|rb|java|cs)$/.test(p) || p === "composer.json");
+
+  if (!files[".gitignore"]) {
+    files[".gitignore"] = isForeignStack
+      ? "vendor\nnode_modules\n.env\nstorage/*.log\n"
+      : "node_modules\ndist\n.env\n";
+  }
+  if (!files["README.md"]) files["README.md"] = README(title, entry);
+
+  if (isForeignStack) return files;
 
   if (!files["package.json"]) files["package.json"] = PKG(slug);
   if (!files["index.html"]) files["index.html"] = INDEX_HTML(title);
@@ -143,8 +160,7 @@ export function buildShipFiles(payload: ShipPayload): Record<string, string> {
   if (!files["tsconfig.json"]) files["tsconfig.json"] = TSCONFIG;
   if (!files["src/styles.css"] && !files["src/index.css"]) files["src/styles.css"] = STYLES;
   if (!files["src/main.tsx"] && !files["src/main.jsx"]) files["src/main.tsx"] = MAIN(entry);
-  if (!files[".gitignore"]) files[".gitignore"] = "node_modules\ndist\n.env\n";
-  if (!files["README.md"]) files["README.md"] = README(title, entry);
 
   return files;
 }
+

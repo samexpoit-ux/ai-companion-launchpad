@@ -12,6 +12,9 @@
  * output also works.
  */
 
+import { prismLangFor } from "@/lib/stack";
+
+
 export interface ArtifactProject {
   id: string;
   title: string;
@@ -123,21 +126,11 @@ export function hasArtifact(text: string): boolean {
 }
 
 export function langForPath(path: string): string {
-  const ext = path.split(".").pop()?.toLowerCase() ?? "";
-  const map: Record<string, string> = {
-    tsx: "tsx",
-    ts: "typescript",
-    jsx: "jsx",
-    js: "javascript",
-    mjs: "javascript",
-    css: "css",
-    html: "html",
-    json: "json",
-    md: "markdown",
-    mdx: "mdx",
-  };
-  return map[ext] ?? "text";
+  // The builder ships React, PHP/Laravel, Node, Python, SQL, Docker … so the
+  // language map lives in one place next to the stack analyser.
+  return prismLangFor(path);
 }
+
 
 // ---------- module resolution for the local preview engine ----------
 

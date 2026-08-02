@@ -1,4 +1,6 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { analyzeStack } from "@/lib/stack";
+
 import { ShipDialog } from "@/components/ShipDialog";
 import {
   X,
@@ -19,6 +21,7 @@ import {
   Rocket,
   MousePointerClick,
   Check,
+  Layers,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -51,6 +54,9 @@ const VersionHistory = lazy(() => import("./VersionHistory"));
 const ValidationBadge = lazy(() => import("./ValidationBadge"));
 // Build/runtime failure overlay with logs + next steps.
 const ErrorOverlay = lazy(() => import("./ErrorOverlay"));
+// Blueprint view for stacks the sandbox cannot execute (Laravel/PHP, Node, SQL, Docker…).
+const StackPreview = lazy(() => import("./StackPreview"));
+
 
 export function PreviewPanel() {
   const {
@@ -89,6 +95,14 @@ export function PreviewPanel() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const { loadStarterProject } = usePreview();
   const credits = useCredits();
+
+  // What kind of project is loaded? Drives the Stack tab and the preview fallback.
+  const stackReport = useMemo(
+    () => (payload?.files ? analyzeStack(payload.files) : null),
+    [payload?.files],
+  );
+
+
 
   // Safe run flow: nothing executes in the sandbox until the user explicitly
   // arms this revision. A new AI patch (new revision) re-locks the preview.
@@ -145,7 +159,16 @@ export function PreviewPanel() {
             icon={Terminal}
             label="Console"
           />
+          {stackReport?.hasBackend && (
+            <TabBtn
+              active={tab === "stack"}
+              onClick={() => setTab("stack")}
+              icon={Layers}
+              label="Stack"
+            />
+          )}
         </div>
+
 
         <span className="pointer-events-none hidden min-w-0 shrink truncate rounded-full border border-ink-200 bg-ink-100 px-2 py-1 font-mono text-2xs text-ink-500 lg:inline">
           {payload.files ? `${Object.keys(payload.files).length} files` : payload.lang}
@@ -345,12 +368,20 @@ export function PreviewPanel() {
         >
           <Suspense fallback={<LoadingSkeleton />}>
             {tab === "preview" ? (
-              <LocalPreview
-                key={`local-${payload.lang}-${revision}`}
-                payload={payload}
-                device={device}
-                reloadKey={reloadKey}
-              />
+              stackReport && !stackReport.webEntry && payload.files ? (
+                // Backend / infra-only project: nothing for the iframe to run, so
+                // show the stack blueprint instead of a blank frame.
+                <StackPreview key={`stack-${revision}`} files={payload.files} />
+              ) : (
+                <LocalPreview
+                  key={`local-${payload.lang}-${revision}`}
+                  payload={payload}
+                  device={device}
+                  reloadKey={reloadKey}
+                />
+              )
+            ) : tab === "stack" && payload.files ? (
+              <StackPreview key={`stack-tab-${revision}`} files={payload.files} />
             ) : tab === "console" ? (
               <PreviewConsole entries={consoleEntries} onClear={clearConsole} />
             ) : tab === "code" && payload.files ? (
@@ -359,10 +390,11 @@ export function PreviewPanel() {
               <SandpackStage
                 key={`${payload.lang}-${reloadKey}-${revision}`}
                 payload={payload}
-                tab={tab}
+                tab={tab === "stack" ? "code" : tab}
                 device={device}
               />
             )}
+
           </Suspense>
 
           {selection && tab === "preview" ? (
