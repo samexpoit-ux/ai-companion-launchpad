@@ -85,6 +85,8 @@ interface PreviewContextValue {
   setDevice: (d: PreviewDevice) => void;
   openPreview: (code: string, rawLang: string) => void;
   openProject: (project: ArtifactProject) => void;
+  /** Empty the workspace (used when switching to a conversation with no build yet). */
+  clearProject: () => void;
   /** Opens the split workspace panel even when nothing has been generated yet. */
   openWorkspace: () => void;
   toggleWorkspace: () => void;
