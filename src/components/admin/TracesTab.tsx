@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -225,9 +225,8 @@ export function TracesTab() {
                 </tr>
               ) : (
                 rows.map((r) => (
-                  <>
+                  <Fragment key={r.id}>
                     <tr
-                      key={r.id}
                       onClick={() => setExpanded(expanded === r.id ? null : r.id)}
                       className="cursor-pointer border-t border-ink-100 align-top hover:bg-ink-50/60"
                     >
@@ -260,7 +259,7 @@ export function TracesTab() {
                       </td>
                     </tr>
                     {expanded === r.id ? (
-                      <tr key={`${r.id}-detail`} className="border-t border-ink-100 bg-ink-50/50">
+                      <tr className="border-t border-ink-100 bg-ink-50/50">
                         <td colSpan={8} className="px-4 py-3">
                           <dl className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
@@ -305,7 +304,7 @@ export function TracesTab() {
                         </td>
                       </tr>
                     ) : null}
-                  </>
+                  </Fragment>
                 ))
               )}
             </tbody>
