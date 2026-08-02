@@ -116,6 +116,14 @@ type AnchorProps = React.AnchorHTMLAttributes<HTMLAnchorElement> & {
   end?: boolean;
 };
 
+/** react-router supports render-prop children on Link/NavLink. */
+function renderChildren(children: AnchorProps["children"], isActive: boolean): React.ReactNode {
+  if (typeof children === "function") {
+    return (children as (state: { isActive: boolean }) => React.ReactNode)({ isActive });
+  }
+  return children;
+}
+
 function Link({ to = "/", replace, onClick, children, className, style, ...rest }: AnchorProps) {
   const { navigate } = useRouter();
   return (
@@ -130,7 +138,7 @@ function Link({ to = "/", replace, onClick, children, className, style, ...rest 
         navigate(to, { replace });
       }}
     >
-      {typeof children === "function" ? children({ isActive: false }) : children}
+      {renderChildren(children, false)}
     </a>
   );
 }
@@ -146,7 +154,7 @@ function NavLink({ to = "/", className, style, children, end, ...rest }: AnchorP
       style={typeof style === "function" ? style({ isActive }) : style}
       aria-current={isActive ? "page" : undefined}
     >
-      {typeof children === "function" ? children({ isActive }) : children}
+      {renderChildren(children, isActive)}
     </Link>
   );
 }
