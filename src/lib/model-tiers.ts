@@ -22,7 +22,7 @@
 /** Coding tier — best structure first, cheap coders as fallback. */
 export const CODING_PRIMARY = "anthropic/claude-3.7-sonnet";
 export const CODING_SECONDARY = "anthropic/claude-3.5-sonnet";
-export const CODING_TERTIARY = "deepseek/deepseek-chat";
+export const CODING_TERTIARY = "qwen/qwen-2.5-coder-32b-instruct";
 
 /** Cheap tier — chat, plan, titles. */
 export const CHEAP_CHAT = "deepseek/deepseek-chat";
