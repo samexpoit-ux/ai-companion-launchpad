@@ -39,6 +39,13 @@ export interface AdminUserRow {
   suspendedAt: string | null;
 }
 
+export interface AdminUserStats {
+  total: number;
+  premium: number;
+  suspended: number;
+  admins: number;
+}
+
 export interface PaymentRow {
   id: string;
   userId: string;
@@ -149,6 +156,21 @@ export async function fetchOverview(): Promise<AdminOverview> {
 const round = (n: number) => Math.round(n * 100) / 100;
 
 /* ------------------------------------------------------------------ users */
+
+export async function fetchUserStats(): Promise<AdminUserStats> {
+  const [total, premium, suspended, admins] = await Promise.all([
+    supabase.from("profiles").select("id", { count: "exact", head: true }),
+    supabase.from("user_settings").select("user_id", { count: "exact", head: true }).neq("plan", "free"),
+    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("status", "suspended"),
+    supabase.from("user_roles").select("user_id", { count: "exact", head: true }).eq("role", "admin"),
+  ]);
+  return {
+    total: total.count ?? 0,
+    premium: premium.count ?? 0,
+    suspended: suspended.count ?? 0,
+    admins: admins.count ?? 0,
+  };
+}
 
 export async function listUsers(search = ""): Promise<AdminUserRow[]> {
   let q = supabase

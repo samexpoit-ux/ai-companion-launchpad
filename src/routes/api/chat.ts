@@ -26,7 +26,14 @@ interface ChatBody {
   threadId?: string;
 }
 
-const SYSTEM_PROMPT = `You are Nexura AI — a senior product engineer and precise coding assistant.
+const CHAT_PROMPT = `You are Nexura AI, a precise and concise product assistant. Respond in clean Markdown.
+Answer the user's actual question directly. Give concrete steps rather than generic advice.`;
+
+const PLAN_PROMPT = `You are Nexura AI, a senior product architect. Respond in clean Markdown with an ordered,
+practical implementation plan. Identify constraints, dependencies, edge cases, security risks, and verification steps.
+Do not generate a project artifact unless the user explicitly switches to Build mode.`;
+
+const BUILD_PROMPT = `You are Nexura AI — a senior product engineer and precise coding assistant.
 Respond in clean Markdown. Use fenced code blocks with language tags (tsx, ts, js, html, css, sql, bash, json)
 whenever you include code. First infer the user's actual outcome, constraints, existing stack, and likely edge cases.
 For chat and planning, give direct, concrete answers with an ordered implementation path—not generic advice.
@@ -58,6 +65,12 @@ Artifact rules:
 - Use semantic HTML, accessible labels, stable responsive dimensions, and high-contrast colors.
 - Before answering, silently check imports, exports, JSX balance, state flow, mobile layout, and preview compatibility.
 - For a single tiny snippet, a normal fenced code block is fine — reserve artifacts for real projects.`;
+
+function systemPromptFor(task: "fast" | "chat" | "reason" | "code" | "fix") {
+  if (task === "code" || task === "fix") return BUILD_PROMPT;
+  if (task === "reason") return PLAN_PROMPT;
+  return CHAT_PROMPT;
+}
 
 export const Route = createFileRoute("/api/chat")({
   server: {
@@ -91,7 +104,13 @@ export const Route = createFileRoute("/api/chat")({
         const lastUser = [...normalizedMessages].reverse().find((m) => m.role === "user");
         const mode = (body.mode ?? "").toLowerCase();
         const forcedTask =
-          mode === "plan" ? ("reason" as const) : mode === "chat" ? ("chat" as const) : undefined;
+          mode === "plan"
+            ? ("reason" as const)
+            : mode === "chat"
+              ? ("chat" as const)
+              : mode === "build"
+                ? ("code" as const)
+                : undefined;
         // ---- server-side credit enforcement (before any provider call) ----
         let charge;
         try {
@@ -110,11 +129,18 @@ export const Route = createFileRoute("/api/chat")({
 
         // The browser cannot grant itself a premium model by spoofing `plan`.
         // Route from the authoritative server-side plan returned by the guard.
-        const route = resolveRoute(body.modelId, {
-          prompt: lastUser?.content ?? "",
-          task: forcedTask,
-          plan: isPlanId(charge.plan) ? charge.plan : undefined,
-        });
+        let route;
+        try {
+          route = resolveRoute(body.modelId, {
+            prompt: lastUser?.content ?? "",
+            task: forcedTask,
+            plan: isPlanId(charge.plan) ? charge.plan : undefined,
+          });
+        } catch (err) {
+          await finalizeRequestCost(request, charge.id, actionForMode(mode), { failed: true });
+          const message = err instanceof Error ? err.message : "Model routing failed.";
+          return apiErrorResponse("no_provider", "chat", message);
+        }
         if ("error" in route) {
           await finalizeRequestCost(request, charge.id, actionForMode(mode), { failed: true });
           return apiErrorResponse("no_provider", "chat", route.error);
@@ -122,7 +148,7 @@ export const Route = createFileRoute("/api/chat")({
 
         const started = Date.now();
         const cleanMessages = [
-          { role: "system" as const, content: SYSTEM_PROMPT },
+          { role: "system" as const, content: systemPromptFor(route.task) },
           ...normalizedMessages,
         ];
 

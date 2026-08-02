@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   deleteUser,
+  fetchUserStats,
   grantCredits,
   listUsers,
   setUserAdmin,
@@ -25,6 +26,7 @@ import {
   setUserPlan,
   setUserStatus,
   type AdminUserRow,
+  type AdminUserStats,
 } from "@/lib/admin-api";
 import { formatCredits } from "@/lib/credits";
 import { PLANS, planById } from "@/lib/plans";
@@ -48,10 +50,13 @@ export function UsersTab() {
   const [filter, setFilter] = useState<Filter>("all");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  const [stats, setStats] = useState<AdminUserStats>({ total: 0, premium: 0, suspended: 0, admins: 0 });
 
   const load = useCallback(async (term: string) => {
     setLoading(true);
-    setRows(await listUsers(term));
+    const [users, userStats] = await Promise.all([listUsers(term), fetchUserStats()]);
+    setRows(users);
+    setStats(userStats);
     setLoading(false);
   }, []);
 
@@ -130,16 +135,6 @@ export function UsersTab() {
         return true;
       }),
     [rows, filter],
-  );
-
-  const stats = useMemo(
-    () => ({
-      total: rows.length,
-      premium: rows.filter((r) => r.plan !== "free").length,
-      suspended: rows.filter((r) => r.status === "suspended").length,
-      admins: rows.filter((r) => r.isAdmin).length,
-    }),
-    [rows],
   );
 
   return (

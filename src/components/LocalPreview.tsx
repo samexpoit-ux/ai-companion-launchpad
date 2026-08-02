@@ -28,8 +28,20 @@ const BASE_HTML = `<!doctype html><html><head><meta charset="utf-8" />
 </style>
 </head><body><div id="root"></div></body></html>`;
 
+const PREVIEW_BRIDGE = `<script>(function(){
+  var send=function(type,level,message){ parent.postMessage({source:'nexura-preview',type:type,level:level,message:String(message)}, '*'); };
+  ['log','info','warn','error'].forEach(function(level){ var native=console[level].bind(console); console[level]=function(){ var args=[].slice.call(arguments); send('console',level,args.map(function(v){ try{return typeof v==='object'?JSON.stringify(v):String(v)}catch(e){return String(v)} }).join(' ')); native.apply(console,args); }; });
+  window.addEventListener('error',function(e){send('error','error',e.message||'Preview error')});
+  window.addEventListener('unhandledrejection',function(e){send('error','error',e.reason&&e.reason.message||e.reason||'Unhandled rejection')});
+})();</script>`;
+
+function withBridge(html: string): string {
+  if (/<head[^>]*>/i.test(html)) return html.replace(/<head([^>]*)>/i, `<head$1>${PREVIEW_BRIDGE}`);
+  return `${PREVIEW_BRIDGE}${html}`;
+}
+
 const CSS_HTML = (css: string) => `<!doctype html><html><head><meta charset="utf-8" />
-<style>body{font-family:ui-sans-serif,system-ui,sans-serif;background:#fff;color:#1B1A17;padding:24px;margin:0}
+${PREVIEW_BRIDGE}<style>body{font-family:ui-sans-serif,system-ui,sans-serif;background:#fff;color:#1B1A17;padding:24px;margin:0}
 .demo-card{padding:16px;border:1px solid #E4EDFA;border-radius:12px;background:#F7FBFF;margin-top:12px}</style>
 <style>${css}</style></head><body>
 <h1>Heading 1</h1><h2>Heading 2</h2>
@@ -40,14 +52,14 @@ const CSS_HTML = (css: string) => `<!doctype html><html><head><meta charset="utf
 
 const JS_HTML = (js: string) => `<!doctype html><html><head><meta charset="utf-8" />
 <style>body{font-family:ui-sans-serif,system-ui,sans-serif;background:#fff;color:#1B1A17;padding:24px;margin:0}</style>
-</head><body><div id="app"></div><script type="module">
+</head><body><div id="app"></div>${PREVIEW_BRIDGE}<script type="module">
 try {
 ${js}
 } catch (e) { console.error(e); document.body.innerHTML = '<pre style="color:#b91c1c;white-space:pre-wrap">' + (e && e.stack || e) + '</pre>'; }
 </script></body></html>`;
 
 const MD_HTML = (md: string) => `<!doctype html><html><head><meta charset="utf-8" />
-<style>body{font-family:ui-sans-serif,system-ui,sans-serif;background:#fff;color:#1B1A17;padding:24px;margin:0;line-height:1.65}
+${PREVIEW_BRIDGE}<style>body{font-family:ui-sans-serif,system-ui,sans-serif;background:#fff;color:#1B1A17;padding:24px;margin:0;line-height:1.65}
 pre{background:#F1F6FE;padding:12px;border-radius:10px;overflow:auto}</style></head>
 <body><pre style="white-space:pre-wrap;background:transparent;padding:0">${md
   .replace(/&/g, "&amp;")
@@ -164,15 +176,41 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
   const isReact = payload.lang === "react" || payload.lang === "react-ts" || !!payload.files;
 
   // Non-React languages render as plain documents.
+  let plainCode = payload.code;
+  let plainCompileError: string | null = null;
+  if (payload.lang === "vanilla-ts") {
+    try {
+      plainCode = transform(payload.code, { filename: "index.ts", presets: ["typescript"] }).code ?? "";
+    } catch (err) {
+      plainCompileError = err instanceof Error ? err.message : String(err);
+    }
+  }
   const srcDoc = isReact
     ? BASE_HTML
     : payload.lang === "css"
       ? CSS_HTML(payload.code)
       : payload.lang === "html"
-        ? payload.code
+        ? withBridge(payload.code)
         : payload.lang === "mdx"
           ? MD_HTML(payload.code)
-          : JS_HTML(payload.code);
+          : JS_HTML(plainCompileError ? `throw new Error(${JSON.stringify(plainCompileError)})` : plainCode);
+
+  useEffect(() => {
+    const receive = (event: MessageEvent) => {
+      if (event.source !== frameRef.current?.contentWindow) return;
+      const data = event.data as { source?: string; type?: string; level?: string; message?: string };
+      if (data?.source !== "nexura-preview" || !data.message) return;
+      if (data.type === "console") {
+        const level = ["log", "info", "warn", "error"].includes(data.level ?? "")
+          ? (data.level as "log" | "info" | "warn" | "error")
+          : "log";
+        reportConsole(level, data.message);
+      }
+      if (data.type === "error" || data.level === "error") reportRuntimeError(data.message);
+    };
+    window.addEventListener("message", receive);
+    return () => window.removeEventListener("message", receive);
+  }, [reportConsole, reportRuntimeError]);
 
   useEffect(() => {
     setCompileError(null);
