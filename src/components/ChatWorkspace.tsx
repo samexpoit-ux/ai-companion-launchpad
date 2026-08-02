@@ -323,12 +323,22 @@ function ChatWorkspaceInner() {
         break;
       }
     }
-    if (!project) return;
+    if (!project) {
+      // Switching into a conversation that has no build yet must not keep the
+      // previous thread's project on screen.
+      const empty = `${active.id}:empty`;
+      if (restoredProjectRef.current !== empty) {
+        restoredProjectRef.current = empty;
+        clearProject();
+      }
+      return;
+    }
     const signature = `${active.id}:${project.title}:${Object.keys(project.files).join(",")}`;
     if (restoredProjectRef.current === signature) return;
     restoredProjectRef.current = signature;
     openProject(project);
-  }, [active, openProject]);
+  }, [active, openProject, clearProject]);
+
 
 
 
