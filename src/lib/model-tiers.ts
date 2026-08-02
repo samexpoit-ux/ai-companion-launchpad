@@ -47,8 +47,8 @@ export const TIER_CHAINS = {
   code: [
     CODING_PRIMARY,
     CODING_SECONDARY,
-    CODING_TERTIARY,
     CHEAP_CHAT,
+    CODING_TERTIARY,
     FREE_CODE,
     FREE_POWER,
     FREE_OSS,
@@ -56,8 +56,8 @@ export const TIER_CHAINS = {
   fix: [
     CODING_PRIMARY,
     CODING_SECONDARY,
-    CODING_TERTIARY,
     CHEAP_CHAT,
+    CODING_TERTIARY,
     FREE_CODE,
     FREE_POWER,
     FREE_OSS,
