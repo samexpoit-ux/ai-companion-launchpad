@@ -443,6 +443,78 @@ export type Database = {
         }
         Relationships: []
       }
+      request_traces: {
+        Row: {
+          attempts: Json
+          cost_usd: number
+          created_at: string
+          credits_charged: number
+          endpoint: string
+          error_message: string | null
+          fallback_count: number
+          final_model: string | null
+          id: string
+          input_tokens: number
+          latency_ms: number
+          mode: string | null
+          output_tokens: number
+          plan: string | null
+          primary_model: string | null
+          prompt_chars: number
+          status: string
+          task: string | null
+          thread_id: string | null
+          trace_id: string
+          user_id: string | null
+        }
+        Insert: {
+          attempts?: Json
+          cost_usd?: number
+          created_at?: string
+          credits_charged?: number
+          endpoint: string
+          error_message?: string | null
+          fallback_count?: number
+          final_model?: string | null
+          id?: string
+          input_tokens?: number
+          latency_ms?: number
+          mode?: string | null
+          output_tokens?: number
+          plan?: string | null
+          primary_model?: string | null
+          prompt_chars?: number
+          status?: string
+          task?: string | null
+          thread_id?: string | null
+          trace_id: string
+          user_id?: string | null
+        }
+        Update: {
+          attempts?: Json
+          cost_usd?: number
+          created_at?: string
+          credits_charged?: number
+          endpoint?: string
+          error_message?: string | null
+          fallback_count?: number
+          final_model?: string | null
+          id?: string
+          input_tokens?: number
+          latency_ms?: number
+          mode?: string | null
+          output_tokens?: number
+          plan?: string | null
+          primary_model?: string | null
+          prompt_chars?: number
+          status?: string
+          task?: string | null
+          thread_id?: string | null
+          trace_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
