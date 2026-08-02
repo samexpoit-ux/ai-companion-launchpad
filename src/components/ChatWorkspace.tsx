@@ -83,7 +83,7 @@ import { takePendingPrompt } from "@/lib/pending-prompt";
 import { PreviewProvider, usePreview, isPreviewable } from "@/components/preview-context";
 import { PreviewPanel } from "@/components/PreviewPanel";
 import { PlayCircle, GripVertical, FolderTree, PanelRight } from "lucide-react";
-import { chatProse, hasArtifact, parseArtifacts, stripArtifacts, type ArtifactProject } from "@/lib/artifact";
+import { chatProse, parseArtifacts, type ArtifactProject } from "@/lib/artifact";
 import { ActivityCard, stepsForMessage } from "@/components/ActivityCard";
 
 import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from "react-resizable-panels";
