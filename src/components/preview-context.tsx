@@ -20,7 +20,7 @@ export type PreviewLang =
   | "vanilla-ts"
   | "css"
   | "mdx";
-export type PreviewTab = "preview" | "code" | "console";
+export type PreviewTab = "preview" | "code" | "console" | "stack";
 export type PreviewDevice = "desktop" | "tablet" | "mobile";
 
 export const DEVICE_WIDTH: Record<PreviewDevice, number | null> = {
