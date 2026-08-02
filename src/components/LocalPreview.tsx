@@ -4,7 +4,9 @@ import * as ReactDOMClient from "react-dom/client";
 import * as LucideIcons from "lucide-react";
 import { transform } from "@babel/standalone";
 import { resolveAlias, resolveModule } from "@/lib/artifact";
-import { PREVIEW_DOC_CSS, PREVIEW_TOKENS_CSS, previewStyleTag } from "@/lib/preview-theme";
+import { previewStyleTag } from "@/lib/preview-theme";
+import { injectTailwind } from "@/lib/preview-tailwind";
+
 import { classNameShims, framerMotion, reactRouterDom } from "@/lib/preview-shims";
 
 import {
@@ -23,8 +25,12 @@ import {
  */
 
 const BASE_HTML = `<!doctype html><html><head><meta charset="utf-8" />
-${previewStyleTag(`html, body { height: 100%; } body { padding: 20px; box-sizing: border-box; } #root { min-height: 100%; }`)}
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..800&family=Space+Grotesk:wght@400..700&display=swap" rel="stylesheet" />
+<style>html,body{height:100%;margin:0}#root{min-height:100%}</style>
 </head><body><div id="root"></div></body></html>`;
+
 
 const PREVIEW_BRIDGE = `<script>(function(){
   var send=function(type,level,message){ parent.postMessage({source:'nexura-preview',type:type,level:level,message:String(message)}, '*'); };
@@ -259,29 +265,12 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
       const doc = frame.contentDocument;
       if (!win || !doc) return;
 
-      // Shared design tokens first, so cloned host CSS can override nothing it
-      // shouldn't and the palette matches even before Tailwind loads.
-      try {
-        const tokens = doc.createElement("style");
-        tokens.dataset["nexuraTokens"] = "true";
-        tokens.textContent = PREVIEW_TOKENS_CSS + PREVIEW_DOC_CSS;
-        doc.head.appendChild(tokens);
-      } catch {
-        /* ignore */
-      }
+      // Run the real Tailwind compiler inside the frame. The previewed project
+      // owns its own look, so we deliberately do NOT clone the product shell's
+      // stylesheet or tokens in here — that used to repaint generated pages with
+      // Nexura's palette and leave utility classes unstyled.
+      void injectTailwind(doc);
 
-      // Mirror the host stylesheets so Tailwind classes render inside the frame.
-      try {
-        for (const node of Array.from(
-          document.head.querySelectorAll("style, link[rel=stylesheet]"),
-        )) {
-          const clone = node.cloneNode(true) as HTMLElement;
-          if (clone instanceof HTMLLinkElement) clone.href = (node as HTMLLinkElement).href;
-          doc.head.appendChild(clone);
-        }
-      } catch {
-        /* ignore */
-      }
 
       // Pipe sandbox errors into the auto-fix loop.
       const frameConsole = (win as unknown as { console: Console }).console;
@@ -382,6 +371,22 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
     reportRuntimeError,
     setBuildError,
   ]);
+
+  // Static HTML previews are Tailwind-authored too, so give them the compiler.
+  useEffect(() => {
+    if (isReact) return;
+    const frame = frameRef.current;
+    if (!frame) return;
+    const run = () => {
+      const doc = frame.contentDocument;
+      if (doc) void injectTailwind(doc);
+    };
+    if (frame.contentDocument?.readyState === "complete") run();
+    frame.addEventListener("load", run);
+    return () => frame.removeEventListener("load", run);
+  }, [isReact, payload.code, payload.lang, reloadKey]);
+
+
 
   /**
    * Visual "select element to edit": while the picker is armed we outline the

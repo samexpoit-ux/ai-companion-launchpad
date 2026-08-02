@@ -39,9 +39,10 @@ export function CreditMeter({
         {!unlimited && <span className="text-ink-500">/ {formatCredits(total)} credits</span>}
         {!compact && (
           <span className="ml-auto rounded-full border border-ink-200 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-ink-500">
-            {planById(plan).name}
+            {unlimited ? "Admin" : planById(plan).name}
           </span>
         )}
+
       </div>
       <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-ink-200">
         <div
