@@ -95,6 +95,14 @@ export function PreviewPanel() {
   const { loadStarterProject } = usePreview();
   const credits = useCredits();
 
+  // What kind of project is loaded? Drives the Stack tab and the preview fallback.
+  const stackReport = useMemo(
+    () => (payload?.files ? analyzeStack(payload.files) : null),
+    [payload?.files],
+  );
+
+
+
   // Safe run flow: nothing executes in the sandbox until the user explicitly
   // arms this revision. A new AI patch (new revision) re-locks the preview.
   const [armedRevision, setArmedRevision] = useState<number | null>(null);
