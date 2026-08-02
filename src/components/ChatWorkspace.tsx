@@ -308,6 +308,30 @@ function ChatWorkspaceInner() {
     if ((active?.messages.length ?? 0) > 0) openWorkspace();
   }, [active?.id, active?.messages.length, isMobile, openWorkspace]);
 
+  // Reopening a conversation restores its latest generated project into the live
+  // workspace, so preview, files and console match the thread you switched to.
+  const restoredProjectRef = useRef<string>("");
+  useEffect(() => {
+    if (!active) return;
+    let project: ArtifactProject | null = null;
+    for (let i = active.messages.length - 1; i >= 0; i -= 1) {
+      const m = active.messages[i];
+      if (m.role !== "assistant") continue;
+      const found = parseArtifacts(m.content)[0];
+      if (found) {
+        project = found;
+        break;
+      }
+    }
+    if (!project) return;
+    const signature = `${active.id}:${project.title}:${Object.keys(project.files).join(",")}`;
+    if (restoredProjectRef.current === signature) return;
+    restoredProjectRef.current = signature;
+    openProject(project);
+  }, [active, openProject]);
+
+
+
   const filtered = useMemo(() => {
     if (!query.trim()) return threads;
     const q = query.toLowerCase();
