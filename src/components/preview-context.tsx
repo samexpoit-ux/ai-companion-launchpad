@@ -187,14 +187,27 @@ function smartDetect(code: string, rawLang: string): PreviewLang {
   return "vanilla";
 }
 
-// Sandbox noise that is never worth an AI patch.
+// Sandbox noise that is never worth an AI patch. These still show up in the
+// Console tab — they just don't inflate the error badge or wake the auto-fixer.
 const IGNORED = [
   /favicon/i,
   /ResizeObserver loop/i,
   /Download the React DevTools/i,
   /sandpack/i,
   /net::ERR_/i,
+  /^Warning:/i,
+  /unique "?key"? prop/i,
+  /validateDOMNesting/i,
+  /defaultProps will be removed/i,
+  /useLayoutEffect does nothing on the server/i,
+  /Failed to load resource/i,
+  /fonts\.(googleapis|gstatic)\.com/i,
+  /allow-scripts and allow-same-origin/i,
+  /was preloaded using link preload/i,
+  /Extra attributes from the server/i,
+  /source ?map/i,
 ];
+
 
 function isNoise(message: string) {
   const m = message.trim();
