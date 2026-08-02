@@ -335,6 +335,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
       setPayload(next);
       setActiveFile(entry);
       setIsOpen(true);
+      setTimeline(null);
       setTab("preview");
       setRevision((r) => r + 1);
       resetFixState();
@@ -438,6 +439,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
 
   const clearProject = useCallback(() => {
     setPayload(null);
+    setTimeline(null);
     setActiveFile(null);
     setVersions([]);
     setActiveVersionId(null);

@@ -50,18 +50,49 @@ export function ActivityCard({
   project = null,
   charge = null,
   adminView = false,
+  messageId = "turn",
+  durationMs,
 }: {
   title: string;
   steps: ActivityStep[];
   busy?: boolean;
+  /** Identifies the turn so the side panel can highlight the open one. */
+  messageId?: string;
+  durationMs?: number;
   project?: ArtifactProject | null;
   /** Per-turn credit breakdown; customers see workload only, never engines. */
   charge?: ChargeSummary | null;
   adminView?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const { payload, openProject, openWorkspace, setTab } = usePreview();
+  const { payload, openProject, openWorkspace, setTab, openTimeline, timeline } = usePreview();
   const canPreview = Boolean(project) || Boolean(payload);
+
+  const detailsOpen = timeline?.messageId === messageId;
+
+  /**
+   * Lovable behaviour: `Details` sends the turn's trajectory to the right-hand
+   * panel (with "Back to latest" to return to preview/code/console). On narrow
+   * screens there is no side panel, so it falls back to the inline list.
+   */
+  const showDetails = () => {
+    const narrow = typeof window !== "undefined" && window.innerWidth < 768;
+    if (narrow) {
+      setOpen((o) => !o);
+      return;
+    }
+    openTimeline({
+      messageId,
+      title,
+      steps: steps.map((s) => ({ label: s.label, detail: s.detail })),
+      files: project?.order ?? [],
+      charge: charge
+        ? chargeLines(charge).map((line) => ({ label: line.label, detail: line.detail }))
+        : undefined,
+      durationMs,
+      at: Date.now(),
+    });
+  };
 
   const showPreview = () => {
     if (project) openProject(project);
@@ -102,14 +133,18 @@ export function ActivityCard({
       <div className="flex items-center gap-2 border-t border-ink-200/70 px-3 py-2">
         <button
           type="button"
-          onClick={() => setOpen((o) => !o)}
+          onClick={showDetails}
           aria-expanded={open}
+          data-testid="activity-details"
           className="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-ink-200 bg-white px-3 text-xs font-medium text-ink-700 transition hover:border-ink-300 hover:text-ink-900"
         >
           <ListTree className="h-3.5 w-3.5" />
           Details
           <ChevronDown
-            className={cn("h-3.5 w-3.5 text-ink-400 transition-transform", open && "rotate-180")}
+            className={cn(
+              "h-3.5 w-3.5 text-ink-400 transition-transform",
+              (open || detailsOpen) && "rotate-180",
+            )}
           />
         </button>
         <button

@@ -56,6 +56,8 @@ const ValidationBadge = lazy(() => import("./ValidationBadge"));
 const ErrorOverlay = lazy(() => import("./ErrorOverlay"));
 // Blueprint view for stacks the sandbox cannot execute (Laravel/PHP, Node, SQL, Docker…).
 const StackPreview = lazy(() => import("./StackPreview"));
+// Lovable-style "Details" trajectory view (timeline + changed files).
+const TimelinePanel = lazy(() => import("./TimelinePanel"));
 
 
 export function PreviewPanel() {
@@ -89,6 +91,7 @@ export function PreviewPanel() {
     selection,
     setSelection,
     applySelectionText,
+    timeline,
   } = usePreview();
 
   const [reloadKey, setReloadKey] = useState(0);
@@ -131,6 +134,13 @@ export function PreviewPanel() {
   }, [credits, runAutoFix]);
 
   if (!isOpen) return null;
+  // The details timeline replaces the workspace until "Back to latest".
+  if (timeline)
+    return (
+      <Suspense fallback={null}>
+        <TimelinePanel view={timeline} />
+      </Suspense>
+    );
   if (!payload) return <EmptyWorkspace onClose={closePreview} onStart={loadStarterProject} />;
 
   return (
