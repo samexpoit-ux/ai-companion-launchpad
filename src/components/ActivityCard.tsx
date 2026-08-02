@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ChevronDown, Loader2, Eye, ListTree, FileCode2 } from "lucide-react";
+import { Check, ChevronDown, Coins, Loader2, Eye, ListTree, FileCode2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePreview } from "@/components/preview-context";
 import type { ArtifactProject } from "@/lib/artifact";
@@ -9,6 +9,15 @@ import {
   type ChargeLine,
   type CreditAction,
 } from "@/lib/credits";
+
+function chargeLines(charge: ChargeSummary): ChargeLine[] {
+  return chargeExplanation(charge.action, {
+    credits: charge.credits,
+    inputTokens: charge.inputTokens,
+    outputTokens: charge.outputTokens,
+    fileCount: charge.fileCount,
+  });
+}
 
 export interface ActivityStep {
   label: string;
@@ -22,16 +31,33 @@ export interface ActivityStep {
  * reasoning, files written); `Preview` pushes the result into the right-hand
  * live workspace.
  */
+export interface ChargeSummary {
+  action: CreditAction;
+  credits?: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  fileCount?: number;
+  /** Admin-only: real upstream provider spend for this turn. */
+  costUsd?: number;
+  /** Admin-only: the engines that were actually called. */
+  models?: string[];
+}
+
 export function ActivityCard({
   title,
   steps,
   busy = false,
   project = null,
+  charge = null,
+  adminView = false,
 }: {
   title: string;
   steps: ActivityStep[];
   busy?: boolean;
   project?: ArtifactProject | null;
+  /** Per-turn credit breakdown; customers see workload only, never engines. */
+  charge?: ChargeSummary | null;
+  adminView?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const { payload, openProject, openWorkspace, setTab } = usePreview();
@@ -120,6 +146,38 @@ export function ActivityCard({
               </span>
             </li>
           ))}
+          {charge && (
+            <li className="mt-2 border-t border-ink-200/70 pt-2">
+              <div className="mb-1 flex items-center gap-1.5 font-medium text-ink-800">
+                <Coins className="h-3.5 w-3.5 text-[color:var(--color-iris)]" />
+                Credits used and why
+              </div>
+              <ul className="space-y-1">
+                {chargeLines(charge).map((line: ChargeLine) => (
+                  <li key={line.label} className="flex gap-2">
+                    <span className="shrink-0 text-ink-700">{line.label}</span>
+                    <span className="min-w-0 break-words text-ink-500">{line.detail}</span>
+                  </li>
+                ))}
+                {adminView && charge.models && charge.models.length > 0 && (
+                  <li className="flex gap-2">
+                    <span className="shrink-0 text-ink-700">API calls</span>
+                    <span className="min-w-0 break-words font-mono text-2xs text-ink-500">
+                      {charge.models.join(" → ")}
+                    </span>
+                  </li>
+                )}
+                {adminView && charge.costUsd != null && (
+                  <li className="flex gap-2">
+                    <span className="shrink-0 text-ink-700">Provider cost</span>
+                    <span className="font-mono text-2xs text-ink-500">
+                      ${charge.costUsd.toFixed(4)}
+                    </span>
+                  </li>
+                )}
+              </ul>
+            </li>
+          )}
           {project && (
             <li className="mt-2 border-t border-ink-200/70 pt-2">
               <div className="mb-1 flex items-center gap-1.5 font-medium text-ink-800">
