@@ -147,6 +147,16 @@ function ChatWorkspaceInner() {
   useEffect(() => setSidebarOpen(!isMobile), [isMobile]);
 
   const [input, setInput] = useState("");
+
+  // "Ask AI" from the preview's visual editor pre-fills the composer.
+  useEffect(() => {
+    const onAsk = (event: Event) => {
+      const detail = (event as CustomEvent<string>).detail;
+      if (typeof detail === "string") setInput(detail);
+    };
+    window.addEventListener("nexura:ask-ai", onAsk);
+    return () => window.removeEventListener("nexura:ask-ai", onAsk);
+  }, []);
   const [isSending, setIsSending] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
