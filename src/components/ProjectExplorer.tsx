@@ -159,7 +159,6 @@ export default function ProjectExplorer() {
   const [draft, setDraft] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [zipping, setZipping] = useState(false);
   const value = draft ?? files[current] ?? "";
   const dirty = draft != null && draft !== files[current];
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -200,30 +199,6 @@ export default function ProjectExplorer() {
 
   const downloadFile = () => {
     downloadBlob(new Blob([value], { type: "text/plain;charset=utf-8" }), current.split("/").pop() || "file.txt");
-  };
-
-  /** Export every file of the project as a zip the user can run locally. */
-  const downloadZip = async () => {
-    setZipping(true);
-    try {
-      const { default: JSZip } = await import("jszip");
-      const zip = new JSZip();
-      for (const [path, code] of Object.entries(files)) zip.file(path, code);
-      const readme = [
-        `# ${payload?.title ?? "Nexura AI project"}`,
-        "",
-        "Exported from Nexura AI.",
-        `Entry file: \`${payload?.entry ?? paths[0]}\``,
-        "",
-        "Runtime packages used by the live preview: react, react-dom, lucide-react.",
-      ].join("\n");
-      zip.file("README.md", readme);
-      const blob = await zip.generateAsync({ type: "blob" });
-      const slug = (payload?.title ?? "nexura-project").toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      downloadBlob(blob, `${slug || "nexura-project"}.zip`);
-    } finally {
-      setZipping(false);
-    }
   };
 
   return (
