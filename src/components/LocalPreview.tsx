@@ -4,8 +4,12 @@ import * as ReactDOMClient from "react-dom/client";
 import * as LucideIcons from "lucide-react";
 import { transform } from "@babel/standalone";
 import { resolveAlias, resolveModule } from "@/lib/artifact";
-import { DEVICE_WIDTH, usePreview, type PreviewDevice, type PreviewPayload } from "./preview-context";
-
+import {
+  DEVICE_WIDTH,
+  usePreview,
+  type PreviewDevice,
+  type PreviewPayload,
+} from "./preview-context";
 
 /**
  * Offline-first preview engine.
@@ -140,9 +144,10 @@ function runProject(
 function pickComponent(exports: Record<string, unknown>): React.ComponentType | undefined {
   const def = exports.default;
   if (typeof def === "function") return def as React.ComponentType;
-  return Object.values(exports).find((v) => typeof v === "function") as React.ComponentType | undefined;
+  return Object.values(exports).find((v) => typeof v === "function") as
+    | React.ComponentType
+    | undefined;
 }
-
 
 interface Props {
   payload: PreviewPayload;
@@ -155,7 +160,6 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
   const rootRef = useRef<ReactDOMClient.Root | null>(null);
   const { reportRuntimeError, reportConsole, setBuildError } = usePreview();
   const [compileError, setCompileError] = useState<string | null>(null);
-
 
   const isReact = payload.lang === "react" || payload.lang === "react-ts" || !!payload.files;
 
@@ -188,25 +192,35 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
 
       // Mirror the host stylesheets so Tailwind classes render inside the frame.
       try {
-        for (const node of Array.from(document.head.querySelectorAll("style, link[rel=stylesheet]"))) {
+        for (const node of Array.from(
+          document.head.querySelectorAll("style, link[rel=stylesheet]"),
+        )) {
           const clone = node.cloneNode(true) as HTMLElement;
           if (clone instanceof HTMLLinkElement) clone.href = (node as HTMLLinkElement).href;
           doc.head.appendChild(clone);
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
 
       // Pipe sandbox errors into the auto-fix loop.
       const frameConsole = (win as unknown as { console: Console }).console;
       for (const level of ["log", "info", "warn", "error"] as const) {
         const native = frameConsole[level].bind(frameConsole);
         frameConsole[level] = (...args: unknown[]) => {
-          const message = args.map((a) => {
-            if (a instanceof Error) return a.message;
-            if (a && typeof a === "object") {
-              try { return JSON.stringify(a); } catch { return String(a); }
-            }
-            return String(a);
-          }).join(" ");
+          const message = args
+            .map((a) => {
+              if (a instanceof Error) return a.message;
+              if (a && typeof a === "object") {
+                try {
+                  return JSON.stringify(a);
+                } catch {
+                  return String(a);
+                }
+              }
+              return String(a);
+            })
+            .join(" ");
           reportConsole(level, message);
           if (level === "error") reportRuntimeError(message);
           native(...args);
@@ -242,11 +256,14 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
 
         if (!Component) throw new Error("No React component was exported from this project.");
 
-
         rootRef.current?.unmount();
         rootRef.current = ReactDOMClient.createRoot(host);
         rootRef.current.render(
-          React.createElement(PreviewErrorBoundary, { onError: reportRuntimeError }, React.createElement(Component)),
+          React.createElement(
+            PreviewErrorBoundary,
+            { onError: reportRuntimeError },
+            React.createElement(Component),
+          ),
         );
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -254,7 +271,6 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
         setBuildError(message);
         reportRuntimeError(message);
       }
-
     };
 
     if (frame.contentDocument?.readyState === "complete") mount();
@@ -266,7 +282,17 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
       rootRef.current = null;
       if (root) setTimeout(() => root.unmount(), 0);
     };
-  }, [payload.code, payload.lang, payload.files, payload.entry, isReact, reloadKey, reportConsole, reportRuntimeError, setBuildError]);
+  }, [
+    payload.code,
+    payload.lang,
+    payload.files,
+    payload.entry,
+    isReact,
+    reloadKey,
+    reportConsole,
+    reportRuntimeError,
+    setBuildError,
+  ]);
 
   const width = DEVICE_WIDTH[device];
 
@@ -303,7 +329,6 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
       )}
     </div>
   );
-
 }
 
 class PreviewErrorBoundary extends React.Component<
@@ -324,7 +349,13 @@ class PreviewErrorBoundary extends React.Component<
     if (this.state.error) {
       return React.createElement(
         "pre",
-        { style: { color: "#b91c1c", whiteSpace: "pre-wrap", fontFamily: "ui-monospace, monospace" } },
+        {
+          style: {
+            color: "#b91c1c",
+            whiteSpace: "pre-wrap",
+            fontFamily: "ui-monospace, monospace",
+          },
+        },
         this.state.error,
       );
     }

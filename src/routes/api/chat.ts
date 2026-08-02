@@ -3,7 +3,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { resolveRoute, runWithFallback } from "@/lib/ai-gateway.server";
 import { isPlanId } from "@/lib/plans";
 import { actionForMode } from "@/lib/credits";
-import { CreditError, chargeRequest, creditErrorCode, finalizeRequestCost } from "@/lib/credit-guard.server";
+import {
+  CreditError,
+  chargeRequest,
+  creditErrorCode,
+  finalizeRequestCost,
+} from "@/lib/credit-guard.server";
 
 interface IncomingMessage {
   role: "user" | "assistant" | "system";
@@ -78,8 +83,8 @@ export const Route = createFileRoute("/api/chat")({
               m.role === "assistant"
                 ? ("assistant" as const)
                 : m.role === "system"
-                ? ("system" as const)
-                : ("user" as const),
+                  ? ("system" as const)
+                  : ("user" as const),
             content: m.content,
           }));
 
@@ -122,8 +127,14 @@ export const Route = createFileRoute("/api/chat")({
         ];
 
         try {
-          const { content, tokens, inputTokens, outputTokens, costUsd, upstream } = await runWithFallback(route, cleanMessages);
-          const finalCharge = await finalizeRequestCost(request, charge.id, actionForMode(mode), { costUsd, inputTokens, outputTokens, upstream });
+          const { content, tokens, inputTokens, outputTokens, costUsd, upstream } =
+            await runWithFallback(route, cleanMessages);
+          const finalCharge = await finalizeRequestCost(request, charge.id, actionForMode(mode), {
+            costUsd,
+            inputTokens,
+            outputTokens,
+            upstream,
+          });
           const balance = finalCharge ?? charge;
           return Response.json({
             content,

@@ -11,7 +11,12 @@
  * imported from a component.
  */
 import { createClient } from "@supabase/supabase-js";
-import { ACTION_RULES, actualUsageCost, usageReservationCost, type CreditAction } from "@/lib/credits";
+import {
+  ACTION_RULES,
+  actualUsageCost,
+  usageReservationCost,
+  type CreditAction,
+} from "@/lib/credits";
 
 export interface ChargeResult {
   id: string;
@@ -49,7 +54,12 @@ function bearer(request: Request): string | null {
 export async function chargeRequest(
   request: Request,
   action: CreditAction,
-  opts: { inputChars?: number; model?: string | null; threadId?: string | null; reason?: string } = {},
+  opts: {
+    inputChars?: number;
+    model?: string | null;
+    threadId?: string | null;
+    reason?: string;
+  } = {},
 ): Promise<ChargeResult> {
   const token = bearer(request);
   if (!token) {
@@ -145,7 +155,13 @@ export async function finalizeRequestCost(
   request: Request,
   ledgerId: string,
   action: CreditAction,
-  info: { costUsd?: number; inputTokens?: number; outputTokens?: number; upstream?: string | null; failed?: boolean },
+  info: {
+    costUsd?: number;
+    inputTokens?: number;
+    outputTokens?: number;
+    upstream?: string | null;
+    failed?: boolean;
+  },
 ): Promise<ChargeResult | null> {
   if (!ledgerId) return null;
   const token = bearer(request);
@@ -173,9 +189,12 @@ export async function finalizeRequestCost(
     }
     const row = (data ?? {}) as Partial<ChargeResult>;
     return {
-      id: String(row.id ?? ledgerId), charged: Number(row.charged ?? finalCredits),
-      plan: String(row.plan ?? "free"), total: Number(row.total ?? 0),
-      used: Number(row.used ?? 0), remaining: Number(row.remaining ?? 0),
+      id: String(row.id ?? ledgerId),
+      charged: Number(row.charged ?? finalCredits),
+      plan: String(row.plan ?? "free"),
+      total: Number(row.total ?? 0),
+      used: Number(row.used ?? 0),
+      remaining: Number(row.remaining ?? 0),
     };
   } catch (err) {
     console.error("[credits] usage finalization failed", err);

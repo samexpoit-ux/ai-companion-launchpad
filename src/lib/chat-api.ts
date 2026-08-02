@@ -82,8 +82,6 @@ export const AI_MODELS: AIModel[] = [
   },
 ];
 
-
-
 export async function sendChatMessage(
   messages: ChatMessage[],
   modelId?: string,
@@ -105,7 +103,6 @@ export async function sendChatMessage(
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
   };
 
-
   const res = await apiFetch("/api/chat", payload);
 
   if (!res.ok) {
@@ -114,7 +111,6 @@ export async function sendChatMessage(
     error.apiError = apiErr;
     throw error;
   }
-
 
   const data = (await res.json()) as {
     content: string;
@@ -127,4 +123,3 @@ export async function sendChatMessage(
   };
   return data;
 }
-

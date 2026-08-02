@@ -129,8 +129,9 @@ export function useCredits(): UseCredits {
   return {
     ...state,
     remaining,
-    quote: (action, inputChars) => state.unlimited ? 0 : estimateCost(action, inputChars ?? 0),
-    canAfford: (action, inputChars) => state.unlimited || remaining >= estimateCost(action, inputChars ?? 0),
+    quote: (action, inputChars) => (state.unlimited ? 0 : estimateCost(action, inputChars ?? 0)),
+    canAfford: (action, inputChars) =>
+      state.unlimited || remaining >= estimateCost(action, inputChars ?? 0),
     applyServerBalance,
     setPlan,
     refresh: load,
