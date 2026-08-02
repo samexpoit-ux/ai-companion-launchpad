@@ -16,6 +16,7 @@ import { Route as ApiSpendRouteImport } from './routes/api/spend'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiAutofixRouteImport } from './routes/api/autofix'
 import { Route as AuthenticatedWorkspaceRouteImport } from './routes/_authenticated/workspace'
+import { Route as AuthenticatedWebhooksRouteImport } from './routes/_authenticated/webhooks'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedResourcesRouteImport } from './routes/_authenticated/resources'
 import { Route as AuthenticatedProjectsRouteImport } from './routes/_authenticated/projects'
@@ -57,6 +58,11 @@ const ApiAutofixRoute = ApiAutofixRouteImport.update({
 const AuthenticatedWorkspaceRoute = AuthenticatedWorkspaceRouteImport.update({
   id: '/workspace',
   path: '/workspace',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWebhooksRoute = AuthenticatedWebhooksRouteImport.update({
+  id: '/webhooks',
+  path: '/webhooks',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/projects': typeof AuthenticatedProjectsRoute
   '/resources': typeof AuthenticatedResourcesRoute
   '/search': typeof AuthenticatedSearchRoute
+  '/webhooks': typeof AuthenticatedWebhooksRoute
   '/workspace': typeof AuthenticatedWorkspaceRoute
   '/api/autofix': typeof ApiAutofixRoute
   '/api/chat': typeof ApiChatRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByTo {
   '/projects': typeof AuthenticatedProjectsRoute
   '/resources': typeof AuthenticatedResourcesRoute
   '/search': typeof AuthenticatedSearchRoute
+  '/webhooks': typeof AuthenticatedWebhooksRoute
   '/workspace': typeof AuthenticatedWorkspaceRoute
   '/api/autofix': typeof ApiAutofixRoute
   '/api/chat': typeof ApiChatRoute
@@ -145,6 +153,7 @@ export interface FileRoutesById {
   '/_authenticated/projects': typeof AuthenticatedProjectsRoute
   '/_authenticated/resources': typeof AuthenticatedResourcesRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
+  '/_authenticated/webhooks': typeof AuthenticatedWebhooksRoute
   '/_authenticated/workspace': typeof AuthenticatedWorkspaceRoute
   '/api/autofix': typeof ApiAutofixRoute
   '/api/chat': typeof ApiChatRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/resources'
     | '/search'
+    | '/webhooks'
     | '/workspace'
     | '/api/autofix'
     | '/api/chat'
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/resources'
     | '/search'
+    | '/webhooks'
     | '/workspace'
     | '/api/autofix'
     | '/api/chat'
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/_authenticated/projects'
     | '/_authenticated/resources'
     | '/_authenticated/search'
+    | '/_authenticated/webhooks'
     | '/_authenticated/workspace'
     | '/api/autofix'
     | '/api/chat'
@@ -260,6 +272,13 @@ declare module '@tanstack/react-router' {
       path: '/workspace'
       fullPath: '/workspace'
       preLoaderRoute: typeof AuthenticatedWorkspaceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/webhooks': {
+      id: '/_authenticated/webhooks'
+      path: '/webhooks'
+      fullPath: '/webhooks'
+      preLoaderRoute: typeof AuthenticatedWebhooksRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/search': {
@@ -330,6 +349,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProjectsRoute: typeof AuthenticatedProjectsRoute
   AuthenticatedResourcesRoute: typeof AuthenticatedResourcesRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
+  AuthenticatedWebhooksRoute: typeof AuthenticatedWebhooksRoute
   AuthenticatedWorkspaceRoute: typeof AuthenticatedWorkspaceRoute
 }
 
@@ -342,6 +362,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProjectsRoute: AuthenticatedProjectsRoute,
   AuthenticatedResourcesRoute: AuthenticatedResourcesRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
+  AuthenticatedWebhooksRoute: AuthenticatedWebhooksRoute,
   AuthenticatedWorkspaceRoute: AuthenticatedWorkspaceRoute,
 }
 
