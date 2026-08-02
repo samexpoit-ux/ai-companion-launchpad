@@ -61,8 +61,15 @@ import {
 } from "@/lib/chat-api";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { actionForMode, estimateCost, formatCredits, ACTION_RULES } from "@/lib/credits";
+import {
+  actionForMode,
+  estimateCost,
+  formatCredits,
+  ACTION_RULES,
+  type CreditAction,
+} from "@/lib/credits";
 import { useCredits } from "@/hooks/useCredits";
+import { useAdmin } from "@/hooks/useAdmin";
 import { CreditMeter } from "@/components/CreditMeter";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import {
@@ -907,7 +914,7 @@ function ChatWorkspaceInner() {
             {/* Messages */}
             <div ref={scrollRef} className="relative flex-1 overflow-y-auto">
               {!active || active.messages.length === 0 ? (
-                <EmptyState onPick={(q) => setInput(q)} model={model} />
+                <EmptyState onPick={(q) => setInput(q)} model={model} adminView={isAdmin} />
               ) : (
                 <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8 sm:px-6 lg:py-10">
                   {active?.messages.map((m) => (
@@ -915,9 +922,10 @@ function ChatWorkspaceInner() {
                       key={m.id}
                       message={m}
                       userInitial={accountName.charAt(0).toUpperCase()}
+                      adminView={isAdmin}
                     />
                   ))}
-                  {isSending && <TypingIndicator model={model} />}
+                  {isSending && <TypingIndicator model={model} adminView={isAdmin} />}
                 </div>
               )}
             </div>
@@ -1014,7 +1022,9 @@ function ChatWorkspaceInner() {
                               <span className="min-w-0">
                                 <span className="block text-sm font-medium text-ink-900">{m}</span>
                                 <span className="block text-2xs leading-snug text-ink-500">
-                                  {ACTION_RULES[actionForMode(m)].note}
+                                  {isAdmin
+                                    ? ACTION_RULES[actionForMode(m)].note
+                                    : ACTION_RULES[actionForMode(m)].customerNote}
                                 </span>
                               </span>
                             </DropdownMenuItem>
@@ -1295,9 +1305,12 @@ function CodeBlock({ language, value: rawValue }: { language: string; value: str
 function MessageBubble({
   message,
   userInitial = "Y",
+  adminView = false,
 }: {
   message: ChatMessage;
   userInitial?: string;
+  /** Engine / provider details are admin-only. */
+  adminView?: boolean;
 }) {
   const isUser = message.role === "user";
   const time = new Date(message.createdAt).toLocaleTimeString([], {
@@ -1335,7 +1348,7 @@ function MessageBubble({
           )}
         >
           <span>{isUser ? "You" : "Nexura"}</span>
-          {!isUser && message.model && (
+          {!isUser && message.model && adminView && (
             <>
               <span className="text-ink-300">·</span>
               <span className="normal-case tracking-normal font-mono text-[color:var(--color-iris-cyan)]/90">
@@ -1352,7 +1365,21 @@ function MessageBubble({
               project ? `Built ${project.title || "your project"}` : "Responded to your prompt"
             }
             project={project}
+            adminView={adminView}
+            charge={{
+              action: creditActionFor(message, Boolean(project)),
+              credits: message.credits,
+              inputTokens: message.inputTokens,
+              outputTokens: message.outputTokens,
+              fileCount: project?.order.length,
+              models: adminView
+                ? [message.model, message.upstream, ...(message.attempts ?? []).map((a) => a.model)]
+                    .filter((v): v is string => Boolean(v))
+                    .filter((v, i, arr) => arr.indexOf(v) === i)
+                : undefined,
+            }}
             steps={stepsForMessage({
+              adminView,
               modelName,
               latencyMs: message.latencyMs,
               tokens: message.tokens,
@@ -1407,7 +1434,16 @@ function MessageBubble({
   );
 }
 
-function TypingIndicator({ model }: { model: AIModel }) {
+/** Best-effort billable action for a stored reply (customer-safe label source). */
+function creditActionFor(message: ChatMessage, hasProject: boolean): CreditAction {
+  const task = (message.task ?? "").toLowerCase();
+  if (task.includes("plan")) return "plan";
+  if (task.includes("fix")) return "autofix";
+  if (task.includes("chat")) return "chat";
+  return hasProject ? "code" : "chat";
+}
+
+function TypingIndicator({ model, adminView = false }: { model: AIModel; adminView?: boolean }) {
   return (
     <div className="flex gap-3 sm:gap-4">
       <div
@@ -1424,7 +1460,7 @@ function TypingIndicator({ model }: { model: AIModel }) {
         <div className="mb-1.5 text-2xs uppercase tracking-[0.18em] text-ink-500">
           Nexura ·{" "}
           <span className="normal-case tracking-normal font-mono text-[color:var(--color-iris-cyan)]/90">
-            {model.name}
+            {adminView ? model.name : "smart routing"}
           </span>
         </div>
         <ActivityCard
@@ -1432,7 +1468,11 @@ function TypingIndicator({ model }: { model: AIModel }) {
           title="Working on it…"
           steps={[
             { label: "Analysed the prompt", detail: "smart cost router", done: true },
-            { label: "Routed to model", detail: model.name, done: true },
+            {
+              label: "Routed to the best-value engine",
+              detail: adminView ? model.name : "smart cost router",
+              done: true,
+            },
             { label: "Thinking and writing the response", done: false },
           ]}
         />
@@ -1441,7 +1481,15 @@ function TypingIndicator({ model }: { model: AIModel }) {
   );
 }
 
-function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIModel }) {
+function EmptyState({
+  onPick,
+  model,
+  adminView = false,
+}: {
+  onPick: (q: string) => void;
+  model: AIModel;
+  adminView?: boolean;
+}) {
   const starters = [
     {
       key: "saas",
@@ -1535,7 +1583,9 @@ function EmptyState({ onPick, model }: { onPick: (q: string) => void; model: AIM
         </span>
 
         <span className="text-ink-300">·</span>
-        <span className="font-medium text-ink-600">{model.name}</span>
+        <span className="font-medium text-ink-600">
+          {adminView ? model.name : "Best-value engine per request"}
+        </span>
       </div>
     </div>
   );
