@@ -625,6 +625,99 @@ function EmptyWorkspace({ onClose, onStart }: { onClose: () => void; onStart: ()
   );
 }
 
+/**
+ * Floating editor for the element picked in the preview. Text edits are written
+ * back into the source file; "Ask AI" hands the selection to the chat composer.
+ */
+function SelectionEditor({
+  selection,
+  onClose,
+  onApply,
+}: {
+  selection: NonNullable<ReturnType<typeof usePreview>["selection"]>;
+  onClose: () => void;
+  onApply: (text: string) => boolean;
+}) {
+  const [draft, setDraft] = useState(selection.text);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setDraft(selection.text);
+    setError(null);
+    setSaved(false);
+  }, [selection]);
+
+  const apply = () => {
+    const next = draft.trim();
+    if (!next) {
+      setError("Text can't be empty.");
+      return;
+    }
+    if (onApply(next)) {
+      setSaved(true);
+      setError(null);
+    } else {
+      setError("Couldn't match that text in the source — try Ask AI instead.");
+    }
+  };
+
+  return (
+    <div className="absolute bottom-3 left-3 right-3 z-20 mx-auto max-w-md rounded-2xl border border-ink-200 bg-white/95 p-3 shadow-[0_24px_60px_-30px_rgba(16,24,40,0.45)] backdrop-blur">
+      <div className="flex items-center justify-between gap-2">
+        <span className="truncate rounded-full bg-[color:var(--color-iris)]/10 px-2 py-0.5 font-mono text-2xs text-[color:var(--color-iris)]">
+          {selection.label}
+        </span>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close element editor"
+          className="rounded-full p-1 text-ink-500 transition hover:bg-ink-900/5 hover:text-ink-900"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      <textarea
+        value={draft}
+        onChange={(e) => {
+          setDraft(e.target.value);
+          setSaved(false);
+        }}
+        rows={2}
+        aria-label="Element text"
+        className="mt-2 w-full resize-none rounded-xl border border-ink-200 bg-white px-2.5 py-2 text-xs text-ink-900 outline-none focus:border-[color:var(--color-iris)]"
+      />
+
+      {error ? <p className="mt-1 text-2xs text-[color:var(--nx-danger,#DC2626)]">{error}</p> : null}
+
+      <div className="mt-2 flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={() =>
+            window.dispatchEvent(
+              new CustomEvent("nexura:ask-ai", {
+                detail: `Update the ${selection.label} element (currently "${selection.text.slice(0, 120)}"): `,
+              }),
+            )
+          }
+          className="rounded-full px-2.5 py-1.5 text-2xs font-semibold text-ink-600 transition hover:bg-ink-900/5"
+        >
+          Ask AI
+        </button>
+        <button
+          type="button"
+          onClick={apply}
+          className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--color-iris)] px-3 py-1.5 text-2xs font-semibold text-white transition hover:brightness-105 active:scale-95"
+        >
+          {saved ? <Check className="h-3.5 w-3.5" /> : null}
+          {saved ? "Applied" : "Apply text"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function LoadingSkeleton() {
   return (
     <div className="flex h-full items-center justify-center">
