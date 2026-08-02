@@ -1,4 +1,6 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { analyzeStack } from "@/lib/stack";
+
 import { ShipDialog } from "@/components/ShipDialog";
 import {
   X,
