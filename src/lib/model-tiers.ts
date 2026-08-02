@@ -14,30 +14,32 @@
  */
 
 /**
- * CHEAP-FIRST POLICY (chosen strategy):
- * DeepSeek / Qwen / GLM open-weight coders give Sonnet-class code quality at
- * ~20-40x lower price, so they are the default. Nothing pricier is used.
+ * POLICY (chosen strategy):
+ *   build / fix  → Claude Sonnet class (best code structure), cheap coders as fallback
+ *   chat / plan  → DeepSeek chat + Gemini Flash only (lowest cost)
  */
 
-/** Coding tier — cheap but strong. */
-export const CODING_PRIMARY = "deepseek/deepseek-v3.2";
-export const CODING_SECONDARY = "z-ai/glm-4.7";
-export const CODING_TERTIARY = "qwen/qwen3-coder-next";
+/** Coding tier — best structure first, cheap coders as fallback. */
+export const CODING_PRIMARY = "anthropic/claude-3.7-sonnet";
+export const CODING_SECONDARY = "anthropic/claude-3.5-sonnet";
+export const CODING_TERTIARY = "deepseek/deepseek-chat";
 
 /** Cheap tier — chat, plan, titles. */
-export const CHEAP_CHAT = "deepseek/deepseek-v4-flash";
+export const CHEAP_CHAT = "deepseek/deepseek-chat";
 /** Ultra-cheap tier — greetings, titles, one-liners. */
-export const NANO_CHAT = "qwen/qwen3.7-flash";
+export const NANO_CHAT = "google/gemini-2.0-flash-001";
+/** Cheap reasoning/plan model. */
+export const CHEAP_REASON = "google/gemini-2.0-flash-001";
 
 /** Free safety net so the product keeps working when credit runs out. */
-export const FREE_CODE = "cohere/north-mini-code:free";
+export const FREE_CODE = "deepseek/deepseek-r1:free";
 /**
- * Strongest free chat model on OpenRouter (550B MoE, 1M context). Free plans
- * get this as their main chat brain so the product still feels premium at $0.
+ * Strongest free chat model on OpenRouter. Free plans get this as their main
+ * chat brain so the product still feels premium at $0.
  */
-export const FREE_POWER = "nvidia/nemotron-3-ultra-550b-a55b:free";
-export const FREE_SMART = "nvidia/nemotron-3-super-120b-a12b:free";
-export const FREE_FAST = "nvidia/nemotron-nano-9b-v2:free";
+export const FREE_POWER = "deepseek/deepseek-chat:free";
+export const FREE_SMART = "meta-llama/llama-3.3-70b-instruct:free";
+export const FREE_FAST = "google/gemma-3-12b-it:free";
 export const FREE_OSS = "openai/gpt-oss-20b:free";
 
 /** Ordered chains: [primary, ...fallbacks]. */
@@ -60,21 +62,22 @@ export const TIER_CHAINS = {
     FREE_POWER,
     FREE_OSS,
   ],
-  reason: [CODING_PRIMARY, CHEAP_CHAT, FREE_POWER, FREE_SMART, FREE_OSS],
+  // Plans stay on the cheap tier — no Claude spend for planning.
+  reason: [CHEAP_CHAT, CHEAP_REASON, FREE_POWER, FREE_SMART, FREE_OSS],
   chat: [CHEAP_CHAT, NANO_CHAT, FREE_POWER, FREE_SMART, FREE_OSS],
   fast: [NANO_CHAT, FREE_FAST, FREE_POWER, FREE_OSS],
 } as const;
 
-/** Small code question — no need to pay coder prices. */
-export const LIGHT_CODE_CHAIN = [CHEAP_CHAT, CODING_PRIMARY, FREE_CODE, FREE_POWER, FREE_OSS];
+/** Small code question — no need to pay Claude prices. */
+export const LIGHT_CODE_CHAIN = [CHEAP_CHAT, CODING_SECONDARY, FREE_CODE, FREE_POWER, FREE_OSS];
 
 /** Models that cost real money, grouped by how expensive they are. */
 export const PREMIUM_MODELS: readonly string[] = [
   CODING_PRIMARY,
   CODING_SECONDARY,
-  CODING_TERTIARY,
 ];
-export const CHEAP_MODELS: readonly string[] = [CHEAP_CHAT, NANO_CHAT];
+export const CHEAP_MODELS: readonly string[] = [CHEAP_CHAT, NANO_CHAT, CODING_TERTIARY];
+
 
 /**
  * Clamp a routing chain to what the selected plan is allowed to use.
