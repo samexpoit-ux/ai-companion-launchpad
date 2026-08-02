@@ -5,11 +5,7 @@ import { Input } from "@/components/ui/input";
 import { fetchUsageReport, type UsageReport } from "@/lib/admin-api";
 import { formatUsd } from "@/lib/credit-ledger";
 import { formatCredits } from "@/lib/credits";
-import {
-  DEFAULT_PRICE_PER_CREDIT,
-  profitSummary,
-  type ProfitRow,
-} from "@/lib/profit";
+import { DEFAULT_PRICE_PER_CREDIT, profitSummary, type ProfitRow } from "@/lib/profit";
 
 const RANGES = [
   { days: 1, label: "24h" },
@@ -161,13 +157,27 @@ function Panel({
         <table className="w-full min-w-[34rem] text-sm">
           <thead className="bg-ink-100/70 text-left text-xs uppercase tracking-wide text-ink-500">
             <tr>
-              <th scope="col" className="px-4 py-2 font-medium">Item</th>
-              <th scope="col" className="px-4 py-2 text-right font-medium">Reqs</th>
-              <th scope="col" className="px-4 py-2 text-right font-medium">Credits</th>
-              <th scope="col" className="px-4 py-2 text-right font-medium">Revenue</th>
-              <th scope="col" className="px-4 py-2 text-right font-medium">Cost</th>
-              <th scope="col" className="px-4 py-2 text-right font-medium">Profit</th>
-              <th scope="col" className="px-4 py-2 text-right font-medium">Margin</th>
+              <th scope="col" className="px-4 py-2 font-medium">
+                Item
+              </th>
+              <th scope="col" className="px-4 py-2 text-right font-medium">
+                Reqs
+              </th>
+              <th scope="col" className="px-4 py-2 text-right font-medium">
+                Credits
+              </th>
+              <th scope="col" className="px-4 py-2 text-right font-medium">
+                Revenue
+              </th>
+              <th scope="col" className="px-4 py-2 text-right font-medium">
+                Cost
+              </th>
+              <th scope="col" className="px-4 py-2 text-right font-medium">
+                Profit
+              </th>
+              <th scope="col" className="px-4 py-2 text-right font-medium">
+                Margin
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-ink-200">

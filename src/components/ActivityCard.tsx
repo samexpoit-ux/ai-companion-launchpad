@@ -233,7 +233,11 @@ export function stepsForMessage(opts: {
   if (opts.modelName && opts.adminView) {
     steps.push({ label: "Selected the AI engine", detail: opts.modelName, done: true });
   } else {
-    steps.push({ label: "Selected the best-value engine", detail: "smart cost router", done: true });
+    steps.push({
+      label: "Selected the best-value engine",
+      detail: "smart cost router",
+      done: true,
+    });
   }
   for (const [index, attempt] of (opts.attempts ?? []).entries()) {
     const timing = attempt.ok

@@ -185,7 +185,10 @@ export function chargeExplanation(
     });
   }
   if (opts.fileCount) {
-    lines.push({ label: "Files delivered", detail: `${opts.fileCount} file(s) written to the workspace` });
+    lines.push({
+      label: "Files delivered",
+      detail: `${opts.fileCount} file(s) written to the workspace`,
+    });
   }
   if (opts.credits != null) {
     lines.push({ label: "Total charged", detail: `${formatCredits(opts.credits)} credits` });

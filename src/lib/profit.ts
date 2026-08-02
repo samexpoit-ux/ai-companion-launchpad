@@ -51,7 +51,8 @@ export interface ProfitSummary {
 }
 
 const round = (n: number, p = 6) => Math.round(n * 10 ** p) / 10 ** p;
-const pct = (part: number, whole: number) => (whole <= 0 ? 0 : Math.round((part / whole) * 1000) / 10);
+const pct = (part: number, whole: number) =>
+  whole <= 0 ? 0 : Math.round((part / whole) * 1000) / 10;
 
 function emptyRow(key: string, label: string): ProfitRow {
   return {
@@ -91,9 +92,15 @@ function group(
 }
 
 /** Full profit picture for a usage window at a given sell price per credit. */
-export function profitSummary(report: UsageReport, price = DEFAULT_PRICE_PER_CREDIT): ProfitSummary {
+export function profitSummary(
+  report: UsageReport,
+  price = DEFAULT_PRICE_PER_CREDIT,
+): ProfitSummary {
   const rows = report.requests;
-  const credits = round(rows.reduce((s, r) => s + r.credits, 0), 2);
+  const credits = round(
+    rows.reduce((s, r) => s + r.credits, 0),
+    2,
+  );
   const costUsd = round(rows.reduce((s, r) => s + r.costUsd, 0));
   const revenueUsd = round(credits * price);
   const profitUsd = round(revenueUsd - costUsd);

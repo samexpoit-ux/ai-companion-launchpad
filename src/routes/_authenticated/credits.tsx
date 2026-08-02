@@ -143,12 +143,26 @@ function CreditsPage() {
                 <caption className="sr-only">Credits grouped by action</caption>
                 <thead className="text-2xs uppercase tracking-wider text-ink-500">
                   <tr>
-                    <th scope="col" className="py-2 pr-3">Action</th>
-                    <th scope="col" className="py-2 pr-3">Charges</th>
-                    <th scope="col" className="py-2 pr-3">Charged</th>
-                    <th scope="col" className="py-2 pr-3">Refunded</th>
-                    <th scope="col" className="py-2 pr-3">Net</th>
-                    {admin && <th scope="col" className="py-2">Provider cost</th>}
+                    <th scope="col" className="py-2 pr-3">
+                      Action
+                    </th>
+                    <th scope="col" className="py-2 pr-3">
+                      Charges
+                    </th>
+                    <th scope="col" className="py-2 pr-3">
+                      Charged
+                    </th>
+                    <th scope="col" className="py-2 pr-3">
+                      Refunded
+                    </th>
+                    <th scope="col" className="py-2 pr-3">
+                      Net
+                    </th>
+                    {admin && (
+                      <th scope="col" className="py-2">
+                        Provider cost
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -158,7 +172,9 @@ function CreditsPage() {
                       <td className="py-2.5 pr-3 text-ink-600">{row.charges}</td>
                       <td className="py-2.5 pr-3 text-ink-600">{formatCredits(row.credits)}</td>
                       <td className="py-2.5 pr-3 text-ink-600">{formatCredits(row.refunded)}</td>
-                      <td className="py-2.5 pr-3 font-semibold text-ink-900">{formatCredits(row.net)}</td>
+                      <td className="py-2.5 pr-3 font-semibold text-ink-900">
+                        {formatCredits(row.net)}
+                      </td>
                       {admin && <td className="py-2.5 text-ink-600">{formatUsd(row.costUsd)}</td>}
                     </tr>
                   ))}
@@ -180,9 +196,10 @@ function CreditsPage() {
                 .filter((e) => e.credits > 0)
                 .slice(0, 25)
                 .map((entry) => {
-                  const action = (entry.action as CreditAction) in ACTION_RULES
-                    ? (entry.action as CreditAction)
-                    : "chat";
+                  const action =
+                    (entry.action as CreditAction) in ACTION_RULES
+                      ? (entry.action as CreditAction)
+                      : "chat";
                   const lines = chargeExplanation(action, { credits: entry.credits });
                   return (
                     <li
@@ -234,7 +251,13 @@ function CreditsPage() {
                 >
                   <span className="font-medium text-ink-900">{entry.action}</span>
                   <span className="text-ink-500">{entry.tier}</span>
-                  <span className={entry.credits < 0 ? "font-semibold text-emerald-600" : "font-semibold text-ink-900"}>
+                  <span
+                    className={
+                      entry.credits < 0
+                        ? "font-semibold text-emerald-600"
+                        : "font-semibold text-ink-900"
+                    }
+                  >
                     {entry.credits < 0 ? "+" : "−"}
                     {formatCredits(Math.abs(entry.credits))}
                   </span>
@@ -305,4 +328,3 @@ function CreditsPage() {
     </PageShell>
   );
 }
-

@@ -125,8 +125,13 @@ function ChatWorkspaceInner() {
   // Engine / provider details are admin-only; customers only see credits + workload.
   const { isAdmin } = useAdmin();
 
-  const { isOpen: previewOpen, toggleWorkspace, openWorkspace, openProject, clearProject } =
-    usePreview();
+  const {
+    isOpen: previewOpen,
+    toggleWorkspace,
+    openWorkspace,
+    openProject,
+    clearProject,
+  } = usePreview();
   const isMobile = useIsMobile();
 
   // Deep link: /workspace?thread=<id> opens that conversation.
@@ -358,9 +363,6 @@ function ChatWorkspaceInner() {
     restoredProjectRef.current = signature;
     openProject(project);
   }, [active, openProject, clearProject]);
-
-
-
 
   const filtered = useMemo(() => {
     if (!query.trim()) return threads;
