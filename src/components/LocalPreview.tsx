@@ -180,7 +180,8 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
   let plainCompileError: string | null = null;
   if (payload.lang === "vanilla-ts") {
     try {
-      plainCode = transform(payload.code, { filename: "index.ts", presets: ["typescript"] }).code ?? "";
+      plainCode =
+        transform(payload.code, { filename: "index.ts", presets: ["typescript"] }).code ?? "";
     } catch (err) {
       plainCompileError = err instanceof Error ? err.message : String(err);
     }
@@ -193,12 +194,21 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
         ? withBridge(payload.code)
         : payload.lang === "mdx"
           ? MD_HTML(payload.code)
-          : JS_HTML(plainCompileError ? `throw new Error(${JSON.stringify(plainCompileError)})` : plainCode);
+          : JS_HTML(
+              plainCompileError
+                ? `throw new Error(${JSON.stringify(plainCompileError)})`
+                : plainCode,
+            );
 
   useEffect(() => {
     const receive = (event: MessageEvent) => {
       if (event.source !== frameRef.current?.contentWindow) return;
-      const data = event.data as { source?: string; type?: string; level?: string; message?: string };
+      const data = event.data as {
+        source?: string;
+        type?: string;
+        level?: string;
+        message?: string;
+      };
       if (data?.source !== "nexura-preview" || !data.message) return;
       if (data.type === "console") {
         const level = ["log", "info", "warn", "error"].includes(data.level ?? "")

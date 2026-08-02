@@ -99,7 +99,10 @@ export async function fetchOverview(): Promise<AdminOverview> {
   const since30 = daysAgo(30);
   const since7 = daysAgo(7);
 
-  const count = async (table: "profiles" | "projects" | "chat_threads" | "chat_messages", since?: string) => {
+  const count = async (
+    table: "profiles" | "projects" | "chat_threads" | "chat_messages",
+    since?: string,
+  ) => {
     let q = supabase.from(table).select("id", { count: "exact", head: true });
     if (since) q = q.gte("created_at", since);
     const { count: c, error } = await q;
@@ -133,7 +136,9 @@ export async function fetchOverview(): Promise<AdminOverview> {
     ledgerRows.filter((r) => Number(r.credits) > 0).reduce((s, r) => s + Number(r.credits), 0),
   );
   const creditsRefunded30d = round(
-    ledgerRows.filter((r) => Number(r.credits) < 0).reduce((s, r) => s + Math.abs(Number(r.credits)), 0),
+    ledgerRows
+      .filter((r) => Number(r.credits) < 0)
+      .reduce((s, r) => s + Math.abs(Number(r.credits)), 0),
   );
   const activeUsers7d = new Set(
     ledgerRows.filter((r) => r.created_at >= since7).map((r) => r.user_id),
@@ -160,9 +165,18 @@ const round = (n: number) => Math.round(n * 100) / 100;
 export async function fetchUserStats(): Promise<AdminUserStats> {
   const [total, premium, suspended, admins] = await Promise.all([
     supabase.from("profiles").select("id", { count: "exact", head: true }),
-    supabase.from("user_settings").select("user_id", { count: "exact", head: true }).neq("plan", "free"),
-    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("status", "suspended"),
-    supabase.from("user_roles").select("user_id", { count: "exact", head: true }).eq("role", "admin"),
+    supabase
+      .from("user_settings")
+      .select("user_id", { count: "exact", head: true })
+      .neq("plan", "free"),
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "suspended"),
+    supabase
+      .from("user_roles")
+      .select("user_id", { count: "exact", head: true })
+      .eq("role", "admin"),
   ]);
   return {
     total: total.count ?? 0,
@@ -198,7 +212,9 @@ export async function listUsers(search = ""): Promise<AdminUserRow[]> {
   ]);
 
   const settingsBy = new Map((settings.data ?? []).map((s) => [s.user_id, s]));
-  const adminIds = new Set((roles.data ?? []).filter((r) => r.role === "admin").map((r) => r.user_id));
+  const adminIds = new Set(
+    (roles.data ?? []).filter((r) => r.role === "admin").map((r) => r.user_id),
+  );
   const usedBy = new Map<string, number>();
   for (const row of ledger.data ?? []) {
     usedBy.set(row.user_id, (usedBy.get(row.user_id) ?? 0) + Number(row.credits ?? 0));
@@ -240,7 +256,11 @@ export async function setUserCreditLimit(userId: string, creditsTotal: number) {
 }
 
 /** Suspends or reactivates an account (admin-only database routine). */
-export async function setUserStatus(userId: string, status: "active" | "suspended", reason?: string) {
+export async function setUserStatus(
+  userId: string,
+  status: "active" | "suspended",
+  reason?: string,
+) {
   const { error } = await supabase.rpc("admin_set_user_status", {
     _user_id: userId,
     _status: status,
@@ -425,7 +445,10 @@ export async function saveSetting(key: string, value: Record<string, unknown>) {
   const { data: auth } = await supabase.auth.getUser();
   const { error } = await supabase
     .from("platform_settings")
-    .upsert({ key, value: value as Json, updated_by: auth.user?.id ?? null }, { onConflict: "key" });
+    .upsert(
+      { key, value: value as Json, updated_by: auth.user?.id ?? null },
+      { onConflict: "key" },
+    );
   if (error) throw new Error(error.message);
   await logAdmin("setting.updated", "platform_settings", key, value);
 }
