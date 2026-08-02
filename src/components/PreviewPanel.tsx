@@ -345,12 +345,20 @@ export function PreviewPanel() {
         >
           <Suspense fallback={<LoadingSkeleton />}>
             {tab === "preview" ? (
-              <LocalPreview
-                key={`local-${payload.lang}-${revision}`}
-                payload={payload}
-                device={device}
-                reloadKey={reloadKey}
-              />
+              stackReport && !stackReport.webEntry && payload.files ? (
+                // Backend / infra-only project: nothing for the iframe to run, so
+                // show the stack blueprint instead of a blank frame.
+                <StackPreview key={`stack-${revision}`} files={payload.files} />
+              ) : (
+                <LocalPreview
+                  key={`local-${payload.lang}-${revision}`}
+                  payload={payload}
+                  device={device}
+                  reloadKey={reloadKey}
+                />
+              )
+            ) : tab === "stack" && payload.files ? (
+              <StackPreview key={`stack-tab-${revision}`} files={payload.files} />
             ) : tab === "console" ? (
               <PreviewConsole entries={consoleEntries} onClear={clearConsole} />
             ) : tab === "code" && payload.files ? (
@@ -359,10 +367,11 @@ export function PreviewPanel() {
               <SandpackStage
                 key={`${payload.lang}-${reloadKey}-${revision}`}
                 payload={payload}
-                tab={tab}
+                tab={tab === "stack" ? "code" : tab}
                 device={device}
               />
             )}
+
           </Suspense>
 
           {selection && tab === "preview" ? (
