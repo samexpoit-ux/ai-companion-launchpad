@@ -327,6 +327,19 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
     void import("@/lib/starter-project").then((mod) => openProject(mod.createStarterProject()));
   }, [openProject]);
 
+  const clearProject = useCallback(() => {
+    setPayload(null);
+    setActiveFile(null);
+    setVersions([]);
+    setActiveVersionId(null);
+    setBuildError(null);
+    setConsoleEntries([]);
+    resetFixState();
+    setRevision((r) => r + 1);
+  }, [resetFixState]);
+
+
+
 
   const clearRuntimeErrors = useCallback(() => {
     setRuntimeErrors([]);
