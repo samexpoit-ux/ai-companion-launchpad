@@ -17,6 +17,8 @@ import {
   GitCompare,
   MoreHorizontal,
   Rocket,
+  MousePointerClick,
+  Check,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -76,6 +78,11 @@ export function PreviewPanel() {
     buildError,
     consoleEntries,
     clearConsole,
+    selectMode,
+    setSelectMode,
+    selection,
+    setSelection,
+    applySelectionText,
   } = usePreview();
 
   const [reloadKey, setReloadKey] = useState(0);
@@ -179,6 +186,25 @@ export function PreviewPanel() {
             title="Reload"
           >
             <RefreshCw className="h-3.5 w-3.5" />
+          </button>
+
+          {/* Visual edit: pick an element in the preview and rewrite its copy. */}
+          <button
+            type="button"
+            onClick={() => {
+              setSelectMode(!selectMode);
+              setSelection(null);
+            }}
+            aria-pressed={selectMode}
+            aria-label="Select element to edit"
+            title="Select element to edit"
+            className={
+              selectMode
+                ? "rounded-full bg-[color:var(--color-iris)]/12 p-1.5 text-[color:var(--color-iris)] transition active:scale-95"
+                : "rounded-full p-1.5 text-ink-500 transition hover:bg-ink-900/5 hover:text-ink-900 active:scale-95"
+            }
+          >
+            <MousePointerClick className="h-3.5 w-3.5" />
           </button>
 
           {/* Shipping is the end of every build, so it stays one click away. */}
@@ -338,6 +364,14 @@ export function PreviewPanel() {
               />
             )}
           </Suspense>
+
+          {selection && tab === "preview" ? (
+            <SelectionEditor
+              selection={selection}
+              onClose={() => setSelection(null)}
+              onApply={applySelectionText}
+            />
+          ) : null}
 
           {buildError && !pendingPatch && (
             <Suspense fallback={null}>
