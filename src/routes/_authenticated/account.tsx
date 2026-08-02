@@ -156,6 +156,7 @@ function AccountPage() {
               plan={credits.plan}
               remaining={credits.remaining}
               total={credits.total}
+              unlimited={credits.unlimited}
               compact
               className="mt-2 border-0 bg-transparent p-0"
             />

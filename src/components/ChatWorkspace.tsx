@@ -721,7 +721,12 @@ function ChatWorkspaceInner() {
 
         {/* Credits */}
         <div className="px-3 pb-1">
-          <CreditMeter plan={credits.plan} remaining={credits.remaining} total={credits.total} />
+          <CreditMeter
+            plan={credits.plan}
+            remaining={credits.remaining}
+            total={credits.total}
+            unlimited={credits.unlimited}
+          />
         </div>
 
         {/* User */}
@@ -820,10 +825,12 @@ function ChatWorkspaceInner() {
                   title="Credits included in your workspace plan"
                 >
                   <Coins className="h-3.5 w-3.5 text-[color:var(--color-iris)]" />
-                  {formatCredits(credits.remaining)}
-                  <span className="hidden text-ink-400 sm:inline">
-                    / {formatCredits(credits.total)} credits
-                  </span>
+                  {credits.unlimited ? "Unlimited" : formatCredits(credits.remaining)}
+                  {!credits.unlimited && (
+                    <span className="hidden text-ink-400 sm:inline">
+                      / {formatCredits(credits.total)} credits
+                    </span>
+                  )}
                 </span>
 
                 <ThemePicker />
@@ -906,9 +913,11 @@ function ChatWorkspaceInner() {
                     <span className="hidden min-w-0 truncate text-2xs text-ink-400 sm:inline">
                       {ACTION_RULES[actionForMode(mode)].label} ·{" "}
                       <span className="font-medium text-ink-600">
-                        {formatCredits(credits.quote(actionForMode(mode), input.length))}
+                        {credits.unlimited
+                          ? "No charge"
+                          : formatCredits(credits.quote(actionForMode(mode), input.length))}
                       </span>{" "}
-                      credits
+                      {!credits.unlimited && "credits"}
                     </span>
 
                     <div className="ml-auto flex shrink-0 items-center gap-1">

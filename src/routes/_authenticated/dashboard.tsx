@@ -356,6 +356,7 @@ function DashboardPage() {
                   plan={credits.plan}
                   remaining={credits.remaining}
                   total={credits.total}
+                  unlimited={credits.unlimited}
                   compact
                   className="border-0 bg-transparent p-0"
                 />

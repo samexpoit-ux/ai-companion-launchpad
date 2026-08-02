@@ -152,6 +152,7 @@ export function PreviewPanel() {
                   plan={credits.plan}
                   remaining={credits.remaining}
                   total={credits.total}
+                  unlimited={credits.unlimited}
                   compact
                   className="w-full px-2 py-1"
                 />
