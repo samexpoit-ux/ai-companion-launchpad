@@ -1,6 +1,11 @@
 import { apiErrorResponse, codeFromUpstream } from "@/lib/api-error";
 import { createFileRoute } from "@tanstack/react-router";
-import { CreditError, chargeRequest, creditErrorCode, finalizeRequestCost } from "@/lib/credit-guard.server";
+import {
+  CreditError,
+  chargeRequest,
+  creditErrorCode,
+  finalizeRequestCost,
+} from "@/lib/credit-guard.server";
 import { resolveRoute, runWithFallback } from "@/lib/ai-gateway.server";
 import { newTraceId, recordTrace, type TraceAttempt } from "@/lib/request-trace.server";
 
@@ -69,7 +74,6 @@ function extractFiles(raw: string): Record<string, string> {
   return out;
 }
 
-
 export const Route = createFileRoute("/api/autofix")({
   server: {
     handlers: {
@@ -88,8 +92,10 @@ export const Route = createFileRoute("/api/autofix")({
             ? body.files
             : null;
         const isProject = Boolean(files);
-        if (!isProject && !code.trim()) return apiErrorResponse("missing_input", "autofix", "No code was supplied to repair.");
-        if (errors.length === 0) return apiErrorResponse("missing_input", "autofix", "No captured errors to repair.");
+        if (!isProject && !code.trim())
+          return apiErrorResponse("missing_input", "autofix", "No code was supplied to repair.");
+        if (errors.length === 0)
+          return apiErrorResponse("missing_input", "autofix", "No captured errors to repair.");
 
         const route = resolveRoute(body.modelId, { task: "fix" });
         if ("error" in route) return apiErrorResponse("no_provider", "autofix", route.error);
@@ -98,7 +104,7 @@ export const Route = createFileRoute("/api/autofix")({
         let charge;
         try {
           charge = await chargeRequest(request, "autofix", {
-            inputChars: (files ? JSON.stringify(files).length : code.length),
+            inputChars: files ? JSON.stringify(files).length : code.length,
             model: route.friendlyId,
             reason: `autofix attempt ${body.attempt ?? 1}`,
           });
@@ -192,10 +198,18 @@ export const Route = createFileRoute("/api/autofix")({
                   tokens: result.tokens,
                   costUsd: result.costUsd,
                   latencyMs: Date.now() - started,
-                  credits: { charged: balance.charged, remaining: balance.remaining },
+                  credits: {
+                    charged: balance.charged,
+                    remaining: balance.remaining,
+                    unlimited: balance.unlimited === true,
+                  },
                 });
               }
-              return apiErrorResponse("bad_model_output", "autofix", "The model did not return a usable patch.");
+              return apiErrorResponse(
+                "bad_model_output",
+                "autofix",
+                "The model did not return a usable patch.",
+              );
             }
             return Response.json({
               files: patched,
@@ -206,13 +220,21 @@ export const Route = createFileRoute("/api/autofix")({
               tokens: result.tokens,
               costUsd: result.costUsd,
               latencyMs: Date.now() - started,
-              credits: { charged: balance.charged, remaining: balance.remaining },
+              credits: {
+                charged: balance.charged,
+                remaining: balance.remaining,
+                unlimited: balance.unlimited === true,
+              },
             });
           }
 
           const { code: fixed, summary } = extractCode(result.content);
           if (!fixed) {
-            return apiErrorResponse("bad_model_output", "autofix", "The model did not return a usable patch.");
+            return apiErrorResponse(
+              "bad_model_output",
+              "autofix",
+              "The model did not return a usable patch.",
+            );
           }
 
           return Response.json({
@@ -223,7 +245,11 @@ export const Route = createFileRoute("/api/autofix")({
             tokens: result.tokens,
             costUsd: result.costUsd,
             latencyMs: Date.now() - started,
-            credits: { charged: balance.charged, remaining: balance.remaining },
+            credits: {
+              charged: balance.charged,
+              remaining: balance.remaining,
+              unlimited: balance.unlimited === true,
+            },
           });
         } catch (err) {
           await finalizeRequestCost(request, charge.id, "autofix", { failed: true });

@@ -145,11 +145,36 @@ export function stepsForMessage(opts: {
   outputTokens?: number;
   credits?: number;
   fileCount?: number;
+  traceId?: string;
+  task?: string;
+  attempts?: Array<{ model: string; ok: boolean; ms: number; error?: string }>;
 }): ActivityStep[] {
   const steps: ActivityStep[] = [
-    { label: "Analysed the prompt", detail: "smart cost router", done: true },
+    {
+      label: "Understood the request",
+      detail: opts.task ? `${opts.task} workflow` : "smart workflow selected",
+      done: true,
+    },
   ];
-  if (opts.modelName) steps.push({ label: "Routed to model", detail: opts.modelName, done: true });
+  steps.push({
+    label: "Planned the delivery",
+    detail: opts.fileCount
+      ? "component structure and file changes"
+      : "response structure and checks",
+    done: true,
+  });
+  if (opts.modelName) {
+    steps.push({ label: "Selected the AI engine", detail: opts.modelName, done: true });
+  }
+  for (const [index, attempt] of (opts.attempts ?? []).entries()) {
+    steps.push({
+      label: attempt.ok ? "Delivery check passed" : `Fallback check ${index + 1}`,
+      detail: attempt.ok
+        ? `${attempt.ms}ms`
+        : `${attempt.ms}ms · ${attempt.error?.slice(0, 90) ?? "delivery incomplete"}`,
+      done: true,
+    });
+  }
   steps.push({
     label: "Generated the response",
     detail:
@@ -169,7 +194,11 @@ export function stepsForMessage(opts: {
     });
   }
   if (opts.fileCount) {
-    steps.push({ label: "Wrote project files", detail: `${opts.fileCount} files`, done: true });
+    steps.push({
+      label: "Delivered and previewed files",
+      detail: `${opts.fileCount} files`,
+      done: true,
+    });
   }
   if (opts.credits != null) {
     steps.push({
@@ -178,5 +207,6 @@ export function stepsForMessage(opts: {
       done: true,
     });
   }
+  if (opts.traceId) steps.push({ label: "Recorded this run", detail: opts.traceId, done: true });
   return steps;
 }

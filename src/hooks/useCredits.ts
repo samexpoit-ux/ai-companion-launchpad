@@ -41,6 +41,7 @@ export interface UseCredits extends CreditState {
     total?: number;
     used?: number;
     plan?: string;
+    unlimited?: boolean;
   }) => void;
   setPlan: (plan: PlanId) => Promise<{ ok: boolean; error?: string }>;
   refresh: () => Promise<void>;
@@ -87,6 +88,9 @@ export function useCredits(): UseCredits {
 
   const applyServerBalance = useCallback<UseCredits["applyServerBalance"]>((payload) => {
     setState((s) => {
+      if (payload.unlimited === true) {
+        return { ...s, unlimited: true, plan: isPlanId(payload.plan) ? payload.plan : s.plan };
+      }
       const total = Number.isFinite(payload.total) ? Number(payload.total) : s.total;
       const used = Number.isFinite(payload.used)
         ? Number(payload.used)
@@ -98,6 +102,7 @@ export function useCredits(): UseCredits {
         plan: isPlanId(payload.plan) ? payload.plan : s.plan,
         total,
         used,
+        unlimited: payload.unlimited ?? s.unlimited,
       };
     });
   }, []);

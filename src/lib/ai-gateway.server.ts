@@ -193,7 +193,7 @@ export function resolveRoute(
 function maxTokensFor(model: string, task: TaskKind): number {
   const paid = !model.endsWith(":free");
   if (!paid) return 4096;
-  if (task === "code" || task === "fix") return 6000;
+  if (task === "code" || task === "fix") return 9000;
   if (task === "reason") return 3000;
   return 1600;
 }
@@ -265,6 +265,24 @@ export async function runWithFallback(
     try {
       const out = await callChatCompletion(route.config, model, messages, route.task);
       if (out.content.trim()) {
+        // Build mode is a delivery contract, not a normal chat answer. If a
+        // provider only explains the page, continue to the next coding model.
+        if (route.task === "code") {
+          const hasArtifact = /<nexusArtifact\b[\s\S]*?<\/nexusArtifact>/i.test(out.content);
+          const hasEntry = /<nexusAction\b[^>]*filePath=["'](?:src\/)?App\.(?:tsx|jsx)["']/i.test(
+            out.content,
+          );
+          if (!hasArtifact || !hasEntry) {
+            lastError = new Error(`[openrouter:${model}] incomplete build delivery`);
+            onAttempt?.({
+              model,
+              ok: false,
+              ms: Date.now() - started,
+              error: "incomplete build delivery: missing artifact or App entry",
+            });
+            continue;
+          }
+        }
         onAttempt?.({ model, ok: true, ms: Date.now() - started });
         return { ...out, upstream: model };
       }

@@ -61,7 +61,7 @@ import {
 } from "@/lib/chat-api";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { actionForMode, formatCredits, ACTION_RULES } from "@/lib/credits";
+import { actionForMode, estimateCost, formatCredits, ACTION_RULES } from "@/lib/credits";
 import { useCredits } from "@/hooks/useCredits";
 import { CreditMeter } from "@/components/CreditMeter";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
@@ -214,11 +214,32 @@ function ChatWorkspaceInner() {
   // Follow ?thread= deep links after the initial hydration too.
   useEffect(() => {
     if (!hydrated || !requestedThreadId) return;
-    setThreads((prev) => {
-      if (prev.some((t) => t.id === requestedThreadId)) setActiveId(requestedThreadId);
-      return prev;
-    });
-  }, [hydrated, requestedThreadId]);
+    if (!threads.some((thread) => thread.id === requestedThreadId)) return;
+    setActiveId(requestedThreadId);
+    if (loadedThreads.has(requestedThreadId)) return;
+    void (async () => {
+      const rows = await listMessages(requestedThreadId);
+      setThreads((prev) =>
+        prev.map((thread) =>
+          thread.id === requestedThreadId
+            ? {
+                ...thread,
+                messages: rows.map((message) => ({
+                  id: message.clientId ?? message.id,
+                  role: message.role === "assistant" ? ("assistant" as const) : ("user" as const),
+                  content: message.content,
+                  createdAt: new Date(message.createdAt).getTime(),
+                  model: message.model ?? undefined,
+                  tokens: message.tokens ?? undefined,
+                  latencyMs: message.latencyMs ?? undefined,
+                })),
+              }
+            : thread,
+        ),
+      );
+      setLoadedThreads((prev) => new Set(prev).add(requestedThreadId));
+    })();
+  }, [hydrated, requestedThreadId, threads, loadedThreads]);
 
   /**
    * Live sync: threads and messages written anywhere (another tab, another
@@ -397,10 +418,10 @@ function ChatWorkspaceInner() {
   );
 
   const sendText = useCallback(
-    async (text: string, thread: ChatThread) => {
+    async (text: string, thread: ChatThread, requestedMode: "Build" | "Chat" | "Plan" = mode) => {
       const value = text.trim();
       if (!value) return;
-      const action = actionForMode(mode);
+      const action = actionForMode(requestedMode);
       if (!credits.canAfford(action, value.length)) {
         updateThread(thread.id, (t) => ({
           ...t,
@@ -447,7 +468,7 @@ function ChatWorkspaceInner() {
       try {
         const reply = await sendChatMessage([...(thread.messages ?? []), userMsg], modelId, {
           plan: credits.plan,
-          mode,
+          mode: requestedMode,
           threadId: thread.id,
         });
         const asstMsg: ChatMessage = {
@@ -460,6 +481,10 @@ function ChatWorkspaceInner() {
           outputTokens: reply.outputTokens,
           latencyMs: reply.latencyMs,
           credits: reply.credits?.charged,
+          traceId: reply.traceId,
+          task: reply.task,
+          upstream: reply.upstream,
+          attempts: reply.attempts,
           createdAt: Date.now(),
         };
         updateThread(thread.id, (t) => ({
@@ -527,12 +552,8 @@ function ChatWorkspaceInner() {
       setMode(pending.mode);
     }
 
-    const current = threads.find((t) => t.id === activeId);
-    if (current && current.messages.length === 0) {
-      setInput("");
-      void sendText(pending.prompt, current);
-      return;
-    }
+    // Dashboard prompts always start a new conversation. Reusing whichever
+    // thread happened to be active made hand-offs dependent on load timing.
     void (async () => {
       const created = await createDbThread({
         title: pending.prompt.slice(0, 48),
@@ -545,9 +566,10 @@ function ChatWorkspaceInner() {
       setActiveId(fresh.id);
       setLoadedThreads((prev) => new Set(prev).add(fresh.id));
       setInput("");
-      await sendText(pending.prompt, fresh);
+      void navigate({ to: "/workspace", search: { thread: fresh.id }, replace: true });
+      await sendText(pending.prompt, fresh, pending.mode as "Build" | "Chat" | "Plan");
     })();
-  }, [hydrated, threads, activeId, sendText]);
+  }, [hydrated, sendText, navigate]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -913,11 +935,9 @@ function ChatWorkspaceInner() {
                     <span className="hidden min-w-0 truncate text-2xs text-ink-400 sm:inline">
                       {ACTION_RULES[actionForMode(mode)].label} ·{" "}
                       <span className="font-medium text-ink-600">
-                        {credits.unlimited
-                          ? "No charge"
-                          : formatCredits(credits.quote(actionForMode(mode), input.length))}
+                        {formatCredits(estimateCost(actionForMode(mode), input.length))}
                       </span>{" "}
-                      {!credits.unlimited && "credits"}
+                      credits {credits.unlimited && "· unlimited"}
                     </span>
 
                     <div className="ml-auto flex shrink-0 items-center gap-1">
@@ -975,8 +995,9 @@ function ChatWorkspaceInner() {
                 </div>
 
                 <p className="mt-3 text-center text-2xs leading-relaxed text-ink-400">
-                  Smart routing · {formatCredits(credits.remaining)} of{" "}
-                  {formatCredits(credits.total)} credits left
+                  {credits.unlimited
+                    ? `Smart routing · Unlimited · ${formatCredits(credits.used)} credits used`
+                    : `Smart routing · ${formatCredits(credits.remaining)} of ${formatCredits(credits.total)} credits left`}
                 </p>
               </div>
             </div>
@@ -1294,6 +1315,9 @@ function MessageBubble({
               outputTokens: message.outputTokens,
               credits: message.credits,
               fileCount: project?.order.length,
+              traceId: message.traceId,
+              task: message.task,
+              attempts: message.attempts,
             })}
           />
         )}

@@ -2,7 +2,7 @@ import { apiErrorResponse, codeFromUpstream } from "@/lib/api-error";
 import { createFileRoute } from "@tanstack/react-router";
 import { resolveRoute, runWithFallback } from "@/lib/ai-gateway.server";
 import { isPlanId } from "@/lib/plans";
-import { actionForMode } from "@/lib/credits";
+import { actionForMode, actualUsageCost } from "@/lib/credits";
 import { systemPromptFor } from "@/lib/prompts";
 import { newTraceId, recordTrace, type TraceAttempt } from "@/lib/request-trace.server";
 import {
@@ -160,6 +160,9 @@ export const Route = createFileRoute("/api/chat")({
             upstream,
           });
           const balance = finalCharge ?? charge;
+          const displayedCharge = charge.unlimited
+            ? actualUsageCost(actionForMode(mode), { inputTokens, outputTokens })
+            : balance.charged;
           await recordTrace(request, {
             traceId,
             endpoint: "chat",
@@ -174,7 +177,7 @@ export const Route = createFileRoute("/api/chat")({
             inputTokens,
             outputTokens,
             costUsd,
-            creditsCharged: balance.charged,
+            creditsCharged: displayedCharge,
             latencyMs: Date.now() - started,
             threadId,
           });
@@ -190,12 +193,14 @@ export const Route = createFileRoute("/api/chat")({
             outputTokens,
             costUsd,
             latencyMs: Date.now() - started,
+            attempts,
             credits: {
-              charged: balance.charged,
+              charged: displayedCharge,
               remaining: balance.remaining,
               total: balance.total,
               used: balance.used,
               plan: balance.plan,
+              unlimited: balance.unlimited === true,
             },
           });
         } catch (err) {
@@ -221,7 +226,6 @@ export const Route = createFileRoute("/api/chat")({
             traceId,
           });
         }
-
       },
     },
   },
