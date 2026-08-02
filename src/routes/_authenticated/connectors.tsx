@@ -51,7 +51,7 @@ const CONNECTORS: Array<{
   status: Status;
   text: string;
   accent: string;
-  action?: { label: string; to: "/workspace" };
+  action?: { label: string; to: "/workspace" | "/domains" | "/webhooks" };
 }> = [
   {
     icon: Github,
@@ -86,16 +86,18 @@ const CONNECTORS: Array<{
   {
     icon: Globe,
     title: "Custom domain",
-    status: "soon",
-    text: "Point a domain at a shipped project and Nexura will handle DNS verification and TLS.",
+    status: "available",
+    text: "Point a domain at a shipped project — Nexura gives you the DNS records and verifies them live.",
     accent: "linear-gradient(135deg, #0EA5E9, #67E8F9)",
+    action: { label: "Manage domains", to: "/domains" },
   },
   {
     icon: Webhook,
     title: "Webhooks",
-    status: "soon",
-    text: "Trigger external workflows whenever a project builds, ships or deploys.",
+    status: "available",
+    text: "Signed HTTP events whenever a project builds, ships or deploys, with a full delivery log.",
     accent: "linear-gradient(135deg, #F59E0B, #FCD34D)",
+    action: { label: "Configure webhooks", to: "/webhooks" },
   },
 ];
 
