@@ -83,7 +83,7 @@ import { takePendingPrompt } from "@/lib/pending-prompt";
 import { PreviewProvider, usePreview, isPreviewable } from "@/components/preview-context";
 import { PreviewPanel } from "@/components/PreviewPanel";
 import { PlayCircle, GripVertical, FolderTree, PanelRight } from "lucide-react";
-import { hasArtifact, parseArtifacts, stripArtifacts, type ArtifactProject } from "@/lib/artifact";
+import { chatProse, parseArtifacts, type ArtifactProject } from "@/lib/artifact";
 import { ActivityCard, stepsForMessage } from "@/components/ActivityCard";
 
 import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from "react-resizable-panels";
@@ -1332,7 +1332,7 @@ function MessageBubble({
           ) : (
             <div className="prose prose-slate prose-sm max-w-none break-words prose-p:my-2 prose-headings:font-display prose-headings:tracking-tight prose-headings:mt-3 prose-headings:mb-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-strong:text-[color:var(--color-iris-deep)]">
               <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-                {hasArtifact(message.content) ? stripArtifacts(message.content) : message.content}
+                {chatProse(message.content)}
               </ReactMarkdown>
             </div>
           )}

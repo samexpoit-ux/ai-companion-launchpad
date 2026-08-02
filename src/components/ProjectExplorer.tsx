@@ -17,6 +17,7 @@ import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 import { cn } from "@/lib/utils";
 import { usePreview } from "./preview-context";
+import { ShipDialog } from "@/components/ShipDialog";
 
 interface TreeNode {
   name: string;
@@ -159,7 +160,6 @@ export default function ProjectExplorer() {
   const [draft, setDraft] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [zipping, setZipping] = useState(false);
   const value = draft ?? files[current] ?? "";
   const dirty = draft != null && draft !== files[current];
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -202,30 +202,6 @@ export default function ProjectExplorer() {
     downloadBlob(new Blob([value], { type: "text/plain;charset=utf-8" }), current.split("/").pop() || "file.txt");
   };
 
-  /** Export every file of the project as a zip the user can run locally. */
-  const downloadZip = async () => {
-    setZipping(true);
-    try {
-      const { default: JSZip } = await import("jszip");
-      const zip = new JSZip();
-      for (const [path, code] of Object.entries(files)) zip.file(path, code);
-      const readme = [
-        `# ${payload?.title ?? "Nexura AI project"}`,
-        "",
-        "Exported from Nexura AI.",
-        `Entry file: \`${payload?.entry ?? paths[0]}\``,
-        "",
-        "Runtime packages used by the live preview: react, react-dom, lucide-react.",
-      ].join("\n");
-      zip.file("README.md", readme);
-      const blob = await zip.generateAsync({ type: "blob" });
-      const slug = (payload?.title ?? "nexura-project").toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      downloadBlob(blob, `${slug || "nexura-project"}.zip`);
-    } finally {
-      setZipping(false);
-    }
-  };
-
   return (
     <div className="flex h-full min-h-0">
       <div className="w-52 shrink-0 overflow-auto border-r border-ink-200 bg-white/50 py-2">
@@ -233,14 +209,18 @@ export default function ProjectExplorer() {
         {tree.map((node) => (
           <TreeItem key={node.path} node={node} depth={0} active={current} changed={changed} onSelect={select} />
         ))}
-        <button
-          onClick={() => void downloadZip()}
-          disabled={zipping}
-          className="mx-2 mt-3 flex w-[calc(100%-16px)] items-center justify-center gap-1.5 rounded-md border border-ink-200 px-2 py-1.5 text-2xs text-ink-600 transition hover:border-[color:var(--color-iris)]/40 hover:text-ink-900 disabled:opacity-50"
-        >
-          <FileArchive className="h-3 w-3" />
-          {zipping ? "Packaging…" : "Export project (.zip)"}
-        </button>
+        <ShipDialog
+          payload={payload ? { title: payload.title, entry: payload.entry, files } : null}
+          trigger={
+            <button
+              disabled={!payload}
+              className="mx-2 mt-3 flex w-[calc(100%-16px)] items-center justify-center gap-1.5 rounded-md border border-ink-200 px-2 py-1.5 text-2xs text-ink-600 transition hover:border-[color:var(--color-iris)]/40 hover:text-ink-900 disabled:opacity-50"
+            >
+              <FileArchive className="h-3 w-3" />
+              Ship project
+            </button>
+          }
+        />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">

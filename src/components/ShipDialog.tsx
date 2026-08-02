@@ -1,0 +1,177 @@
+/**
+ * Ship dialog — the only way a project leaves Nexura.
+ *
+ * Three routes, all from the live workspace: download a runnable zip, push
+ * straight into a GitHub repository, or take a build bundle to a VPS/host.
+ */
+import { useState } from "react";
+import { FileArchive, Github, Rocket, Loader2, Check, ExternalLink } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { pushProjectToGitHub } from "@/lib/ship.functions";
+import { buildShipFiles, slugify, type ShipPayload } from "@/lib/ship-bundle";
+
+export function ShipDialog({ payload, trigger }: { payload: ShipPayload | null; trigger: React.ReactNode }) {
+  const push = useServerFn(pushProjectToGitHub);
+  const [zipping, setZipping] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [token, setToken] = useState("");
+  const [owner, setOwner] = useState("");
+  const [repo, setRepo] = useState(slugify(payload?.title));
+  const [result, setResult] = useState<{ repoUrl: string; branch: string; commit: string; files: number } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const fileCount = payload ? Object.keys(payload.files).length : 0;
+
+  const downloadZip = async () => {
+    if (!payload) return;
+    setZipping(true);
+    try {
+      const { default: JSZip } = await import("jszip");
+      const zip = new JSZip();
+      for (const [path, code] of Object.entries(buildShipFiles(payload))) zip.file(path, code);
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${slugify(payload.title)}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setZipping(false);
+    }
+  };
+
+  const doPush = async () => {
+    if (!payload) return;
+    setBusy(true);
+    setError(null);
+    setResult(null);
+    try {
+      const res = await push({
+        data: {
+          token: token.trim(),
+          repo: repo.trim() || slugify(payload.title),
+          owner: owner.trim() || undefined,
+          private: true,
+          message: `Nexura AI — ${payload.title ?? "project"} update`,
+          files: buildShipFiles(payload),
+        },
+      });
+      setResult(res);
+      setToken("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "GitHub push failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Ship this project</DialogTitle>
+          <DialogDescription>
+            {fileCount} file{fileCount === 1 ? "" : "s"} from the live workspace, packaged as a runnable
+            Vite + React app. Nothing to copy or paste.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Tabs defaultValue="zip">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="zip">Download</TabsTrigger>
+            <TabsTrigger value="github">GitHub</TabsTrigger>
+            <TabsTrigger value="deploy">Deploy</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="zip" className="space-y-3 pt-4">
+            <p className="text-sm text-muted-foreground">
+              Includes <code>package.json</code>, Vite config, entry HTML and a README, so
+              <code> npm install &amp;&amp; npm run dev</code> just works.
+            </p>
+            <Button onClick={() => void downloadZip()} disabled={!payload || zipping} className="w-full">
+              {zipping ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileArchive className="mr-2 h-4 w-4" />}
+              {zipping ? "Packaging…" : "Download .zip"}
+            </Button>
+          </TabsContent>
+
+          <TabsContent value="github" className="space-y-3 pt-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="gh-token">Personal access token (repo scope)</Label>
+              <Input
+                id="gh-token"
+                type="password"
+                autoComplete="off"
+                placeholder="ghp_…"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Used once for this push and never stored.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="gh-owner">Owner / org (optional)</Label>
+                <Input id="gh-owner" placeholder="your-username" value={owner} onChange={(e) => setOwner(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="gh-repo">Repository</Label>
+                <Input id="gh-repo" value={repo} onChange={(e) => setRepo(e.target.value)} />
+              </div>
+            </div>
+            <Button onClick={() => void doPush()} disabled={!payload || busy || token.trim().length < 20} className="w-full">
+              {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Github className="mr-2 h-4 w-4" />}
+              {busy ? "Pushing…" : "Create repo & push"}
+            </Button>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            {result && (
+              <div className="rounded-md border border-border bg-muted/40 p-3 text-sm">
+                <p className="flex items-center gap-1.5 font-medium">
+                  <Check className="h-4 w-4 text-[color:var(--color-iris,currentColor)]" />
+                  Pushed {result.files} files to {result.branch} ({result.commit})
+                </p>
+                <a
+                  href={result.repoUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-flex items-center gap-1 text-primary underline"
+                >
+                  Open repository <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="deploy" className="space-y-3 pt-4">
+            <p className="text-sm text-muted-foreground">
+              Push to GitHub first, then connect that repo to any host — or build it straight on your VPS:
+            </p>
+            <pre className="overflow-x-auto rounded-md border border-border bg-muted/40 p-3 text-xs">
+{`git clone <your-repo> app && cd app
+npm install && npm run build
+# serve dist/ with nginx (SPA fallback: try_files $uri /index.html;)`}
+            </pre>
+            <Button variant="secondary" className="w-full" onClick={() => void downloadZip()} disabled={!payload}>
+              <Rocket className="mr-2 h-4 w-4" />
+              Download deploy bundle
+            </Button>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}
