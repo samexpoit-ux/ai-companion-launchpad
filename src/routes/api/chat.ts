@@ -159,7 +159,12 @@ export const Route = createFileRoute("/api/chat")({
             outputTokens,
             upstream,
           });
-          const balance = finalCharge ?? charge;
+          // Finalization reports the real token cost but not the caller's plan class, so the
+          // unlimited flag from the reservation is carried over — otherwise an admin's meter
+          // would flip from "Unlimited" to a metered balance after every request.
+          const balance = finalCharge
+            ? { ...finalCharge, unlimited: finalCharge.unlimited || charge.unlimited === true }
+            : charge;
           const displayedCharge = charge.unlimited
             ? actualUsageCost(actionForMode(mode), { inputTokens, outputTokens })
             : balance.charged;

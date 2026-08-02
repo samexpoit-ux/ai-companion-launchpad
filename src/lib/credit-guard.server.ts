@@ -210,6 +210,7 @@ export async function finalizeRequestCost(
       total: Number(row.total ?? 0),
       used: Number(row.used ?? 0),
       remaining: Number(row.remaining ?? 0),
+      unlimited: row.unlimited === true,
     };
   } catch (err) {
     console.error("[credits] usage finalization failed", err);
