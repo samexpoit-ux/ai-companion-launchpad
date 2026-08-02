@@ -552,7 +552,7 @@ function ChatWorkspaceInner() {
       void navigate({ to: "/workspace", search: { thread: fresh.id }, replace: true });
       await sendText(pending.prompt, fresh, pending.mode as "Build" | "Chat" | "Plan");
     })();
-  }, [hydrated, threads, activeId, sendText]);
+  }, [hydrated, threads, activeId, sendText, navigate]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {

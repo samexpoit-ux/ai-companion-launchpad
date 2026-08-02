@@ -158,10 +158,14 @@ export function stepsForMessage(opts: {
   ];
   steps.push({
     label: "Planned the delivery",
-    detail: opts.fileCount ? "component structure and file changes" : "response structure and checks",
+    detail: opts.fileCount
+      ? "component structure and file changes"
+      : "response structure and checks",
     done: true,
   });
-  if (opts.modelName) steps.push({ label: "Selected the AI engine", detail: opts.modelName, done: true });
+  if (opts.modelName) {
+    steps.push({ label: "Selected the AI engine", detail: opts.modelName, done: true });
+  }
   for (const [index, attempt] of (opts.attempts ?? []).entries()) {
     steps.push({
       label: attempt.ok ? "Delivery check passed" : `Fallback check ${index + 1}`,
@@ -190,7 +194,11 @@ export function stepsForMessage(opts: {
     });
   }
   if (opts.fileCount) {
-    steps.push({ label: "Delivered and previewed files", detail: `${opts.fileCount} files`, done: true });
+    steps.push({
+      label: "Delivered and previewed files",
+      detail: `${opts.fileCount} files`,
+      done: true,
+    });
   }
   if (opts.credits != null) {
     steps.push({

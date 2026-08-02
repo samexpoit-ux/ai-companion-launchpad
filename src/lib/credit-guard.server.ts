@@ -100,7 +100,9 @@ export async function chargeRequest(
       _thread_id: opts.threadId ?? null,
       _reason: opts.reason ?? "unlimited admin usage",
     });
-    if (error) throw new CreditError("unavailable", error.message ?? "Usage ledger is unavailable.");
+    if (error) {
+      throw new CreditError("unavailable", error.message ?? "Usage ledger is unavailable.");
+    }
     const row = (data ?? {}) as Partial<ChargeResult>;
     return {
       id: String(row.id ?? ""),
