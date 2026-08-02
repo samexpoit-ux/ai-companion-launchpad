@@ -1370,6 +1370,8 @@ function MessageBubble({
             }
             project={project}
             adminView={adminView}
+            messageId={message.id}
+            durationMs={message.latencyMs}
             charge={{
               action: creditActionFor(message, Boolean(project)),
               credits: message.credits,
