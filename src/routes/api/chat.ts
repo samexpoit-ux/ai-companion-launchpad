@@ -3,6 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { resolveRoute, runWithFallback } from "@/lib/ai-gateway.server";
 import { isPlanId } from "@/lib/plans";
 import { actionForMode } from "@/lib/credits";
+import { systemPromptFor } from "@/lib/prompts";
+import { newTraceId, recordTrace, type TraceAttempt } from "@/lib/request-trace.server";
 import {
   CreditError,
   chargeRequest,
@@ -24,52 +26,6 @@ interface ChatBody {
   mode?: string;
   /** Thread the charge belongs to, for the ledger. */
   threadId?: string;
-}
-
-const CHAT_PROMPT = `You are Nexura AI, a precise and concise product assistant. Respond in clean Markdown.
-Answer the user's actual question directly. Give concrete steps rather than generic advice.`;
-
-const PLAN_PROMPT = `You are Nexura AI, a senior product architect. Respond in clean Markdown with an ordered,
-practical implementation plan. Identify constraints, dependencies, edge cases, security risks, and verification steps.
-Do not generate a project artifact unless the user explicitly switches to Build mode.`;
-
-const BUILD_PROMPT = `You are Nexura AI — a senior product engineer and precise coding assistant.
-Respond in clean Markdown. Use fenced code blocks with language tags (tsx, ts, js, html, css, sql, bash, json)
-whenever you include code. First infer the user's actual outcome, constraints, existing stack, and likely edge cases.
-For chat and planning, give direct, concrete answers with an ordered implementation path—not generic advice.
-For builds, produce polished, responsive, accessible code with coherent hierarchy, working interactions,
-empty/loading/error states, and no placeholder buttons. Prefer small focused components.
-
-MULTI-FILE PROJECTS — very important:
-When the user asks you to build an app, page, component set, or anything that needs more than one file,
-output the whole project as ONE artifact using exactly this format:
-
-<nexusArtifact id="kebab-case-id" title="Short Project Title">
-<nexusAction type="file" filePath="src/App.tsx">
-...full file contents, no markdown fences...
-</nexusAction>
-<nexusAction type="file" filePath="src/components/Thing.tsx">
-...full file contents...
-</nexusAction>
-</nexusArtifact>
-
-Artifact rules:
-- Always include an entry component at src/App.tsx with a default export.
-- Write COMPLETE files, never diffs, placeholders, or "...rest of code".
-- Do NOT wrap file contents in markdown code fences inside nexusAction.
-- Use relative imports ("./components/Thing") or "@/..." aliases resolved from src/.
-- Only these runtime packages exist in the live preview: react, react-dom, lucide-react.
-  Style with inline styles or Tailwind utility classes. Never import UI libraries or fetch remote packages.
-- Put a short plain-language explanation BEFORE the artifact, not inside it.
-- Ensure every imported local file is included and every visible interaction works.
-- Use semantic HTML, accessible labels, stable responsive dimensions, and high-contrast colors.
-- Before answering, silently check imports, exports, JSX balance, state flow, mobile layout, and preview compatibility.
-- For a single tiny snippet, a normal fenced code block is fine — reserve artifacts for real projects.`;
-
-function systemPromptFor(task: "fast" | "chat" | "reason" | "code" | "fix") {
-  if (task === "code" || task === "fix") return BUILD_PROMPT;
-  if (task === "reason") return PLAN_PROMPT;
-  return CHAT_PROMPT;
 }
 
 export const Route = createFileRoute("/api/chat")({
@@ -111,16 +67,33 @@ export const Route = createFileRoute("/api/chat")({
               : mode === "build"
                 ? ("code" as const)
                 : undefined;
+        const traceId = newTraceId();
+        const threadId = typeof body.threadId === "string" ? body.threadId : null;
+        const attempts: TraceAttempt[] = [];
+        const requestStarted = Date.now();
+
         // ---- server-side credit enforcement (before any provider call) ----
         let charge;
         try {
           charge = await chargeRequest(request, actionForMode(mode), {
             inputChars: lastUser?.content.length ?? 0,
-            threadId: typeof body.threadId === "string" ? body.threadId : null,
+            threadId,
           });
         } catch (err) {
           if (err instanceof CreditError) {
+            await recordTrace(request, {
+              traceId,
+              endpoint: "chat",
+              mode,
+              attempts,
+              status: "blocked",
+              errorMessage: err.message,
+              promptChars: lastUser?.content.length ?? 0,
+              latencyMs: Date.now() - requestStarted,
+              threadId,
+            });
             return apiErrorResponse(creditErrorCode(err), "chat", err.message, {
+              traceId,
               ...(err.remaining != null ? { remaining: err.remaining } : {}),
             });
           }
@@ -139,11 +112,35 @@ export const Route = createFileRoute("/api/chat")({
         } catch (err) {
           await finalizeRequestCost(request, charge.id, actionForMode(mode), { failed: true });
           const message = err instanceof Error ? err.message : "Model routing failed.";
-          return apiErrorResponse("no_provider", "chat", message);
+          await recordTrace(request, {
+            traceId,
+            endpoint: "chat",
+            mode,
+            plan: charge.plan,
+            attempts,
+            status: "error",
+            errorMessage: message,
+            promptChars: lastUser?.content.length ?? 0,
+            latencyMs: Date.now() - requestStarted,
+            threadId,
+          });
+          return apiErrorResponse("no_provider", "chat", message, { traceId });
         }
         if ("error" in route) {
           await finalizeRequestCost(request, charge.id, actionForMode(mode), { failed: true });
-          return apiErrorResponse("no_provider", "chat", route.error);
+          await recordTrace(request, {
+            traceId,
+            endpoint: "chat",
+            mode,
+            plan: charge.plan,
+            attempts,
+            status: "error",
+            errorMessage: route.error,
+            promptChars: lastUser?.content.length ?? 0,
+            latencyMs: Date.now() - requestStarted,
+            threadId,
+          });
+          return apiErrorResponse("no_provider", "chat", route.error, { traceId });
         }
 
         const started = Date.now();
@@ -151,10 +148,11 @@ export const Route = createFileRoute("/api/chat")({
           { role: "system" as const, content: systemPromptFor(route.task) },
           ...normalizedMessages,
         ];
+        const promptChars = cleanMessages.reduce((sum, m) => sum + m.content.length, 0);
 
         try {
           const { content, tokens, inputTokens, outputTokens, costUsd, upstream } =
-            await runWithFallback(route, cleanMessages);
+            await runWithFallback(route, cleanMessages, (attempt) => attempts.push(attempt));
           const finalCharge = await finalizeRequestCost(request, charge.id, actionForMode(mode), {
             costUsd,
             inputTokens,
@@ -162,12 +160,31 @@ export const Route = createFileRoute("/api/chat")({
             upstream,
           });
           const balance = finalCharge ?? charge;
+          await recordTrace(request, {
+            traceId,
+            endpoint: "chat",
+            mode,
+            task: route.task,
+            plan: balance.plan,
+            primaryModel: route.upstream,
+            finalModel: upstream,
+            attempts,
+            status: "ok",
+            promptChars,
+            inputTokens,
+            outputTokens,
+            costUsd,
+            creditsCharged: balance.charged,
+            latencyMs: Date.now() - started,
+            threadId,
+          });
           return Response.json({
             content,
             model: route.friendlyId,
             provider: "openrouter",
             upstream,
             task: route.task,
+            traceId,
             tokens,
             inputTokens,
             outputTokens,
@@ -184,11 +201,27 @@ export const Route = createFileRoute("/api/chat")({
         } catch (err) {
           await finalizeRequestCost(request, charge.id, actionForMode(mode), { failed: true });
           const e = err as Error & { status?: number };
+          await recordTrace(request, {
+            traceId,
+            endpoint: "chat",
+            mode,
+            task: route.task,
+            plan: charge.plan,
+            primaryModel: route.upstream,
+            attempts,
+            status: "error",
+            errorMessage: e.message,
+            promptChars,
+            latencyMs: Date.now() - started,
+            threadId,
+          });
           return apiErrorResponse(codeFromUpstream(e.status), "chat", e.message, {
             model: route.friendlyId,
             provider: "openrouter",
+            traceId,
           });
         }
+
       },
     },
   },

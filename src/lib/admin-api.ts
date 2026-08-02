@@ -617,3 +617,126 @@ export async function fetchUsageReport(days = 30, limit = 500): Promise<UsageRep
 
   return { users, requests, totals };
 }
+
+/* ------------------------------------------------- model routing traces */
+
+export interface TraceAttemptRow {
+  model: string;
+  ok: boolean;
+  ms: number;
+  error?: string;
+}
+
+export interface RequestTraceRow {
+  id: string;
+  traceId: string;
+  userId: string | null;
+  email: string | null;
+  endpoint: string;
+  mode: string | null;
+  task: string | null;
+  plan: string | null;
+  primaryModel: string | null;
+  finalModel: string | null;
+  attempts: TraceAttemptRow[];
+  fallbackCount: number;
+  status: string;
+  errorMessage: string | null;
+  promptChars: number;
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number;
+  creditsCharged: number;
+  latencyMs: number;
+  threadId: string | null;
+  createdAt: string;
+}
+
+export interface TraceReport {
+  rows: RequestTraceRow[];
+  totals: {
+    requests: number;
+    errors: number;
+    fallbacks: number;
+    avgLatencyMs: number;
+    costUsd: number;
+  };
+}
+
+/**
+ * Model routing traces. RLS restricts `request_traces` to admins, so a
+ * non-admin session simply gets an empty list.
+ */
+export async function fetchRequestTraces(days = 7, limit = 200): Promise<TraceReport> {
+  const since = new Date(Date.now() - days * 86_400_000).toISOString();
+  // `request_traces` is admin-only telemetry and is not part of the generated
+  // Data API types, so the table name is passed untyped on purpose.
+  const client = supabase as unknown as {
+    from: (table: string) => {
+      select: (cols: string) => {
+        gte: (
+          col: string,
+          value: string,
+        ) => {
+          order: (
+            col: string,
+            opts: { ascending: boolean },
+          ) => {
+            limit: (n: number) => Promise<{ data: Record<string, unknown>[] | null; error: unknown }>;
+          };
+        };
+      };
+    };
+  };
+
+  const { data } = await client
+    .from("request_traces")
+    .select("*")
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  const raw = data ?? [];
+  const userIds = [...new Set(raw.map((r) => r["user_id"]).filter(Boolean) as string[])];
+  const profiles = userIds.length
+    ? await supabase.from("profiles").select("id, email").in("id", userIds)
+    : { data: [] as { id: string; email: string | null }[] };
+  const emailBy = new Map((profiles.data ?? []).map((p) => [p.id, p.email]));
+
+  const rows: RequestTraceRow[] = raw.map((r) => ({
+    id: String(r["id"]),
+    traceId: String(r["trace_id"] ?? ""),
+    userId: (r["user_id"] as string | null) ?? null,
+    email: emailBy.get(String(r["user_id"])) ?? null,
+    endpoint: String(r["endpoint"] ?? ""),
+    mode: (r["mode"] as string | null) ?? null,
+    task: (r["task"] as string | null) ?? null,
+    plan: (r["plan"] as string | null) ?? null,
+    primaryModel: (r["primary_model"] as string | null) ?? null,
+    finalModel: (r["final_model"] as string | null) ?? null,
+    attempts: Array.isArray(r["attempts"]) ? (r["attempts"] as TraceAttemptRow[]) : [],
+    fallbackCount: Number(r["fallback_count"] ?? 0),
+    status: String(r["status"] ?? "ok"),
+    errorMessage: (r["error_message"] as string | null) ?? null,
+    promptChars: Number(r["prompt_chars"] ?? 0),
+    inputTokens: Number(r["input_tokens"] ?? 0),
+    outputTokens: Number(r["output_tokens"] ?? 0),
+    costUsd: Number(r["cost_usd"] ?? 0),
+    creditsCharged: Number(r["credits_charged"] ?? 0),
+    latencyMs: Number(r["latency_ms"] ?? 0),
+    threadId: (r["thread_id"] as string | null) ?? null,
+    createdAt: String(r["created_at"]),
+  }));
+
+  const totals = {
+    requests: rows.length,
+    errors: rows.filter((r) => r.status !== "ok").length,
+    fallbacks: rows.filter((r) => r.fallbackCount > 0).length,
+    avgLatencyMs: rows.length
+      ? Math.round(rows.reduce((s, r) => s + r.latencyMs, 0) / rows.length)
+      : 0,
+    costUsd: money(rows.reduce((s, r) => s + r.costUsd, 0)),
+  };
+
+  return { rows, totals };
+}

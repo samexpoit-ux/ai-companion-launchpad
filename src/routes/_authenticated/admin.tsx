@@ -7,6 +7,7 @@ import {
   Layers,
   LayoutDashboard,
   Menu,
+  Route as RouteIcon,
   ScrollText,
   ShieldAlert,
   ShieldCheck,
@@ -21,6 +22,7 @@ import { UsageTab } from "@/components/admin/UsageTab";
 import { PaymentsTab } from "@/components/admin/PaymentsTab";
 import { PlansTab } from "@/components/admin/PlansTab";
 import { SettingsTab } from "@/components/admin/SettingsTab";
+import { TracesTab } from "@/components/admin/TracesTab";
 import { AuditTab } from "@/components/admin/AuditTab";
 import { useAdmin } from "@/hooks/useAdmin";
 import { cn } from "@/lib/utils";
@@ -59,6 +61,7 @@ const SECTIONS = [
   { id: "payments", label: "Payments", hint: "Sales & refunds", icon: BadgeDollarSign, accent: "var(--color-sun)" },
   { id: "plans", label: "Plans", hint: "Pricing tiers", icon: Layers, accent: "var(--color-iris-warm)" },
   { id: "settings", label: "Settings", hint: "Platform config", icon: SlidersHorizontal, accent: "var(--color-iris-cyan)" },
+  { id: "traces", label: "Model traces", hint: "Routing & fallbacks", icon: RouteIcon, accent: "var(--color-orchid)" },
   { id: "audit", label: "Audit log", hint: "Admin trail", icon: ScrollText, accent: "var(--color-flare)" },
 ] as const;
 
@@ -248,6 +251,7 @@ function AdminPage() {
           {tab === "payments" && <PaymentsTab />}
           {tab === "plans" && <PlansTab />}
           {tab === "settings" && <SettingsTab />}
+          {tab === "traces" && <TracesTab />}
           {tab === "audit" && <AuditTab />}
         </section>
       </div>

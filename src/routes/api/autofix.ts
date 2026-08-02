@@ -2,6 +2,7 @@ import { apiErrorResponse, codeFromUpstream } from "@/lib/api-error";
 import { createFileRoute } from "@tanstack/react-router";
 import { CreditError, chargeRequest, creditErrorCode, finalizeRequestCost } from "@/lib/credit-guard.server";
 import { resolveRoute, runWithFallback } from "@/lib/ai-gateway.server";
+import { newTraceId, recordTrace, type TraceAttempt } from "@/lib/request-trace.server";
 
 interface AutofixBody {
   code?: string;
@@ -142,8 +143,10 @@ export const Route = createFileRoute("/api/autofix")({
         ];
 
         const started = Date.now();
+        const traceId = newTraceId();
+        const attempts: TraceAttempt[] = [];
         try {
-          const result = await runWithFallback(route, messages);
+          const result = await runWithFallback(route, messages, (a) => attempts.push(a));
           const finalCharge = await finalizeRequestCost(request, charge.id, "autofix", {
             costUsd: result.costUsd,
             inputTokens: result.inputTokens,
@@ -151,6 +154,23 @@ export const Route = createFileRoute("/api/autofix")({
             upstream: result.upstream,
           });
           const balance = finalCharge ?? charge;
+          await recordTrace(request, {
+            traceId,
+            endpoint: "autofix",
+            mode: "fix",
+            task: route.task,
+            plan: balance.plan,
+            primaryModel: route.upstream,
+            finalModel: result.upstream,
+            attempts,
+            status: "ok",
+            promptChars: messages.reduce((sum, m) => sum + m.content.length, 0),
+            inputTokens: result.inputTokens,
+            outputTokens: result.outputTokens,
+            costUsd: result.costUsd,
+            creditsCharged: balance.charged,
+            latencyMs: Date.now() - started,
+          });
 
           if (isProject) {
             const patched = extractFiles(result.content);
@@ -208,7 +228,19 @@ export const Route = createFileRoute("/api/autofix")({
         } catch (err) {
           await finalizeRequestCost(request, charge.id, "autofix", { failed: true });
           const e = err as Error & { status?: number };
-          return apiErrorResponse(codeFromUpstream(e.status), "autofix", e.message);
+          await recordTrace(request, {
+            traceId,
+            endpoint: "autofix",
+            mode: "fix",
+            task: route.task,
+            plan: charge.plan,
+            primaryModel: route.upstream,
+            attempts,
+            status: "error",
+            errorMessage: e.message,
+            latencyMs: Date.now() - started,
+          });
+          return apiErrorResponse(codeFromUpstream(e.status), "autofix", e.message, { traceId });
         }
       },
     },

@@ -256,16 +256,28 @@ export async function callChatCompletion(
 export async function runWithFallback(
   route: ResolvedRoute,
   messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
+  onAttempt?: (attempt: { model: string; ok: boolean; ms: number; error?: string }) => void,
 ): Promise<{ content: string; tokens: number; inputTokens: number; outputTokens: number; costUsd: number; upstream: string }> {
   const chain = [route.upstream, ...route.fallbacks];
   let lastError: unknown;
   for (const model of chain) {
+    const started = Date.now();
     try {
       const out = await callChatCompletion(route.config, model, messages, route.task);
-      if (out.content.trim()) return { ...out, upstream: model };
+      if (out.content.trim()) {
+        onAttempt?.({ model, ok: true, ms: Date.now() - started });
+        return { ...out, upstream: model };
+      }
       lastError = new Error(`[openrouter:${model}] empty response`);
+      onAttempt?.({ model, ok: false, ms: Date.now() - started, error: "empty response" });
     } catch (err) {
       lastError = err;
+      onAttempt?.({
+        model,
+        ok: false,
+        ms: Date.now() - started,
+        error: err instanceof Error ? err.message.slice(0, 300) : String(err).slice(0, 300),
+      });
     }
   }
   throw lastError instanceof Error ? lastError : new Error("All OpenRouter models failed");

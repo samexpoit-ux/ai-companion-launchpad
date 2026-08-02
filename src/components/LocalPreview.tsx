@@ -4,6 +4,8 @@ import * as ReactDOMClient from "react-dom/client";
 import * as LucideIcons from "lucide-react";
 import { transform } from "@babel/standalone";
 import { resolveAlias, resolveModule } from "@/lib/artifact";
+import { PREVIEW_DOC_CSS, PREVIEW_TOKENS_CSS, previewStyleTag } from "@/lib/preview-theme";
+
 import {
   DEVICE_WIDTH,
   usePreview,
@@ -20,12 +22,7 @@ import {
  */
 
 const BASE_HTML = `<!doctype html><html><head><meta charset="utf-8" />
-<style>
-  :root { color-scheme: light; }
-  html, body { margin: 0; height: 100%; }
-  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #fff; color: #1B1A17; padding: 20px; box-sizing: border-box; }
-  #root { min-height: 100%; }
-</style>
+${previewStyleTag(`html, body { height: 100%; } body { padding: 20px; box-sizing: border-box; } #root { min-height: 100%; }`)}
 </head><body><div id="root"></div></body></html>`;
 
 const PREVIEW_BRIDGE = `<script>(function(){
@@ -36,13 +33,15 @@ const PREVIEW_BRIDGE = `<script>(function(){
 })();</script>`;
 
 function withBridge(html: string): string {
-  if (/<head[^>]*>/i.test(html)) return html.replace(/<head([^>]*)>/i, `<head$1>${PREVIEW_BRIDGE}`);
-  return `${PREVIEW_BRIDGE}${html}`;
+  // Standalone HTML documents still get the shared theme tokens so a previewed
+  // page uses the same palette as the product shell.
+  const injected = `${PREVIEW_BRIDGE}${previewStyleTag()}`;
+  if (/<head[^>]*>/i.test(html)) return html.replace(/<head([^>]*)>/i, `<head$1>${injected}`);
+  return `${injected}${html}`;
 }
 
 const CSS_HTML = (css: string) => `<!doctype html><html><head><meta charset="utf-8" />
-${PREVIEW_BRIDGE}<style>body{font-family:ui-sans-serif,system-ui,sans-serif;background:#fff;color:#1B1A17;padding:24px;margin:0}
-.demo-card{padding:16px;border:1px solid #E4EDFA;border-radius:12px;background:#F7FBFF;margin-top:12px}</style>
+${PREVIEW_BRIDGE}${previewStyleTag()}
 <style>${css}</style></head><body>
 <h1>Heading 1</h1><h2>Heading 2</h2>
 <p>The quick brown fox jumps over the lazy dog.</p>
@@ -51,16 +50,15 @@ ${PREVIEW_BRIDGE}<style>body{font-family:ui-sans-serif,system-ui,sans-serif;back
 </body></html>`;
 
 const JS_HTML = (js: string) => `<!doctype html><html><head><meta charset="utf-8" />
-<style>body{font-family:ui-sans-serif,system-ui,sans-serif;background:#fff;color:#1B1A17;padding:24px;margin:0}</style>
+${previewStyleTag()}
 </head><body><div id="app"></div>${PREVIEW_BRIDGE}<script type="module">
 try {
 ${js}
-} catch (e) { console.error(e); document.body.innerHTML = '<pre style="color:#b91c1c;white-space:pre-wrap">' + (e && e.stack || e) + '</pre>'; }
+} catch (e) { console.error(e); document.body.innerHTML = '<pre style="color:var(--nx-danger);white-space:pre-wrap">' + (e && e.stack || e) + '</pre>'; }
 </script></body></html>`;
 
 const MD_HTML = (md: string) => `<!doctype html><html><head><meta charset="utf-8" />
-${PREVIEW_BRIDGE}<style>body{font-family:ui-sans-serif,system-ui,sans-serif;background:#fff;color:#1B1A17;padding:24px;margin:0;line-height:1.65}
-pre{background:#F1F6FE;padding:12px;border-radius:10px;overflow:auto}</style></head>
+${PREVIEW_BRIDGE}${previewStyleTag(`body{line-height:1.65}`)}</head>
 <body><pre style="white-space:pre-wrap;background:transparent;padding:0">${md
   .replace(/&/g, "&amp;")
   .replace(/</g, "&lt;")}</pre></body></html>`;
@@ -237,6 +235,17 @@ export default function LocalPreview({ payload, device, reloadKey }: Props) {
       const win = frame.contentWindow;
       const doc = frame.contentDocument;
       if (!win || !doc) return;
+
+      // Shared design tokens first, so cloned host CSS can override nothing it
+      // shouldn't and the palette matches even before Tailwind loads.
+      try {
+        const tokens = doc.createElement("style");
+        tokens.dataset["nexuraTokens"] = "true";
+        tokens.textContent = PREVIEW_TOKENS_CSS + PREVIEW_DOC_CSS;
+        doc.head.appendChild(tokens);
+      } catch {
+        /* ignore */
+      }
 
       // Mirror the host stylesheets so Tailwind classes render inside the frame.
       try {
