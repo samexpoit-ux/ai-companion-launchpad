@@ -1,5 +1,21 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
-import { X, Code2, Eye, Terminal, RefreshCw, Monitor, Tablet, Smartphone, Wand2, Loader2, ShieldCheck, AlertTriangle, History, GitCompare, MoreHorizontal } from "lucide-react";
+import {
+  X,
+  Code2,
+  Eye,
+  Terminal,
+  RefreshCw,
+  Monitor,
+  Tablet,
+  Smartphone,
+  Wand2,
+  Loader2,
+  ShieldCheck,
+  AlertTriangle,
+  History,
+  GitCompare,
+  MoreHorizontal,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +28,12 @@ import { cn } from "@/lib/utils";
 import { useCredits } from "@/hooks/useCredits";
 import { CreditMeter } from "@/components/CreditMeter";
 import { formatCredits } from "@/lib/credits";
-import { usePreview, MAX_FIX_ATTEMPTS, type PreviewPayload, type PreviewDevice } from "./preview-context";
+import {
+  usePreview,
+  MAX_FIX_ATTEMPTS,
+  type PreviewPayload,
+  type PreviewDevice,
+} from "./preview-context";
 
 // Sandpack touches window at import; keep it out of the SSR graph.
 const SandpackStage = lazy(() => import("./SandpackStage"));
@@ -26,9 +47,6 @@ const VersionHistory = lazy(() => import("./VersionHistory"));
 const ValidationBadge = lazy(() => import("./ValidationBadge"));
 // Build/runtime failure overlay with logs + next steps.
 const ErrorOverlay = lazy(() => import("./ErrorOverlay"));
-
-
-
 
 export function PreviewPanel() {
   const {
@@ -92,15 +110,32 @@ export function PreviewPanel() {
   if (!isOpen) return null;
   if (!payload) return <EmptyWorkspace onClose={closePreview} onStart={loadStarterProject} />;
 
-
   return (
-    <aside data-testid="live-workspace" className="relative flex h-full min-w-0 flex-col border-l border-ink-200 bg-ink-100">
+    <aside
+      data-testid="live-workspace"
+      className="relative flex h-full min-w-0 flex-col border-l border-ink-200 bg-ink-100"
+    >
       {/* Header — Lovable-style single row: segmented tabs left, viewport + actions right */}
       <div className="flex h-12 shrink-0 items-center gap-2 overflow-hidden border-b border-ink-200 bg-white px-2 sm:px-3">
         <div className="flex min-w-0 shrink items-center gap-0.5 rounded-full border border-ink-200 bg-ink-100 p-0.5 sm:gap-1">
-          <TabBtn active={tab === "preview"} onClick={() => setTab("preview")} icon={Eye} label="Preview" />
-          <TabBtn active={tab === "code"} onClick={() => setTab("code")} icon={Code2} label="Code" />
-          <TabBtn active={tab === "console"} onClick={() => setTab("console")} icon={Terminal} label="Console" />
+          <TabBtn
+            active={tab === "preview"}
+            onClick={() => setTab("preview")}
+            icon={Eye}
+            label="Preview"
+          />
+          <TabBtn
+            active={tab === "code"}
+            onClick={() => setTab("code")}
+            icon={Code2}
+            label="Code"
+          />
+          <TabBtn
+            active={tab === "console"}
+            onClick={() => setTab("console")}
+            icon={Terminal}
+            label="Console"
+          />
         </div>
 
         <span className="pointer-events-none hidden min-w-0 shrink truncate rounded-full border border-ink-200 bg-ink-100 px-2 py-1 font-mono text-2xs text-ink-500 lg:inline">
@@ -110,9 +145,24 @@ export function PreviewPanel() {
         <div className="ml-auto flex min-w-0 shrink-0 items-center gap-0.5 sm:gap-1">
           {tab === "preview" && (
             <div className="hidden items-center gap-0.5 rounded-full border border-ink-200 bg-ink-100 p-0.5 sm:flex">
-              <DeviceBtn active={device === "desktop"} onClick={() => setDevice("desktop")} icon={Monitor} label="Desktop" />
-              <DeviceBtn active={device === "tablet"} onClick={() => setDevice("tablet")} icon={Tablet} label="Tablet" />
-              <DeviceBtn active={device === "mobile"} onClick={() => setDevice("mobile")} icon={Smartphone} label="Mobile" />
+              <DeviceBtn
+                active={device === "desktop"}
+                onClick={() => setDevice("desktop")}
+                icon={Monitor}
+                label="Desktop"
+              />
+              <DeviceBtn
+                active={device === "tablet"}
+                onClick={() => setDevice("tablet")}
+                icon={Tablet}
+                label="Tablet"
+              />
+              <DeviceBtn
+                active={device === "mobile"}
+                onClick={() => setDevice("mobile")}
+                icon={Smartphone}
+                label="Mobile"
+              />
             </div>
           )}
 
@@ -161,20 +211,49 @@ export function PreviewPanel() {
               {tab === "preview" && (
                 <div className="flex items-center gap-1 px-2 py-1.5 sm:hidden">
                   <span className="mr-auto text-xs text-ink-600">Viewport</span>
-                  <DeviceBtn active={device === "desktop"} onClick={() => setDevice("desktop")} icon={Monitor} label="Desktop" />
-                  <DeviceBtn active={device === "tablet"} onClick={() => setDevice("tablet")} icon={Tablet} label="Tablet" />
-                  <DeviceBtn active={device === "mobile"} onClick={() => setDevice("mobile")} icon={Smartphone} label="Mobile" />
+                  <DeviceBtn
+                    active={device === "desktop"}
+                    onClick={() => setDevice("desktop")}
+                    icon={Monitor}
+                    label="Desktop"
+                  />
+                  <DeviceBtn
+                    active={device === "tablet"}
+                    onClick={() => setDevice("tablet")}
+                    icon={Tablet}
+                    label="Tablet"
+                  />
+                  <DeviceBtn
+                    active={device === "mobile"}
+                    onClick={() => setDevice("mobile")}
+                    icon={Smartphone}
+                    label="Mobile"
+                  />
                 </div>
               )}
-              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setReviewBeforeApply(!reviewBeforeApply); }}>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setReviewBeforeApply(!reviewBeforeApply);
+                }}
+              >
                 <GitCompare className="mr-2 h-3.5 w-3.5" />
                 Review patches
-                <span className="ml-auto text-2xs text-ink-500">{reviewBeforeApply ? "On" : "Off"}</span>
+                <span className="ml-auto text-2xs text-ink-500">
+                  {reviewBeforeApply ? "On" : "Off"}
+                </span>
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setAutoFixEnabled(!autoFixEnabled); }}>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setAutoFixEnabled(!autoFixEnabled);
+                }}
+              >
                 <Wand2 className="mr-2 h-3.5 w-3.5" />
                 Auto-fix errors
-                <span className="ml-auto text-2xs text-ink-500">{autoFixEnabled ? "On" : "Off"}</span>
+                <span className="ml-auto text-2xs text-ink-500">
+                  {autoFixEnabled ? "On" : "Off"}
+                </span>
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setHistoryOpen((h) => !h)}>
                 <History className="mr-2 h-3.5 w-3.5" />
@@ -194,7 +273,6 @@ export function PreviewPanel() {
         </div>
       </div>
 
-
       {historyOpen && (
         <Suspense fallback={null}>
           <VersionHistory onClose={() => setHistoryOpen(false)} />
@@ -213,49 +291,53 @@ export function PreviewPanel() {
 
       {/* Canvas — inset rounded stage, like Lovable's right-hand preview surface */}
       <div className="relative min-h-0 flex-1 p-2 sm:p-3">
-        <div data-testid="workspace-stage" className="relative h-full w-full overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_24px_60px_-38px_rgba(16,24,40,0.35)]">
-        <Suspense fallback={<LoadingSkeleton />}>
-          {tab === "preview" ? (
-            <LocalPreview
-              key={`local-${payload.lang}-${revision}`}
-              payload={payload}
-              device={device}
-              reloadKey={reloadKey}
-            />
-          ) : tab === "console" ? (
-            <PreviewConsole entries={consoleEntries} onClear={clearConsole} />
-          ) : tab === "code" && payload.files ? (
-            <ProjectExplorer key={`explorer-${revision}`} />
-          ) : (
-            <SandpackStage
-              key={`${payload.lang}-${reloadKey}-${revision}`}
-              payload={payload}
-              tab={tab}
-              device={device}
-            />
+        <div
+          data-testid="workspace-stage"
+          className="relative h-full w-full overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_24px_60px_-38px_rgba(16,24,40,0.35)]"
+        >
+          <Suspense fallback={<LoadingSkeleton />}>
+            {tab === "preview" ? (
+              <LocalPreview
+                key={`local-${payload.lang}-${revision}`}
+                payload={payload}
+                device={device}
+                reloadKey={reloadKey}
+              />
+            ) : tab === "console" ? (
+              <PreviewConsole entries={consoleEntries} onClear={clearConsole} />
+            ) : tab === "code" && payload.files ? (
+              <ProjectExplorer key={`explorer-${revision}`} />
+            ) : (
+              <SandpackStage
+                key={`${payload.lang}-${reloadKey}-${revision}`}
+                payload={payload}
+                tab={tab}
+                device={device}
+              />
+            )}
+          </Suspense>
+
+          {buildError && !pendingPatch && (
+            <Suspense fallback={null}>
+              <ErrorOverlay onReload={() => setReloadKey((k) => k + 1)} />
+            </Suspense>
           )}
-        </Suspense>
 
-        {buildError && !pendingPatch && (
-          <Suspense fallback={null}>
-            <ErrorOverlay onReload={() => setReloadKey((k) => k + 1)} />
-          </Suspense>
-        )}
-
-        {pendingPatch && (
-          <Suspense fallback={null}>
-            <PatchReview />
-          </Suspense>
-        )}
+          {pendingPatch && (
+            <Suspense fallback={null}>
+              <PatchReview />
+            </Suspense>
+          )}
         </div>
       </div>
-
-
     </aside>
   );
 }
 
-function PreviewConsole({ entries, onClear }: {
+function PreviewConsole({
+  entries,
+  onClear,
+}: {
   entries: Array<{ id: number; level: "log" | "info" | "warn" | "error"; message: string }>;
   onClear: () => void;
 }) {
@@ -263,19 +345,39 @@ function PreviewConsole({ entries, onClear }: {
     <div className="flex h-full flex-col bg-ink-900 text-ink-100">
       <div className="flex h-10 shrink-0 items-center border-b border-ink-700 px-3">
         <span className="font-mono text-2xs uppercase text-ink-400">Browser console</span>
-        <button type="button" onClick={onClear} className="ml-auto rounded px-2 py-1 text-2xs text-ink-300 hover:bg-ink-800">Clear</button>
+        <button
+          type="button"
+          onClick={onClear}
+          className="ml-auto rounded px-2 py-1 text-2xs text-ink-300 hover:bg-ink-800"
+        >
+          Clear
+        </button>
       </div>
       <div className="min-h-0 flex-1 overflow-auto p-3 font-mono text-xs">
-        {entries.length === 0 ? <p className="text-ink-500">No output yet. Preview logs and errors appear here.</p> : entries.map((entry) => (
-          <div key={entry.id} className={cn("border-b border-ink-800 py-1.5", entry.level === "error" ? "text-red-300" : entry.level === "warn" ? "text-amber-300" : "text-ink-200")}>
-            <span className="mr-2 text-ink-500">[{entry.level}]</span>{entry.message}
-          </div>
-        ))}
+        {entries.length === 0 ? (
+          <p className="text-ink-500">No output yet. Preview logs and errors appear here.</p>
+        ) : (
+          entries.map((entry) => (
+            <div
+              key={entry.id}
+              className={cn(
+                "border-b border-ink-800 py-1.5",
+                entry.level === "error"
+                  ? "text-red-300"
+                  : entry.level === "warn"
+                    ? "text-amber-300"
+                    : "text-ink-200",
+              )}
+            >
+              <span className="mr-2 text-ink-500">[{entry.level}]</span>
+              {entry.message}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
 }
-
 
 function AutoFixBar({
   status,
@@ -302,10 +404,10 @@ function AutoFixBar({
     status === "review"
       ? "border-[color:var(--color-iris)]/45 bg-[color:var(--color-iris)]/10 text-ink-800"
       : status === "fixed"
-      ? "border-emerald-300/60 bg-emerald-50/80 text-emerald-900"
-      : status === "failed" || status === "exhausted"
-        ? "border-sky-300/70 bg-sky-50/80 text-sky-900"
-        : "border-[color:var(--color-iris)]/35 bg-[color:var(--color-iris)]/8 text-ink-800";
+        ? "border-emerald-300/60 bg-emerald-50/80 text-emerald-900"
+        : status === "failed" || status === "exhausted"
+          ? "border-sky-300/70 bg-sky-50/80 text-sky-900"
+          : "border-[color:var(--color-iris)]/35 bg-[color:var(--color-iris)]/8 text-ink-800";
 
   return (
     <div className={cn("flex items-start gap-2 border-b px-3 py-2 text-xs", tone)}>
@@ -323,14 +425,15 @@ function AutoFixBar({
         <div className="font-medium">
           {status === "fixing" && `Auto-fixing… attempt ${attempts} of ${MAX_FIX_ATTEMPTS}`}
           {status === "review" && `Patch ready for review — attempt ${attempts}`}
-          {status === "detected" && `${errors.length} runtime error${errors.length > 1 ? "s" : ""} captured`}
+          {status === "detected" &&
+            `${errors.length} runtime error${errors.length > 1 ? "s" : ""} captured`}
           {status === "fixed" && (last?.summary ?? "Patch applied")}
           {status === "failed" && (error ?? "Auto-fix failed")}
           {status === "exhausted" && `Still failing after ${MAX_FIX_ATTEMPTS} AI attempts`}
         </div>
         {errors.length > 0 && (
           <pre className="mt-1 max-h-16 overflow-auto whitespace-pre-wrap break-words font-mono text-2xs opacity-80">
-{errors.slice(-2).join("\n")}
+            {errors.slice(-2).join("\n")}
           </pre>
         )}
         {status === "fixed" && last?.model && (
@@ -341,15 +444,16 @@ function AutoFixBar({
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
-        {(status === "detected" || status === "failed" || status === "exhausted") && errors.length > 0 && (
-          <button
-            onClick={onFix}
-            className="inline-flex items-center gap-1 rounded-md border border-current/25 bg-white/70 px-2 py-1 text-2xs hover:bg-white/90"
-          >
-            <Wand2 className="h-3 w-3" />
-            Fix with AI
-          </button>
-        )}
+        {(status === "detected" || status === "failed" || status === "exhausted") &&
+          errors.length > 0 && (
+            <button
+              onClick={onFix}
+              className="inline-flex items-center gap-1 rounded-md border border-current/25 bg-white/70 px-2 py-1 text-2xs hover:bg-white/90"
+            >
+              <Wand2 className="h-3 w-3" />
+              Fix with AI
+            </button>
+          )}
         <button
           onClick={onReset}
           className="rounded-md p-1 opacity-60 hover:opacity-100"
@@ -422,10 +526,17 @@ function DeviceBtn({
 
 function EmptyWorkspace({ onClose, onStart }: { onClose: () => void; onStart: () => void }) {
   return (
-    <aside data-testid="live-workspace" className="relative flex h-full min-w-0 flex-col border-l border-ink-200 bg-ink-100">
+    <aside
+      data-testid="live-workspace"
+      className="relative flex h-full min-w-0 flex-col border-l border-ink-200 bg-ink-100"
+    >
       <div className="flex h-12 shrink-0 items-center gap-2 overflow-hidden border-b border-ink-200 bg-white px-2 sm:px-3">
-        <span className="shrink-0 text-2xs font-semibold uppercase tracking-[0.18em] text-ink-400">Live Workspace</span>
-        <span className="rounded-md border border-ink-200 bg-ink-100 px-1.5 py-0.5 font-mono text-2xs text-ink-500">idle</span>
+        <span className="shrink-0 text-2xs font-semibold uppercase tracking-[0.18em] text-ink-400">
+          Live Workspace
+        </span>
+        <span className="rounded-md border border-ink-200 bg-ink-100 px-1.5 py-0.5 font-mono text-2xs text-ink-500">
+          idle
+        </span>
         <button
           onClick={onClose}
           className="ml-auto rounded-md p-1.5 text-ink-500 hover:bg-ink-900/5 hover:text-ink-900"
@@ -442,8 +553,8 @@ function EmptyWorkspace({ onClose, onStart }: { onClose: () => void; onStart: ()
           </div>
           <p className="text-sm font-medium text-ink-900">Nothing to preview yet</p>
           <p className="mt-1.5 text-xs leading-relaxed text-ink-500">
-            Ask Nexura to build something — generated projects open here with live
-            preview, a file explorer and console.
+            Ask Nexura to build something — generated projects open here with live preview, a file
+            explorer and console.
           </p>
           <button
             onClick={onStart}
@@ -459,7 +570,6 @@ function EmptyWorkspace({ onClose, onStart }: { onClose: () => void; onStart: ()
 }
 
 function LoadingSkeleton() {
-
   return (
     <div className="flex h-full items-center justify-center">
       <div className="flex items-center gap-2 text-xs text-ink-500">
